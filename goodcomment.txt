@@ -1,0 +1,13 @@
+/**
+ * @brief   the_description
+ *
+ * 
+ *
+ * @version x.x
+ * @ingroup objectrecognition
+ * @ingroup apc
+ * 
+ * @author    Adam Allevato <allevato@utexas.edu>
+ * @copyright BSD 3-paragraph
+ * @date      the_date
+ */

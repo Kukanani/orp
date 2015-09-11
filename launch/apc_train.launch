@@ -1,0 +1,111 @@
+<launch>
+  <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
+  <arg name="home_dir"       default="$(find orp)" />
+  <arg name="data_folder"    default="$(find orp)/data" /> 
+  <arg name="openni2"        default="true"/>
+  <arg name="recognitionview" default="false"/>
+
+  <remap from="camera/depth_registered/points" to="/cloud_pcd" />
+
+  <rosparam command="load" file="$(arg home_dir)/cfg/apc_train.yaml" />
+  <rosparam command="load" file="$(arg home_dir)/cfg/sixdof_test.yaml" />
+
+  <!-- DATA -->
+  <group unless="$(arg sim)">
+    <group unless="$(arg openni2)">
+      <include file="$(find openni_launch)/launch/openni.launch"> </include>
+    </group>
+    <group if="$(arg openni2)">
+      <include file="$(find openni2_launch)/launch/openni2.launch">  </include>
+    </group>
+
+    <node
+      name    = "dummy_frame_broadcaster"  
+      pkg     = "orp"
+      type    = "dummy_frame_broadcaster"
+      args    = "base_link camera_link 0 0 0 0 0 0"
+
+      respawn = "true"
+      output  = "screen"
+    />
+  </group>
+  <group if="$(arg sim)">
+    <node
+      name    = "dummy_frame_broadcaster"  
+      pkg     = "orp"
+      type    = "dummy_frame_broadcaster"
+      args    = "base_link camera_depth_optical_frame 0 0 0 -1.57079632679 0 -1.57079632679"
+
+      respawn = "true"
+      output  = "screen"
+    />
+  </group>
+
+  <node pkg = "amazon_challenge" type="load_item_params.py" name="$(anon orp_load_item_params)" args="$(find amazon_challenge)/scripts/APC.sqlite" output="screen" respawn="false" />
+  <node
+    name    = "frame_broadcaster"  
+    pkg     = "amazon_challenge"
+    type    = "frame_broadcaster"
+    args    = ""
+
+    respawn = "true"
+    output  = "screen"
+  />
+  
+  <!-- CLASSIFICATION -->
+
+
+  <node
+    name    = "segmentation"  
+    pkg     = "orp"
+    type    = "segmentation"
+    args    = ""
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <!-- CONDUCTOR -->
+  <node
+    name    = "shelf_manager"
+    pkg     = "orp"
+    type    = "shelf_manager"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
+    name="histogram_saver"
+    pkg="orp"
+    type="histogram_saver"
+    args="$(arg data_folder)"
+
+    respawn="true"
+    output="screen"
+  />
+
+  <!-- VISUALIZATION AND CONFIGURATION -->
+  <node
+    name    = "rqt_reconfigure"
+    pkg     = "rqt_reconfigure"
+    type    = "rqt_reconfigure"
+    args    = ""
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <group if="$(arg recognitionview)">
+    <node
+      name    = "rviz"
+      pkg     = "rviz"
+      type    = "rviz"
+      args    = "-s $(arg home_dir)/rviz/splash.png"
+
+      respawn = "false"
+      output  = "screen"
+    />
+  </group>
+
+</launch>

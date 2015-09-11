@@ -1,0 +1,92 @@
+<launch>
+  <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
+  <arg name="home_dir"       default="$(find orp)" />
+  <arg name="data_folder"    default="$(find orp)/apc_data" />
+  <arg name="cph_list"       default="$(find orp)/cfg/test1.list" />
+  <arg name="cvfh_list"      default="$(find orp)/cfg/test1.list" />
+  <arg name="rgb_list"       default="$(find orp)/cfg/test1.list" />
+  <arg name="openni2"        default="false"/>
+
+  <rosparam command="load" file="$(arg home_dir)/cfg/apc_test_hardware.yaml" />
+
+  <!-- DATA -->
+  <group unless="$(arg openni2)">
+    <include file="$(find openni_launch)/launch/openni.launch"> </include>
+  </group>
+  <group if="$(arg openni2)">
+    <include file="$(find openni2_launch)/launch/openni2.launch">  </include>
+  </group>
+
+  <!-- CLASSIFICATION -->
+
+  <node
+    name    = "segmentation"
+    pkg     = "orp"
+    type    = "segmentation"
+    args    = ""
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
+    name    = "cph_classifier"
+    pkg     = "orp"
+    type    = "cph_classifier"
+    args    = "$(arg data_folder) $(arg cph_list)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <!--<node
+    name    = "cvfh_classifier"
+    pkg     = "orp"
+    type    = "cvfh_classifier"
+    args    = "$(arg data_folder) $(arg cvfh_classifier)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
+    name    = "rgb_classifier"
+    pkg     = "orp"
+    type    = "rgb_classifier"
+    args    = "$(arg data_folder) $(arg rgb_classifier)"
+
+    respawn = "true"
+    output  = "screen"
+  /> -->
+
+  <!-- CONDUCTOR -->
+  <node
+    name    = "recognizer"
+    pkg     = "orp"
+    type    = "recognizer"
+    args    = "$(arg cph_list)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <!-- VISUALIZATION AND CONFIGURATION -->
+  <node
+    name    = "rqt_reconfigure"
+    pkg     = "rqt_reconfigure"
+    type    = "rqt_reconfigure"
+    args    = ""
+
+    respawn = "false"
+    output  = "screen"
+  />
+  <node
+    name    = "rviz"
+    pkg     = "rviz"
+    type    = "rviz"
+    args    = "-d $(arg home_dir)/rviz/orp.rviz -s $(arg home_dir)/rviz/splash.png"
+
+    respawn = "false"
+    output  = "screen"
+  />
+</launch>

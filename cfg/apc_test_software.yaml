@@ -1,0 +1,103 @@
+camera:
+  camera_nodelet_manager: {num_worker_threads: 4}
+  debayer: {debayer: 0}
+  depth:
+    image:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_raw:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_rect:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_rect_raw:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+  depth_rectify_depth: {interpolation: 0}
+  depth_registered:
+    hw_registered:
+      image_rect_raw:
+        compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+        compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+        theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_raw:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    sw_registered:
+      image_rect_raw:
+        compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+        compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+        theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+  depth_registered_rectify_depth: {interpolation: 0}
+  disparity_depth: {max_range: 4.0, min_range: 0.5}
+  disparity_registered_hw: {max_range: 4.0, min_range: 0.5}
+  disparity_registered_sw: {max_range: 4.0, min_range: 0.5}
+  driver: {data_skip: 0, depth_camera_info_url: '', depth_frame_id: /camera_depth_optical_frame,
+    depth_ir_offset_x: 5.0, depth_ir_offset_y: 4.0, depth_mode: 2, depth_registration: true,
+    depth_time_offset: 0.0, device_id: '#1', image_mode: 2, image_time_offset: 0.0,
+    rgb_camera_info_url: '', rgb_frame_id: /camera_rgb_optical_frame, z_offset_mm: 0,
+    z_scaling: 1.0}
+  ir:
+    image_raw:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_rect_ir:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+  rectify_color: {interpolation: 1}
+  rectify_ir: {interpolation: 1}
+  rectify_mono: {interpolation: 1}
+  rgb:
+    image_color:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_mono:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_raw:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_rect_color:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+    image_rect_mono:
+      compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+      compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+      theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+recognizer: {colocation_dist: 0.05, marker_alpha: 1.0, marker_blue: 0.0, marker_green: 1.0,
+  marker_red: 1.0, marker_size: 0.03, max_duplicate_objects: 20, max_objects: 20,
+  object_label_alpha: 1.0, object_label_blue: 0.0, object_label_green: 1.0, object_label_red: 1.0,
+  object_label_size: 0.03, refresh_interval: 1.0, show_pose: false, show_pose_std_dev: false,
+  show_position: true, show_recognition_probability: false, show_unknown_labels: true,
+  stale_time: 5.0}
+rosdistro: 'hydro
+
+  '
+roslaunch:
+  uris: {host_cyclops__58722: 'http://cyclops:58722/', host_vonbraun__37353: 'http://vonbraun:37353/',
+    host_vonbraun__37528: 'http://vonbraun:37528/', host_vonbraun__43505: 'http://vonbraun:43505/',
+    host_vonbraun__44718: 'http://vonbraun:44718/', host_vonbraun__48024: 'http://vonbraun:48024/',
+    host_vonbraun__48162: 'http://vonbraun:48162/', host_vonbraun__50766: 'http://vonbraun:50766/',
+    host_vonbraun__58696: 'http://vonbraun:58696/'}
+rosversion: '1.10.11'
+run_id: 497f9fc2-acc4-11e4-ab1f-844bf53b2663
+segmentation: {cluster_tolerance: 0.03, max_cluster_size: 100000, max_plane_segmentation_iterations: 50,
+  min_cluster_size: 100, object_label_alpha: 1.0, percentage_to_analyze: 1.0, segmentation_distance_threshold: 0.01,
+  spatial_max_x: 5.0, spatial_max_y: 5.0, spatial_max_z: 10.0, spatial_min_x: -5.0,
+  spatial_min_y: -5.0, spatial_min_z: 0.0, spatial_theta_x: 0.0, voxel_leaf_size: 0.005}
+segmentation_node: {cluster_tolerance: 0.03, max_cluster_size: 2000, max_plane_segmentation_iterations: 50,
+  min_cluster_size: 300, object_label_alpha: 1.0, percentage_to_analyze: 0.3, segmentation_distance_threshold: 0.01,
+  spatial_max_x: 0.25, spatial_max_y: 2.3, spatial_max_z: 1.41, spatial_min_x: -2.6,
+  spatial_min_y: -5.0, spatial_min_z: 0.0, spatial_theta_x: 0.0, voxel_leaf_size: 0.005}

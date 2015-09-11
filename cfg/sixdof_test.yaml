@@ -1,0 +1,8 @@
+camera:
+  driver: {depth_registration: true, data_skip: 10}
+recognizer: { marker_size: 0.015, colocation_dist: 0.05, marker_alpha: 1.0, marker_blue: 0.0, marker_green: 1.0,
+  marker_red: 1.0, marker_size: 0.03, refresh_interval: 0.1, show_pose: false, show_pose_std_dev: false,
+  show_position: false, show_recognition_probability: false, show_unknown_labels: true,
+  stale_time: 1.0}
+segmentation: {max_cluster_size: 5000, min_cluster_size: 50, percentage_to_analyze: 1.0, voxel_leaf_size: 0.0035,
+  spatial_min_x: -5.0, spatial_min_y: -5.0, spatial_min_z: -5.0, spatial_max_x: 5.0, spatial_max_y: 5.0, spatial_max_z: 5.0}

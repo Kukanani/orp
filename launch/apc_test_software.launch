@@ -1,0 +1,105 @@
+<launch>
+  <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
+  <arg name="home_dir"       default="$(find orp)" />
+  <arg name="data_folder"    default="$(find orp)/test/cheezit_output" />
+  <arg name="list"       default="$(find orp)/cfg/test2.list" />
+  <arg name="openni2"        default="true"/>
+
+  <rosparam command="load" file="$(arg home_dir)/cfg/apc_test_software.yaml" />
+
+  <!-- DATA -->
+  <group unless="$(arg sim)">
+    <group unless="$(arg openni2)">
+      <include file="$(find openni_launch)/launch/openni.launch"> </include>
+    </group>
+    <group if="$(arg openni2)">
+      <include file="$(find openni2_launch)/launch/openni2.launch">  </include>
+    </group>
+
+    <node
+      name    = "dummy_frame_broadcaster"  
+      pkg     = "orp"
+      type    = "dummy_frame_broadcaster"
+      args    = "base_link camera_link 0 0 0 0 0 0"
+
+      respawn = "true"
+      output  = "screen"
+    />
+  </group>
+  <group if="$(arg sim)">
+    <node
+      name    = "dummy_frame_broadcaster"  
+      pkg     = "orp"
+      type    = "dummy_frame_broadcaster"
+      args    = "base_link camera_depth_optical_frame 0 0 0 -1.57079632679 0 -1.57079632679"
+
+      respawn = "true"
+      output  = "screen"
+    />
+  </group>
+
+  <node pkg = "amazon_challenge" type="load_item_params.py" name="$(anon orp_load_item_params)" args="$(find amazon_challenge)/scripts/APC.sqlite" output="screen" respawn="false" />
+  <node
+    name    = "frame_broadcaster"  
+    pkg     = "amazon_challenge"
+    type    = "frame_broadcaster"
+    args    = ""
+
+    respawn = "true"
+    output  = "screen"
+  />
+  <remap from="/camera/depth_registered/points" to="/cloud_pcd" />
+
+  <!-- CLASSIFICATION (previously segmentation_node)-->
+
+  <node
+    name    = "segmentation"
+    pkg     = "orp"
+    type    = "segmentation"
+    args    = ""
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+<node
+    name    = "sixdof_classifier"
+    pkg     = "orp"
+    type    = "sixdof_classifier"
+    args    = "$(arg data_folder) $(arg list)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <!-- CONDUCTOR -->
+  <node
+    name    = "recognizer"
+    pkg     = "orp"
+    type    = "recognizer"
+    args    = "$(arg list)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <!-- VISUALIZATION AND CONFIGURATION -->
+  <node
+    name    = "rqt_reconfigure"
+    pkg     = "rqt_reconfigure"
+    type    = "rqt_reconfigure"
+    args    = ""
+
+    respawn = "false"
+    output  = "screen"
+  />
+  <node
+    name    = "rviz"
+    pkg     = "rviz"
+    type    = "rviz"
+    args    = "-d $(arg home_dir)/rviz/orp.rviz -s $(arg home_dir)/rviz/splash.png"
+
+    respawn = "false"
+    output  = "screen"
+  />
+</launch>
