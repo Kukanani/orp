@@ -1,16 +1,10 @@
 #ifndef _HISTOGRAM_SAVER_H_
 #define _HISTOGRAM_SAVER_H_
 
-
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
 
-#include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <dynamic_reconfigure/server.h>
-
-#include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/features/vfh.h>
@@ -18,14 +12,17 @@
 #include <pcl/features/crh.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <dynamic_reconfigure/server.h>
+#include <pcl_conversions/pcl_conversions.h>
 
-//NRG internal files
+#include <orp/SaveCloud.h>
+#include <orp/Segmentation.h>
+#include <orp/HistogramSaverConfig.h>
+
 #include "orp/classifier/cph.h"
 #include "orp/core/orp_utils.h"
-
-#include "orp/SaveCloud.h"
-#include "orp/Segmentation.h"
-#include "orp/HistogramSaverConfig.h"
 
 /**
  * @brief Extracts features from point clouds and saves to file.

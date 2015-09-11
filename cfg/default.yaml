@@ -79,14 +79,10 @@ camera:
 recognizer: {colocation_dist: 0.05, max_duplicate_objects: 20, max_objects: 20, object_label_alpha: 1.0,
   object_label_blue: 0.0, object_label_green: 1.0, object_label_red: 1.0, object_label_size: 0.03,
   refresh_interval: 1, stale_time: 5.0}
-rosdistro: 'hydro
-
-  '
+rosdistro: 'hydro'
 roslaunch:
   uris: {host_cyclops__58722: 'http://cyclops:58722/'}
-rosversion: '1.10.11
-
-  '
+rosversion: '1.10.11'
 run_id: 497f9fc2-acc4-11e4-ab1f-844bf53b2663
 segmentation_node: {cluster_tolerance: 0.03, max_cluster_size: 2000, max_plane_segmentation_iterations: 50,
   min_cluster_size: 300, object_label_alpha: 1.0, percentage_to_analyze: 0.3, segmentation_distance_threshold: 0.01,

@@ -1,8 +1,8 @@
-#include "orp/app/vision_simulator.h"
 #include <fstream>
 #include <string>
 #include <sstream>
 
+#include "orp/app/vision_simulator.h"
 /**
  * Starts up the name and handles command-line arguments.
  * @param  argc num args

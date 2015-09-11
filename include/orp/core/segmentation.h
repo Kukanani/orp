@@ -2,13 +2,7 @@
 #define _SEGMENTATION_H_
 
 #define _USE_MATH_DEFINES
-#include <math.h>
-
-#include "ros/ros.h"
-#include <dynamic_reconfigure/server.h>
-
-#include <tf/transform_listener.h>
-#include <pcl_ros/transforms.h>
+#include <cmath>
 
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
@@ -25,10 +19,14 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/conditional_removal.h>
 
-//ROS-generated definitions
-#include "orp/Segmentation.h"
-#include "orp/SegmentationConfig.h"
-#include "orp/ReloadParams.h"
+#include <ros/ros.h>
+#include <dynamic_reconfigure/server.h>
+#include <tf/transform_listener.h>
+#include <pcl_ros/transforms.h>
+
+#include <orp/Segmentation.h>
+#include <orp/SegmentationConfig.h>
+#include <orp/ReloadParams.h>
 
 #include "orp/core/orp_utils.h"
 

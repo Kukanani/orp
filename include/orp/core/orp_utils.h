@@ -2,12 +2,11 @@
 #define _ORP_UTILS_H_
 
 #define _USE_MATH_DEFINES
-#include <math.h>
+#include <cmath>
 #include <stdexcept>
 #include <sstream>
 #include <fstream>
 #include <iomanip>
-
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/vtk_lib_io.h>

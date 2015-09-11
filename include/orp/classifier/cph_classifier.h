@@ -4,7 +4,7 @@
 //NRG internal files
 #include "orp/core/classifier.h"
 
-#include "cph.h"
+#include "orp/classifier/cph.h"
 
 /**
  * @brief   Uses the CPH classifier to identify a point cloud from a list of known objects.

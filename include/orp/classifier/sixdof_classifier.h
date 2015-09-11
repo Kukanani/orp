@@ -4,9 +4,9 @@
 #include <pcl/features/cvfh.h>
 #include <pcl/features/crh.h>
 #include <pcl/features/normal_3d.h>
-#include <pcl_ros/transforms.h>
 #include <pcl/recognition/crh_alignment.h>
 
+#include <pcl_ros/transforms.h>
 #include <tf/transform_listener.h>
 //NRG internal files
 #include "orp/core/classifier.h"

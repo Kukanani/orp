@@ -1,5 +1,7 @@
 #include <iostream>
+
 #include <boost/thread/thread.hpp>
+
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
@@ -11,13 +13,6 @@
 
 #include "orp/core/orp_utils.h"
 
-
-/**
- * Arguments:
- *
- * argument 1: 
- * 
- */
 int
  main (int argc, char** argv)
 {

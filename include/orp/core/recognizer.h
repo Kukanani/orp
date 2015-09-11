@@ -1,25 +1,24 @@
 #ifndef _RECOGNIZER_H_
 #define _RECOGNIZER_H_
 
-#include "ros/ros.h"
-#include "visualization_msgs/MarkerArray.h"
-#include "orp/WorldObjects.h"
+#include <ctime>
+#include <fstream>
+
+#include <ros/ros.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
-
+#include <std_msgs/Empty.h>
 #include <dynamic_reconfigure/server.h>
-#include "orp/RecognizerConfig.h"
-#include "orp/GetObjectPose.h"
-#include "orp/DetectionSet.h"
-#include "std_msgs/Empty.h"
+
+#include <orp/RecognizerConfig.h>
+#include <orp/GetObjectPose.h>
+#include <orp/DetectionSet.h>
+#include <orp/WorldObjects.h>
 
 #include "orp/core/world_object.h"
 #include "orp/core/world_object_manager.h"
 #include "orp/core/orp_utils.h"
-
-// ADDITIONAL INCLUDES GO HERE
-#include <ctime>
-#include <fstream>
 
 /**
  * @brief   Base recognizer class.

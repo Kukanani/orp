@@ -1,3 +1,6 @@
+#ifndef _SHELF_MANAGER_H_
+#define _SHELF_MANAGER_H_
+
 #include <string>
 
 #include <boost/algorithm/string.hpp>
@@ -5,13 +8,10 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 
-#include "orp/ChooseShelf.h"
-#include "orp/ReloadParams.h"
+#include <orp/ChooseShelf.h>
+#include <orp/ReloadParams.h>
 
 #include "orp/core/orp_utils.h"
-
-#ifndef _SHELF_MANAGER_H_
-#define _SHELF_MANAGER_H_
 
 /**
  * @brief  sets segmentation parameters based on the shelf being viewed.

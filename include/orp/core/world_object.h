@@ -1,16 +1,17 @@
 #ifndef _WORLD_OBJECT_H_
 #define _WORLD_OBJECT_H_
 
-#include <ros/ros.h>
-#include <tf/transform_datatypes.h>
-#include <tf_conversions/tf_eigen.h>
-
 #include <string>
 #include <algorithm>
 #include <map>
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
+
 #include <boost/shared_ptr.hpp>
+
+#include <ros/ros.h>
+#include <tf/transform_datatypes.h>
+#include <tf_conversions/tf_eigen.h>
 
 #include <orp/ClassificationResult.h>
 

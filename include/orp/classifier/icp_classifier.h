@@ -10,9 +10,6 @@
 #include <pcl/console/parse.h>
 #include <pcl/registration/icp.h>
 #include <pcl/features/normal_3d.h>
-#include <pcl_ros/point_cloud.h>
-#include <pcl_conversions/pcl_conversions.h>
-
 
 #include <boost/filesystem.hpp>
 #include <boost/random/mersenne_twister.hpp>
@@ -21,10 +18,12 @@
 #include <boost/regex.hpp>
 #include <boost/bind.hpp>
 
-#include "ros/ros.h"
-#include "sensor_msgs/PointCloud2.h"
-#include "eigen_conversions/eigen_msg.h"
+#include <ros/ros.h>
 #include <tf/transform_listener.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/transforms.h>
 
 //NRG internal files

@@ -12,22 +12,20 @@
 #include <boost/regex.hpp>
 #include <boost/bind.hpp>
 
-#include "ros/ros.h"
-#include "sensor_msgs/PointCloud2.h"
-#include "eigen_conversions/eigen_msg.h"
-#include "std_msgs/Empty.h"
-
 #include <flann/flann.h>
 
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <std_msgs/Empty.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-//NRG internal files
+#include <orp/Segmentation.h>
+#include <orp/DetectionSet.h>
+
 #include "orp/core/world_object.h"
 #include "orp/core/orp_utils.h"
-
-#include "orp/Segmentation.h"
-#include "orp/DetectionSet.h"
 
 //http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_5:_3D_object_recognition_(pipeline)
 typedef pcl::Histogram<90> CRH90;

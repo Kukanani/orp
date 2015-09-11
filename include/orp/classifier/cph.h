@@ -1,15 +1,14 @@
 #ifndef _CPH_H_
 #define _CPH_H_
 
-
 #include <iostream>
-#include <math.h>
-
-#include <pcl_ros/point_cloud.h>
-#include <pcl/common/transforms.h>
-#include <pcl_conversions/pcl_conversions.h>
+#include <cmath>
 
 #include <flann/flann.h>
+#include <pcl/common/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl_ros/point_cloud.h>
+
 #include "orp/core/orp_utils.h"
 
 #define CPH_DEBUG 0

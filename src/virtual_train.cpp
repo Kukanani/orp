@@ -1,16 +1,17 @@
-#include <pcl/io/vtk_lib_io.h>
-#include <vtkPolyDataMapper.h>
-#include <pcl/apps/render_views_tesselated_sphere.h>
-
-#include <pcl/features/cvfh.h>
-#include <pcl/features/crh.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl_ros/transforms.h>
-#include <pcl/recognition/crh_alignment.h>
-
 #include <string>
 #include <iostream>
 #include <sstream>
+
+#include <vtkPolyDataMapper.h>
+
+#include <pcl/io/vtk_lib_io.h>
+#include <pcl/apps/render_views_tesselated_sphere.h>
+#include <pcl/features/cvfh.h>
+#include <pcl/features/crh.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/recognition/crh_alignment.h>
+
+#include <pcl_ros/transforms.h>
 
 #include "orp/core/orp_utils.h"
 

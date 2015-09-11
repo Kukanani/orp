@@ -1,16 +1,15 @@
 #ifndef _PAN_DATA_COLLECTOR_H_
 #define _PAN_DATA_COLLECTOR_H_
 
-
 #include <sstream>
 
-#include "ros/ros.h"
+#include <ros/ros.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
 #include <sensor_msgs/PointCloud2.h>
 
-#include "orp/DataCollect.h"   
-#include "orp/SaveCloud.h" 
+#include <orp/DataCollect.h>
+#include <orp/SaveCloud.h>
 
 /**
  * @brief Sends pan commands and pipes sensor point cloud data off to the SaveCloud service.
