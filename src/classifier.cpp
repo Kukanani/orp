@@ -57,7 +57,7 @@ void Classifier::init() {
     subModels.size(),
     subModels[0].second.size());
 
-  //ROS_INFO_STREAM("data size: [" << kData->rows << " , " << kData->cols << "]");
+  ROS_INFO_STREAM("data size: [" << kData->rows << " , " << kData->cols << "]");
   for(size_t i = 0; i < kData->rows; ++i)
   {
     for(size_t j = 0; j < kData->cols; ++j)
@@ -68,7 +68,7 @@ void Classifier::init() {
 
   kIndex = new flann::Index<flann::ChiSquareDistance<float> >(*kData, flann::LinearIndexParams ());
   kIndex->buildIndex();
-  //ROS_INFO("Training data loaded.");
+  ROS_INFO("Training data loaded.");
 
   detectionSetSub = n.subscribe(
     "/detection_set",
@@ -79,7 +79,7 @@ void Classifier::init() {
   startSub = n.subscribe("orp_start_recognition", 1, &Classifier::cb_subscribe, this);
   stopSub = n.subscribe("orp_stop_recognition", 1, &Classifier::cb_unsubscribe, this);
 
-  ROS_INFO("Beginning classification");
+  //ROS_INFO("Beginning classification");
   //subscribe();
 } //Classifier
 
@@ -137,6 +137,7 @@ void Classifier::setDetectionSet(std::vector<std::string> set) {
   {
     for(size_t j = 0; j < kData->cols; ++j)
     {
+      ROS_INFO_STREAM("" << i << ", " << j << ": " << subModels[i].second[j]);
       *(kData->ptr()+(i*kData->cols + j)) = subModels[i].second[j];
     }
   }
@@ -160,12 +161,12 @@ int  Classifier::nearestKSearch(flann::Index<flann::ChiSquareDistance<float> > &
 {
   int rows = 1;
   // Query point
-  flann::Matrix<float> home = flann::Matrix<float>(const_cast<float*>(&(homeFeature.second[0])), rows, homeFeature.second.size ());
-  //flann::Matrix<float> home = flann::Matrix<float>(new float[homeFeature.second.size ()], rows, homeFeature.second.size ());
-  //memcpy (&home.ptr ()[0], &homeFeature.second.at(0), home.cols * home.rows * sizeof (int));
+  //flann::Matrix<float> home = flann::Matrix<float>(const_cast<float*>(&(homeFeature.second[0])), home.rows, homeFeature.second.size ());
+  flann::Matrix<float> home = flann::Matrix<float>(new float[homeFeature.second.size ()], rows, homeFeature.second.size ());
+  memcpy (&home.ptr ()[0], &homeFeature.second.at(0), home.cols * home.rows * sizeof (int));
 
-  indices = flann::Matrix<int>(new int[k], home.cols, k);
-  distances = flann::Matrix<float>(new float[k], home.cols, k);
+  indices = flann::Matrix<int>(new int[home.rows*k], home.rows, k);
+  distances = flann::Matrix<float>(new float[home.rows*k], home.rows, k);
   int foundCount = index.knnSearch (home, indices, distances, k, flann::SearchParams (128));
   //delete[] home.ptr();
 
@@ -219,6 +220,7 @@ void Classifier::loadModelsRecursive(
 
 void Classifier::subscribe()
 {
+  ROS_INFO("Classifier subscribing");
   if(depthInfoSubscriber == NULL)
   {
     classificationPub = n.advertise<orp::ClassificationResult>("/classification", 1);

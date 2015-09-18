@@ -25,6 +25,8 @@
 class SixDOFClassifier : public Classifier {
 protected:
   tf::TransformListener listener;
+
+  int minCloudSize;
 public:
   /**
    * Constructor

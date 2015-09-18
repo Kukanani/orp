@@ -331,8 +331,9 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
     //ROS_INFO("chance that it's %s is %f", it->first.c_str(), it->second.at(newObject.result.label));
     probs.insert(TypeMap::value_type(it->first, PoseGuess(it->second.at(newObject.result.label), eigPose)));
   }
-  ROS_INFO_STREAM("Recognizer result pose: " << newObject.result.pose.pose.position.x << ", " << newObject.result.pose.pose.position.y <<
-    ", " << newObject.result.pose.pose.position.z);
+  //ROS_INFO_STREAM("Recognizer result pose: " << newObject.result.pose.pose.position.x << ", " << newObject.result.pose.pose.position.y <<
+  //  ", " << newObject.result.pose.pose.position.z);
+  
   // for(TypeMap::iterator it = probs.begin(); it != probs.end(); ++it) {
   //   ROS_INFO_STREAM("actual probs value: " << it->first.name.c_str() << ": " << it->second.prob << "; " << it->second.pose.translation()(0) << ", " << it->second.pose.translation()(3) << ", " << it->second.pose.translation()(3));
   // }
@@ -615,7 +616,7 @@ void Recognizer::addMarker(WorldObjectPtr wo)
 
   tf::Pose originalPose;
   tf::poseEigenToTF (wo->getBestPose(), originalPose);
-  ROS_INFO("Recognizer marker pos: %f %f %f", originalPose.getOrigin().x(), originalPose.getOrigin().y(),  originalPose.getOrigin().z());
+  //ROS_INFO("Recognizer marker pos: %f %f %f", originalPose.getOrigin().x(), originalPose.getOrigin().y(),  originalPose.getOrigin().z());
   //ROS_INFO("objPose quaternion: %f %f %f %f", rotQ.x(), rotQ.y(), rotQ.z(), rotQ.w());
   
   ros::Time now = ros::Time::now();

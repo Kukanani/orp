@@ -3,7 +3,7 @@
   <arg name="home_dir"        default="$(find orp)" />
   <arg name="sixdof_folder"   default="$(find orp)/data/sixdof" />
   <arg name="fourdof_folder"  default="$(find orp)/data/fourdof" />
-  <arg name="list"            default="$(arg home_dir)/cfg/test_all.list" />
+  <arg name="list"            default="cfg/test_1.list" />
   <arg name="openni"          default="false"/>
   <arg name="openni2"         default="true"/>
   <arg name="realsense"       default="false"/>
@@ -13,17 +13,12 @@
   <arg name="fourdof"         default="false"/>
   <arg name="sixdof"          default="true"/>
 
-  <rosparam command="load" file="$(arg home_dir)/cfg/sia5_demo.yaml" />
-  <rosparam command="load" file="$(arg home_dir)/cfg/shelves_absolute.yaml" />
 
   <!-- DATA -->
   <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
   <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">  </include>
   <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
-  <remap from="/camera/depth_registered/points" to="/camera/depth/points" />
-
-  <node pkg = "amazon_challenge" type="load_item_params.py" name="$(anon orp_load_item_params)" args="$(find amazon_challenge)/scripts/APC.sqlite" output="screen" respawn="false" />
 
   <!-- CLASSIFICATION -->
 
@@ -53,7 +48,7 @@
     name    = "sixdof_classifier"
     pkg     = "orp"
     type    = "sixdof_classifier"
-    args    = "$(arg sixdof_folder) $(arg list)"
+    args    = "$(arg sixdof_folder) $(arg home_dir)/$(arg list)"
 
     respawn = "true"
     output  = "screen"
@@ -64,7 +59,7 @@
     name    = "fourdof_classifier"
     pkg     = "orp"
     type    = "cvfh_classifier"
-    args    = "$(arg fourdof_folder) $(arg list)"
+    args    = "$(arg fourdof_folder) $(arg home_dir)/$(arg list)"
 
     respawn = "true"
     output  = "screen"
@@ -84,7 +79,7 @@
     name    = "recognizer"
     pkg     = "orp"
     type    = "recognizer"
-    args    = "$(arg list)"
+    args    = "$(arg home_dir)/$(arg list)"
 
     respawn = "true"
     output  = "screen"
@@ -112,4 +107,5 @@
     output  = "screen"
   />
 
+  <rosparam command="load" file="$(arg home_dir)/cfg/default.yaml" />
 </launch>

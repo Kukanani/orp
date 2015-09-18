@@ -29,8 +29,9 @@ int main(int argc, char **argv)
 } //main
 
 SixDOFClassifier::SixDOFClassifier(ros::NodeHandle nh, std::string dataFolder, std::string path):
-  Classifier(nh, 10000, "sixdof", path, dataFolder, ".cvfh")
+  Classifier(nh, 10000, "sixdof", path, dataFolder, ".cvfh"), minCloudSize(10)
 {
+  subscribe();
 } //SixDOFClassifier
 
 bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &sixdof) {
@@ -94,19 +95,28 @@ bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVect
 double testLast = 0; // used for debug testing
 
 void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
-  //ROS_INFO("camera callback");
+  //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
+  if(cloud.width < minCloudSize) {
+    return;
+  }
+
+  orp::ClassificationResult classRes;
+
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
   //ROS_INFO("SixDOF classifier calling segmentation");
   segmentationClient.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
   //ROS_INFO("SixDOF classifier finished calling segmentation");
-
-  orp::ClassificationResult classRes;
-
   //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);
 
   for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
+    //ROS_INFO("Processing one cloud");
+    if(eachCloud->width < 3) {
+      ROS_INFO("Cloud too small!");
+      continue;
+    }
+    //ROS_INFO("cloud acceptable size");
     pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
     pcl::fromROSMsg(*eachCloud, *thisCluster);
 
@@ -133,19 +143,26 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     histogram.second.resize(308);
 
     for (size_t i = 0; i < 308; ++i) {
+      //ROS_INFO_STREAM("" << i << ": " << cvfhs->points[0].histogram[i]);
       histogram.second[i] = cvfhs->points[0].histogram[i];
       //does the fact that we only look at index 0 here matter? I think it might.
     }
 
-    int numNeighbors = 5;
+    int numNeighbors = 2;
     //KNN classification find nearest neighbors based on histogram
-    int numFound = nearestKSearch (*kIndex, histogram, numNeighbors, kIndices, kDistances);
+    int numFound = 0;
+
+    //ROS_INFO("Nearest K search start");
+    numFound = nearestKSearch (*kIndex, histogram, numNeighbors, kIndices, kDistances);
+    //ROS_INFO("Nearest K search end");
+
+    if(numFound == 0) {
+      ROS_ERROR("KNN search found 0 nearby feature vectors");
+    }
 
     int limit = std::min<int>(numNeighbors, numFound);
-    
+
     for(int j=0; j<limit; j++) {
-      // ROS_INFO("SixDOF: Dist(%s@%.2f): %f", subModels.at(kIndices[0][j]).first.dataName.c_str(),
-        // subModels.at(kIndices[0][j]).first.angle, kDistances[0][j]);
       ROS_DEBUG("SixDOF: Dist(%s@%.2f): %f", subModels.at(kIndices[0][j]).first.name.c_str(),
         subModels.at(kIndices[0][j]).first.angle, kDistances[0][j]);
     }
@@ -176,21 +193,24 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     std::vector<float> angles;
     alignment.computeRollAngle(*clusterCRH, *viewCRH, angles);
    
+    Eigen::Affine3d finalPose;
     if (angles.size() == 0)
     {
-      ROS_ERROR("No angles correlated! not detecting this object.");
+      ROS_WARN("No angles correlated.");
+      finalPose(0,3) = clusterCentroid(0)+viewCentroid(0);
+      finalPose(1,3) = clusterCentroid(1)+viewCentroid(1);
+      finalPose(2,3) = clusterCentroid(2)+viewCentroid(2);
     }
     else {
       //ROS_INFO("list of correlations:");
-      for(int k = 0; k < angles.size(); k++) {
+      //for(int k = 0; k < angles.size(); k++) {
         //ROS_INFO_STREAM("\t" << angles[k] << "degrees");
-      }
-      Eigen::Affine3d finalPose;
+      //}
       finalPose(0,3) = clusterCentroid(0)+viewCentroid(0);
       finalPose(1,3) = clusterCentroid(1)+viewCentroid(1);
       finalPose(2,3) = clusterCentroid(2)+viewCentroid(2);
 
-      // CRH rotation:
+      // CRH rotation
       
       // get the rotation vector - just the vector to the centroid in object space
       //Eigen::Vector3d rotVec = Eigen::Vector3d(finalPose(0,3), finalPose(1,3), finalPose(2,3));
@@ -198,11 +218,7 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       rotVec.normalize();
       //ROS_INFO_STREAM("rotation vector for CRH: " << finalPose(0,3) << ", " << finalPose(1,3) << ", " << finalPose(2,3));
       
-      // get the rotation amount from CRH and convert from degrees to radians
       double radRotationAmount = 2*M_PI - angles.at(0) * M_PI/180;
-      //radRotationAmount = testLast;
-      //testLast -= 0.2;
-      //ORPUtils::attemptToReloadDoubleParam(n, "/testrotation", radRotationAmount);
       //ROS_INFO_STREAM("rotation amount = " << radRotationAmount);
       
       // create a quaternion that represents rotation around an axis
@@ -214,29 +230,20 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       // rotate the object using the quaternion.
       Eigen::Affine3d crhRot; crhRot = Eigen::Affine3d(Eigen::AngleAxisd(radRotationAmount, rotVec));
       finalPose.linear() = rotMat;
-      finalPose.linear() *= subModels.at(kIndices[0][0]).first.pose.linear();
-
-      classRes.result.label = subModels.at(kIndices[0][0]).first.name;
-      tf::poseEigenToMsg(finalPose, classRes.result.pose.pose);
-      
-
-      /*}
-      else { //if nothing matches well enough, return "unknown"
-        ROS_ERROR("not within threshold, distance was %f", kDistances[0][0]);
-        classRes.result.label = "unknown";
-        classRes.result.pose.pose.position.x = clusterCentroid(0);
-        classRes.result.pose.pose.position.y = clusterCentroid(1);
-        classRes.result.pose.pose.position.z = clusterCentroid(2);
-      }*/
-
-      classRes.method = "sixdof";
-      // ROS_INFO("SixDOF: position is %f %f %f",
-      //   classRes.result.pose.pose.position.x,
-      //   classRes.result.pose.pose.position.y,
-      //   classRes.result.pose.pose.position.z);
-      classificationPub.publish(classRes);
     }
-    delete[] kIndices.ptr();
-    delete[] kDistances.ptr();
+
+    finalPose.linear() *= subModels.at(kIndices[0][0]).first.pose.linear();
+
+    classRes.result.label = subModels.at(kIndices[0][0]).first.name;
+    tf::poseEigenToMsg(finalPose, classRes.result.pose.pose);
+
+    classRes.method = "sixdof";
+    // ROS_INFO("SixDOF: position is %f %f %f",
+    //   classRes.result.pose.pose.position.x,
+    //   classRes.result.pose.pose.position.y,
+    //   classRes.result.pose.pose.position.z);
+    classificationPub.publish(classRes);
   }
+  delete[] kIndices.ptr();
+  delete[] kDistances.ptr();
 } //classify*/
