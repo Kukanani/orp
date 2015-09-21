@@ -76,7 +76,7 @@ bool compareClusterSize(const sensor_msgs::PointCloud2& a, const sensor_msgs::Po
 
 bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     orp::Segmentation::Response &response) {
-  ROS_DEBUG("segmenting...");
+  ROS_DEBUG("Segmenting...");
   inputCloud = PCP(new PC());
   processCloud = PCP(new PC());
   inputCloud->points.clear();
@@ -101,22 +101,22 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     pc2_message.header.frame_id = req.scene.header.frame_id;
   //}
 
-  if(inputCloud->points.size() <= 0) {
-    ROS_INFO("incoming point cloud is empty. Finishing");
+  if(inputCloud->points.size() <= minClusterSize) {
+    ROS_INFO("Segmentation point cloud is too small.");
     return false;
   }
 
-  ROS_INFO("%d points remain in dataset before spatial/voxel filtering (%f).",
-    (int) inputCloud->points.size(), voxelLeafSize);
-  ROS_INFO_STREAM("The first point in the cloud is " << inputCloud->points.front().x << ", " << inputCloud->points.front().y << ", " << inputCloud->points.front().z);
+  //ROS_INFO("%d points remain in dataset before spatial/voxel filtering (%f).",
+  //  (int) inputCloud->points.size(), voxelLeafSize);
+  //ROS_INFO_STREAM("The first point in the cloud is " << inputCloud->points.front().x << ", " << inputCloud->points.front().y << ", " << inputCloud->points.front().z);
 
   //clip
   int preVoxel = inputCloud->points.size();
   *inputCloud = *(clipByDistance(inputCloud, minX, maxX, minY, maxY, minZ, maxZ));
   *inputCloud = *(voxelGridify(inputCloud, voxelLeafSize));
 
-  ROS_INFO("%d points remain in dataset after spatial/voxel filtering (%f).",
-    (int) inputCloud->points.size(), voxelLeafSize);
+  //ROS_INFO("%d points remain in dataset after spatial/voxel filtering (%f).",
+  //  (int) inputCloud->points.size(), voxelLeafSize);
 
   if(inputCloud->points.size() > 0 && inputCloud->points.size() < preVoxel) {
 
@@ -141,23 +141,8 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
   } else {
     ROS_WARN_STREAM("not clustering filtered point cloud containing " << inputCloud->points.size() << " points.");
   }
-  ROS_INFO("segmentation call finished");
+  // ROS_INFO("segmentation call finished");
   return true;
-
-  /*if(inputCloud->points.size() > 0) {
-    std::vector<sensor_msgs::PointCloud2> clusters = cluster(inputCloud, clusterTolerance,
-        minClusterSize, maxClusterSize);
-    int count = 0;
-      ROS_INFO("publishing clouds...");
-    for(std::vector<sensor_msgs::PointCloud2>::iterator cluster = clusters.begin();
-        cluster != clusters.end() && count < maxClusters; ++cluster)
-    {
-      ROS_INFO("publishing a cloud");
-      pcl::toROSMsg(*inputCloud, pc2_message);
-      clustersPublisher.publish(pc2_message);
-      count++;
-    }
-  }*/
 } //processSegmentation
 
 
@@ -165,8 +150,8 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
     float minX, float maxX, float minY, float maxY, float minZ, float maxZ) {
 
   processCloud->resize(0);
-  ROS_INFO("Spatial filtering. Bounds are %f - %f, %f - %f, %f - %f", 
-    minX, maxX, minY, maxY, minZ, maxZ);
+  //ROS_INFO("Spatial filtering. Bounds are %f - %f, %f - %f, %f - %f", 
+ //   minX, maxX, minY, maxY, minZ, maxZ);
 
   // We must build a condition.
   // And "And" condition requires all tests to check true. "Or" conditions also available.

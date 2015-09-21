@@ -1,13 +1,14 @@
 #include "orp/core/classifier.h"
 
 Classifier::Classifier(ros::NodeHandle nh, float thresh, std::string _name,
-  std::string _path, std::string folder, std::string fileExt) :
+  std::string _path, std::string folder, std::string fileExt, bool _autostart) :
     n(nh),
     name(_name),
     dataFolder(folder),
     path(_path),
     fileExtension(fileExt),
-    threshold(thresh)
+    threshold(thresh),
+    autostart(_autostart)
 {
 } //Classifier
 
@@ -18,6 +19,7 @@ Classifier::Classifier(const Classifier& other) {
   path = other.path;
   fileExtension = other.fileExtension;
   threshold = other.threshold;
+  autostart = other.autostart;
   //may have to add other copies here 
 }
 
@@ -79,8 +81,10 @@ void Classifier::init() {
   startSub = n.subscribe("orp_start_recognition", 1, &Classifier::cb_subscribe, this);
   stopSub = n.subscribe("orp_stop_recognition", 1, &Classifier::cb_unsubscribe, this);
 
-  //ROS_INFO("Beginning classification");
-  //subscribe();
+  if(autostart) {
+    ROS_INFO("Autostarting classification");
+    subscribe();
+  }
 } //Classifier
 
 Classifier::~Classifier() {
@@ -195,7 +199,7 @@ void Classifier::loadModelsRecursive(
       ROS_INFO("NOT traversing into directory %s.", ss.str().c_str());
       //loadFeatureModels (it->path(), extension, loadedModels);
     }
-    if(boost::filesystem::is_regular_file(it->status()) && boost::filesystem::extension(it->path()) == ".cvfh") {
+    if(boost::filesystem::is_regular_file(it->status()) && boost::filesystem::extension(it->path()) == extension) {
       FeatureVector m;
       boost::regex pattern("");
       boost::cmatch what;
@@ -207,13 +211,16 @@ void Classifier::loadModelsRecursive(
           if (loadHist(it->path(), m)) {
             loadedModels.push_back(m);
           } else {
-            //ROS_INFO("histogram loader rejected this file");
+            //ROS_INFO_STREAM("histogram loader rejected file " << it->path().filename().string().c_str());
           }
         }
         else {
           //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
         }
       }
+    }
+    else {
+      //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
     }
   }
 } //loadModelsRecursive

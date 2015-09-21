@@ -14,24 +14,28 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   if(argc < 3) {
-    ROS_FATAL("proper usage is 'sixdof_classifier data_directory object_list_file");
+    ROS_FATAL("proper usage is 'sixdof_classifier data_directory object_list_file [autostart]");
     return -1;
   }
   std::string directory = argv[1];
   std::string listFile = argv[2];
+  bool autostart = false;
+  if(argc >= 4) {
+    if(std::string(argv[3])  == "true") autostart = true;
+  }
 
   ROS_INFO("Starting SixDOF Classifier");
-  SixDOFClassifier v(n, directory, listFile);
+  SixDOFClassifier v(n, directory, listFile, autostart);
   v.init();
 
   ros::spin();
   return 1;
 } //main
 
-SixDOFClassifier::SixDOFClassifier(ros::NodeHandle nh, std::string dataFolder, std::string path):
-  Classifier(nh, 10000, "sixdof", path, dataFolder, ".cvfh"), minCloudSize(10)
+SixDOFClassifier::SixDOFClassifier(ros::NodeHandle nh, std::string dataFolder, std::string path, bool autostart):
+  Classifier(nh, 10000, "sixdof", path, dataFolder, ".cvfh", autostart)
 {
-  subscribe();
+
 } //SixDOFClassifier
 
 bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &sixdof) {
@@ -96,10 +100,6 @@ double testLast = 0; // used for debug testing
 
 void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
-  if(cloud.width < minCloudSize) {
-    return;
-  }
-
   orp::ClassificationResult classRes;
 
   orp::Segmentation seg_srv;
@@ -243,7 +243,9 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     //   classRes.result.pose.pose.position.y,
     //   classRes.result.pose.pose.position.z);
     classificationPub.publish(classRes);
+
+    delete[] kIndices.ptr();
+    delete[] kDistances.ptr();
   }
-  delete[] kIndices.ptr();
-  delete[] kDistances.ptr();
-} //classify*/
+  //ROS_INFO("classification call over");
+} //classify

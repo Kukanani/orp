@@ -3,15 +3,19 @@
   <arg name="home_dir"        default="$(find orp)" />
   <arg name="sixdof_folder"   default="$(find orp)/data/sixdof" />
   <arg name="fourdof_folder"  default="$(find orp)/data/fourdof" />
+  <arg name="cph_folder"      default="$(find orp)/data/cph" />
   <arg name="list"            default="cfg/test_1.list" />
   <arg name="openni"          default="false"/>
-  <arg name="openni2"         default="true"/>
+  <arg name="openni2"         default="false"/>
   <arg name="realsense"       default="false"/>
   <arg name="recognitionview" default="false"/>
   <arg name="sim"             default="false"/>
 
   <arg name="fourdof"         default="false"/>
-  <arg name="sixdof"          default="true"/>
+  <arg name="sixdof"          default="false"/>
+  <arg name="cph"             default="false"/>
+
+  <arg name="autostart"       default="true"/>
 
 
   <!-- DATA -->
@@ -44,11 +48,22 @@
   />
 
   <node
+    if      = "$(arg cph)"
+    name    = "cph_classifier"
+    pkg     = "orp"
+    type    = "cph_classifier"
+    args    = "$(arg cph_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
     if      = "$(arg sixdof)"
     name    = "sixdof_classifier"
     pkg     = "orp"
     type    = "sixdof_classifier"
-    args    = "$(arg sixdof_folder) $(arg home_dir)/$(arg list)"
+    args    = "$(arg sixdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
 
     respawn = "true"
     output  = "screen"
@@ -59,29 +74,21 @@
     name    = "fourdof_classifier"
     pkg     = "orp"
     type    = "cvfh_classifier"
-    args    = "$(arg fourdof_folder) $(arg home_dir)/$(arg list)"
+    args    = "$(arg fourdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
 
     respawn = "true"
     output  = "screen"
   />
 
   <!-- CONDUCTOR -->
-  <node
-    name    = "shelf_manager"
-    pkg     = "orp"
-    type    = "shelf_manager"
-
-    respawn = "true"
-    output  = "screen"
-  />
 
   <node
     name    = "recognizer"
     pkg     = "orp"
     type    = "recognizer"
-    args    = "$(arg home_dir)/$(arg list)"
+    args    = "$(arg home_dir)/$(arg list) $(arg autostart)"
 
-    respawn = "true"
+    required= "true"
     output  = "screen"
   />
 
@@ -108,4 +115,14 @@
   />
 
   <rosparam command="load" file="$(arg home_dir)/cfg/default.yaml" />
+
+  <node
+    name    = "dynparam"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set camera/driver depth_registration true"
+
+    respawn = "false"
+    output  = "screen"
+  />
 </launch>

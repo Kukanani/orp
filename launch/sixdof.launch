@@ -1,0 +1,11 @@
+<launch>
+	
+	<include file="$(find orp)/launch/orp.launch">
+ 		<arg name="openni2"          value="true"/>
+ 		<arg name="sixdof"           value="true"/>
+ 		<arg name="recognitionview"  value="true"/>
+ 		<arg name="list"             value="cfg/sixdof.list"/>
+ 		<arg name="autostart"        value="true"/>
+	</include>
+
+</launch>

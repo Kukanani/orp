@@ -65,6 +65,7 @@ private:
   tf::Transformer* objectTransformer;          /// transform object poses from one frame to another
   ros::ServiceServer objectPoseServer;  /// Provides poses for requested objects.
 
+  bool autostart;                       /// if true, begin the recognition loop automatically (auto-subscribe to classification)
   ros::Subscriber startSub;             /// to start recognition loop
   ros::Subscriber stopSub;              /// to stop recognition loop
 
@@ -225,8 +226,9 @@ public:
    * Main Recognizer constructor.
    * @arg nh The NodeHandle to use for all ROS functionality.
    * @arg sensorModelFile the CPH sensor model file
+   * @arg autostart whether or not to start recognition automatically. Default is false (wait for a message to be published to /orp_start_recognition)
    */
-  Recognizer(ros::NodeHandle nh, std::string sensorModelFile);
+  Recognizer(ros::NodeHandle nh, std::string sensorModelFile, bool autostart = false);
   /**
    * Main Recognizer destructor
    */

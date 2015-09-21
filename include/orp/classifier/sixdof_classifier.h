@@ -25,13 +25,11 @@
 class SixDOFClassifier : public Classifier {
 protected:
   tf::TransformListener listener;
-
-  int minCloudSize;
 public:
   /**
    * Constructor
    */
-  SixDOFClassifier(ros::NodeHandle nh,  std::string directory, std::string path);
+  SixDOFClassifier(ros::NodeHandle nh,  std::string directory, std::string path, bool autostart = false);
   
   /**
    * Load one histogram from a file, as long as it matches the known list of objects.

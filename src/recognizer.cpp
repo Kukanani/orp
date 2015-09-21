@@ -14,12 +14,18 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   if(argc < 2) {
-    ROS_FATAL("proper usage is 'recognizer sensor_model_file");
+    ROS_FATAL("proper usage is 'recognizer sensor_model_file [autostart]");
     return -1;
   }
+  bool autostart = false;
   std::string listFile = argv[1];
+  if(argc >= 3) {
+    if(std::string(argv[2]) == "true") {
+      autostart = true;
+    }
+  }
   ROS_INFO("Starting Recognizer");
-  Recognizer s(n, listFile);
+  Recognizer s(n, listFile, autostart);
 
   ros::spin();
   return 1;
@@ -27,8 +33,9 @@ int main(int argc, char **argv)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-Recognizer::Recognizer(ros::NodeHandle nh, std::string sensorModelFile) :
+Recognizer::Recognizer(ros::NodeHandle nh, std::string sensorModelFile, bool _autostart) :
     n(nh),
+    autostart(_autostart),
     colocationDist(0.01),
     typeManager(0),
     recognitionFrame("camera_depth_optical_frame"),
@@ -79,9 +86,12 @@ Recognizer::Recognizer(ros::NodeHandle nh, std::string sensorModelFile) :
   ROS_INFO("initializing sensor model");
   initializeBayesSensorModel(sensorModelFile);
 
-  //startRecognition();
-
   fillMarkerStubs();
+
+  if(autostart) {
+    ROS_INFO("Autostarting recognition");
+    startRecognition();
+  }
 } //Recognizer constructor
 
 Recognizer::~Recognizer()

@@ -215,7 +215,7 @@ void WorldObject::setProbabilityOf(std::string wotName, float prob, Eigen::Affin
 
 float WorldObject::getProbabilityOf(WorldObjectType wot)
 {
-  ROS_INFO_STREAM("getProbabilityOf(" << wot.name << ") = " << types[wot].prob);
+  //ROS_INFO_STREAM("getProbabilityOf(" << wot.name << ") = " << types[wot].prob);
   return types[wot].prob; //returns MIN_PROB if has to create a new value
 } //getProbabilityOf
 
@@ -653,7 +653,7 @@ bool WorldObjectBayesKalman::mergeIn(WorldObject* other) {
     // ROS_INFO_STREAM("Pose begins at " << get4DOFPose());
 
     //Kalman pose/position update.
-     ROS_INFO_STREAM("Error covariance projection sigma = " << sigma);
+    // ROS_INFO_STREAM("Error covariance projection sigma = " << sigma);
 
     //noise covariance vector, R_k in literature
     Eigen::Matrix4d R_k;

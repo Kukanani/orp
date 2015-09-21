@@ -53,7 +53,7 @@ typedef std::vector<FeatureVector, Eigen::aligned_allocator<FeatureVector> > Fea
  * Given incoming point clouds, a classifier will generate a best guess
  * as to the result and publish that result to a topic. It is designed
  * to compare against feature vectors that have been previously saved
- * in a file, with a dofferent feature vector for each object pose.
+ * in a file, with a different feature vector for each object pose.
  *
  * @version 1.0
  * @ingroup objectrecognition
@@ -76,6 +76,7 @@ protected:
   flann::Matrix<float> kDistances;              /// The resulting distances for the knn search.
   flann::Matrix<float>* kData;                  /// The data for the knn search.
 
+  bool autostart;                               /// If true, then classifier will automatically subscribe to depth data and begin producing classifications.
   float threshold;                              /// knn distance threshold
   std::string name;                             /// classifier type (cph, vfh, etc.)
   std::string dataFolder;                       /// folder to load feature vectors from
@@ -158,7 +159,8 @@ public:
     std::string _name,
     std::string path,
     std::string dataFolder,
-    std::string fileExt);
+    std::string fileExt,
+    bool autostart = false);
 
   Classifier(const Classifier& other);
 
