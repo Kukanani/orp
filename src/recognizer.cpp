@@ -592,7 +592,7 @@ void Recognizer::publishROS()
     tf::poseEigenToTF((**it).getBestPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
 
-    newObject.pose.header.frame_id = recognitionFrame;
+    newObject.pose.header.frame_id = "world";
     objectMsg.objects.insert(objectMsg.objects.end(), newObject);
   }
 
@@ -632,7 +632,7 @@ void Recognizer::addMarker(WorldObjectPtr wo)
   ros::Time now = ros::Time::now();
 
   visualization_msgs::Marker labelMarker;
-  labelMarker.header.frame_id    = recognitionFrame;
+  labelMarker.header.frame_id    = "world"; //FIXME
   labelMarker.header.stamp       = now;
   labelMarker.type               = visualization_msgs::Marker::TEXT_VIEW_FACING;
   labelMarker.action             = visualization_msgs::Marker::ADD;
@@ -658,6 +658,7 @@ void Recognizer::addMarker(WorldObjectPtr wo)
   objMarker.color.g = markerGreen;
   objMarker.color.b = markerBlue;
   objMarker.color.a = markerAlpha*0.5;
+  objMarker.header.frame_id = "world"; //FIXME
 
   tf::Transform transform = originalPose;
   //objectBroadcaster->sendTransform(tf::StampedTransform(transform, ros::Time::now(), recognitionFrame, wo->getBestType().name));

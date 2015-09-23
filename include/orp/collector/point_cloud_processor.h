@@ -21,7 +21,7 @@
 #include "orp/core/orp_utils.h"
 
 /**
- * @brief A pipeline for doing arbitrary transformations on pcd files.
+ * @brief A pipeline for doing arbitrary transformations (batch processing) on pcd files.
  *
  *
  * @version 1.0
@@ -41,7 +41,7 @@ public:
   bool bigBird;                         //true if using bigbird dataset, true by default.
 
   ros::ServiceClient histogram_client;  ///Used to send point clouds off for file processing.
-  orp::SaveCloud srv;              ///the message to send to the histogram client
+  orp::SaveCloud srv;                   ///the message to send to the histogram client
 
   /**
    * Constructor

@@ -1,9 +1,9 @@
 <launch>
   <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
   <arg name="home_dir"        default="$(find orp)" />
-  <arg name="sixdof_folder"   default="$(find orp)/data/sixdof" />
-  <arg name="fourdof_folder"  default="$(find orp)/data/fourdof" />
-  <arg name="cph_folder"      default="$(find orp)/data/cph" />
+  <arg name="sixdof_folder"   default="data/sixdof" />
+  <arg name="fourdof_folder"  default="data/fourdof" />
+  <arg name="cph_folder"      default="data/cph" />
   <arg name="list"            default="cfg/test_1.list" />
   <arg name="openni"          default="false"/>
   <arg name="openni2"         default="false"/>
@@ -27,11 +27,10 @@
   <!-- CLASSIFICATION -->
 
   <node
-    if      = "$(arg sim)"
-    name    = "dummy_frame_broadcaster"  
-    pkg     = "orp"
-    type    = "dummy_frame_broadcaster"
-    args    = "base_link camera_link 0 0 0 0 0 0"
+    name    = "static_transform_publisher"  
+    pkg     = "tf"
+    type    = "static_transform_publisher"
+    args    = "0 0 0.5 0 0.85 0 world camera_link 100"
 
     respawn = "true"
     output  = "screen"
@@ -52,7 +51,7 @@
     name    = "cph_classifier"
     pkg     = "orp"
     type    = "cph_classifier"
-    args    = "$(arg cph_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+    args    = "$(arg home_dir)/$(arg cph_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
 
     respawn = "true"
     output  = "screen"
@@ -63,7 +62,9 @@
     name    = "sixdof_classifier"
     pkg     = "orp"
     type    = "sixdof_classifier"
-    args    = "$(arg sixdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+    args    = "$(arg home_dir)/$(arg sixdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+
+    launch-prefix="xterm -e gdb --args"
 
     respawn = "true"
     output  = "screen"
@@ -74,7 +75,7 @@
     name    = "fourdof_classifier"
     pkg     = "orp"
     type    = "cvfh_classifier"
-    args    = "$(arg fourdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+    args    = "$(arg home_dir)/$(arg fourdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
 
     respawn = "true"
     output  = "screen"

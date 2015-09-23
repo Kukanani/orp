@@ -10,7 +10,7 @@ PanDataCollector::PanDataCollector(ros::NodeHandle nh)  {
 			&PanDataCollector::rotate_cb,
 			this);
 	//call services
-	pan_client = n.serviceClient<orp::SaveCloud>("save_cloud");
+	pan_client = n.serviceClient<orp::SaveCloud>("/save_cloud");
 
 	//make a topic
 	panCommandPublisher    = n.advertise<std_msgs::Int32>("/pan_command",1);
@@ -52,8 +52,5 @@ bool PanDataCollector::rotate_cb(orp::DataCollect::Request& req,
 		loop_rate.sleep();
 		command.data += req.delta;
 	}
-
-	res.result = 1;
-	ROS_INFO("Status: %d", srv.response.result);
 	return true;
 }

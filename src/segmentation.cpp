@@ -2,7 +2,7 @@
 
 Segmentation::Segmentation() :
   node("segmentation"),
-  transformToFrame(""),
+  transformToFrame("world"), //FIXME
   listener(),
   spinner(4),
   maxClusters(100)
@@ -76,6 +76,11 @@ bool compareClusterSize(const sensor_msgs::PointCloud2& a, const sensor_msgs::Po
 
 bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     orp::Segmentation::Response &response) {
+  if(req.scene.height * req.scene.width < 3) {
+    ROS_DEBUG("Not segmenting cloud, it's too small.");
+    return false;
+  }
+
   ROS_DEBUG("Segmenting...");
   inputCloud = PCP(new PC());
   processCloud = PCP(new PC());
@@ -88,18 +93,18 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
 
   //ROS_INFO("segmentation: going from %s to %s", req.scene.header.frame_id.c_str(), transformToFrame.c_str());
 
-  // if(transformToFrame != "" && 
-  //   listener.waitForTransform(req.scene.header.frame_id, transformToFrame, req.scene.header.stamp, ros::Duration(0.5)))
-  // {
-  //   pcl_ros::transformPointCloud (transformToFrame, req.scene, transformedMessage, listener);
-  //   pcl::fromROSMsg(transformedMessage, *inputCloud);
-  //   //pc2_message.header.frame_id = transformToFrame;
-  // }
-  //else {
-    //ROS_WARN_THROTTLE(60, "Segmentation: listen for transformation to %s timed out. Proceeding...", transformToFrame.c_str());
+  if(transformToFrame != "" && 
+    listener.waitForTransform(req.scene.header.frame_id, transformToFrame, req.scene.header.stamp, ros::Duration(0.5)))
+  {
+    pcl_ros::transformPointCloud (transformToFrame, req.scene, transformedMessage, listener);
+    pcl::fromROSMsg(transformedMessage, *inputCloud);
+    //pc2_message.header.frame_id = transformToFrame;
+  }
+  else {
+    ROS_WARN_THROTTLE(60, "Segmentation: listen for transformation to %s timed out. Proceeding...", transformToFrame.c_str());
     pcl::fromROSMsg(req.scene, *inputCloud);
     pc2_message.header.frame_id = req.scene.header.frame_id;
-  //}
+  }
 
   if(inputCloud->points.size() <= minClusterSize) {
     ROS_INFO("Segmentation point cloud is too small.");

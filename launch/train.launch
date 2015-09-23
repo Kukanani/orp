@@ -1,0 +1,84 @@
+<launch>
+  <arg name="home_dir"        default="$(find orp)" />
+  <arg name="openni"          default="false"/>
+  <arg name="openni2"         default="false"/>
+  <arg name="realsense"       default="false"/>
+  
+  <!-- DATA -->
+  <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
+  <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">  </include>
+  <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
+
+  <node
+    name    = "static_transform_publisher"  
+    pkg     = "tf"
+    type    = "static_transform_publisher"
+    args    = "0 0 0.5 0 0.85 0 world camera_link 100"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
+    name="segmentation"
+    pkg="orp"
+    type="segmentation"
+    args=""
+
+    respawn="true"
+    output="screen"
+  />
+  <node
+    name="histogram_saver"
+    pkg="orp"
+    type="histogram_saver"
+    args="$(arg home_dir)/$(arg data_folder)"
+
+    respawn="true"
+    output="screen"
+  />
+  <node
+    name="pan_data_collector"
+    pkg="orp"
+    type="pan_data_collector"
+    args=""
+
+    respawn="true"
+    output="screen"
+  />
+  <include
+    file="$(find orp)/launch/pan_table.launch"
+  />
+
+
+
+  <node
+    name    = "rqt_reconfigure"
+    pkg     = "rqt_reconfigure"
+    type    = "rqt_reconfigure"
+    args    = ""
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "rviz"
+    pkg     = "rviz"
+    type    = "rviz"
+    args    = "-s $(arg home_dir)/rviz/splash.png"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "dynparam"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set camera/driver depth_registration true"
+
+    respawn = "false"
+    output  = "screen"
+  />
+</launch>

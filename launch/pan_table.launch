@@ -1,0 +1,12 @@
+<launch>
+  <!-- PAN TABLE -->
+  <node
+    name="arduino_interface"
+    pkg="rosserial_python"
+    type="serial_node.py"
+    args="/dev/ttyACM0" 
+    
+    output="screen"
+    required="true"
+  />
+</launch>

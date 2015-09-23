@@ -1,10 +1,14 @@
 <launch>
 	
+	<arg name="data_folder" default="data" />
+	<arg name="list" default="cfg/sixdof.list" />
+
 	<include file="$(find orp)/launch/orp.launch">
  		<arg name="openni2"          value="true"/>
  		<arg name="sixdof"           value="true"/>
  		<arg name="recognitionview"  value="true"/>
- 		<arg name="list"             value="cfg/sixdof.list"/>
+ 		<arg name="sixdof_folder"    value="$(arg data_folder)"/>
+ 		<arg name="list"             value="$(arg list)"/>
  		<arg name="autostart"        value="true"/>
 	</include>
 

@@ -242,4 +242,28 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   fileName_ss << outDir << "sixdof/" << name << "_" << num << ".crh";
   ROS_INFO_STREAM("Writing 6DOF CRH to '" << fileName_ss.str().c_str() << "'...");
   pcl::io::savePCDFile(fileName_ss.str(), *histogram); 
+
+
+  Eigen::Vector4f cloudCentroid;
+  pcl::compute3DCentroid(*cluster, cloudCentroid);
+
+  std::stringstream stream;
+  stream << outDir << "sixdof/" << name << "_" << num << ".mat4";
+  Eigen::Matrix4f poseMatrix;
+  poseMatrix(0,3) -= cloudCentroid(0);
+  poseMatrix(1,3) -= cloudCentroid(1);
+  poseMatrix(2,3) -= cloudCentroid(2);
+  ORPUtils::saveEigenMatrix4f(stream.str(), poseMatrix);
+  stream.str("");
+  stream.clear();
+
+
+  stream << outDir << "sixdof/" << name << "_" << angle << ".pcd";
+  char thepath3[500];
+  realpath(fileName_ss.str().c_str(), thepath3);
+
+  //Write raw pcd file (objecName_angle.pcd)
+  ROS_INFO_STREAM("writing raw cloud to file '" << thepath3 << "'");
+  pcl::io::savePCDFile(thepath3, *cluster);
+  ROS_DEBUG("done");
 } //write6DOF

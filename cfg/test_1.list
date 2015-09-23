@@ -1,4 +1,3 @@
-large_can medium_can small_can
-large_can     0.1 100 1 1
-medium_can    0.1 1 100 1
-small_can     0.1 1 1 100
+small_can ring
+small_can 0.1 0.9 0.1
+ring 0.1 0.1 0.9

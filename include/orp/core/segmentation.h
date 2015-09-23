@@ -224,7 +224,7 @@ public:
    * @return true if all parameters could be set.
    */
   bool reloadParams();
-
+  
   void run();
 
   //Callbacks
@@ -237,8 +237,8 @@ public:
    * @param  cloud the cloud to segment
    */
   //void cb_segment(sensor_msgs::PointCloud2 incoming);
-bool processSegmentation(orp::Segmentation::Request &req,
-    orp::Segmentation::Response &response);
+  bool processSegmentation(orp::Segmentation::Request &req,
+      orp::Segmentation::Response &response);
 }; //Segmentation
 
 #endif //_SEGMENTATION_H_

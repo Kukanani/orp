@@ -73,9 +73,10 @@ add_library(orp
 
 add_executable(recognizer src/recognizer.cpp)
 add_executable(segmentation src/segmentation.cpp)
+add_executable(point_cloud_batch_processor src/point_cloud_processor.cpp)
 
+add_executable(pan_data_collector src/pan_data_collector.cpp)
 add_executable(apc_data_collector src/apc_data_collector.cpp)
-add_executable(point_cloud_processor src/point_cloud_processor.cpp)
 add_executable(histogram_saver src/histogram_saver.cpp)
 add_executable(virtual_train src/virtual_train.cpp)
 
@@ -84,14 +85,7 @@ add_executable(vfh_classifier src/vfh_classifier.cpp)
 add_executable(cvfh_classifier src/cvfh_classifier.cpp)
 add_executable(icp_classifier src/icp_classifier.cpp)
 add_executable(sixdof_classifier src/sixdof_classifier.cpp)
-add_executable(dummy_frame_broadcaster src/dummy_frame_broadcaster.cpp)
 add_executable(vision_simulator src/vision_simulator.cpp)
-add_executable(shelf_manager src/shelf_manager.cpp)
-
-#add_executable(rgb_classifier src/rgb_classifier.cpp)
-#add_executable(icp_test src/icp_test.cpp)
-add_executable(crh_test src/crh_test.cpp)
-#add_executable(correspondence_grouping src/correspondence_grouping.cpp)
 
 ####################################################################################################
 
@@ -99,8 +93,9 @@ add_executable(crh_test src/crh_test.cpp)
 add_dependencies(recognizer ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(segmentation ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 
+add_dependencies(pan_data_collector ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(apc_data_collector ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-add_dependencies(point_cloud_processor ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+add_dependencies(point_cloud_batch_processor ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(histogram_saver ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 
@@ -109,14 +104,7 @@ add_dependencies(vfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cp
 add_dependencies(cvfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(icp_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(sixdof_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-add_dependencies(dummy_frame_broadcaster ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(vision_simulator ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-add_dependencies(shelf_manager ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-
-#add_dependencies(rgb_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-#add_dependencies(icp_test ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-add_dependencies(crh_test ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-#add_dependencies(correspondence_grouping ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 
 ####################################################################################################
 
@@ -126,8 +114,9 @@ target_link_libraries(orp ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES
 target_link_libraries(recognizer ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(segmentation ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
+target_link_libraries(pan_data_collector ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(apc_data_collector ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-target_link_libraries(point_cloud_processor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+target_link_libraries(point_cloud_batch_processor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(histogram_saver ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(virtual_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkIO.so libvtkFiltering.so)
 
@@ -136,11 +125,4 @@ target_link_libraries(vfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp 
 target_link_libraries(cvfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(icp_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(sixdof_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-target_link_libraries(dummy_frame_broadcaster ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(vision_simulator ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-target_link_libraries(shelf_manager ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-
-#target_link_libraries(rgb_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-#target_link_libraries(icp_test ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkCommon.so libvtkFiltering.so)
-target_link_libraries(crh_test ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES})
-#target_link_libraries(correspondence_grouping ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkCommon.so libvtkFiltering.so)
