@@ -1,7 +1,7 @@
 <launch>
 	
 	<arg name="data_folder" default="data" />
-	<arg name="list" default="cfg/sixdof.list" />
+	<arg name="list" default="cfg/apc_all.list" />
 
 	<include file="$(find orp)/launch/orp.launch">
  		<arg name="openni2"          value="true"/>

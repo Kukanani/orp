@@ -258,7 +258,7 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   stream.clear();
 
 
-  stream << outDir << "sixdof/" << name << "_" << angle << ".pcd";
+  stream << outDir << "sixdof/" << name << "_" << num << ".pcd";
   char thepath3[500];
   realpath(fileName_ss.str().c_str(), thepath3);
 
