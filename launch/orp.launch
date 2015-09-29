@@ -64,8 +64,6 @@
     type    = "sixdof_classifier"
     args    = "$(arg home_dir)/$(arg sixdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
 
-    launch-prefix="xterm -e gdb --args"
-
     respawn = "true"
     output  = "screen"
   />

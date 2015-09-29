@@ -182,11 +182,6 @@ private:
    */
   void publishROS();
 
-  /**
-   * Clean the list of scene markers
-   */
-  void refreshMarkers();
-
   /// Get a pre-loaded stub, or return an unknown stub if one can't be found
   std::pair<visualization_msgs::Marker, RPY> getStubAt(std::string);
 

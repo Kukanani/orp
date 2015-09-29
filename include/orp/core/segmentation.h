@@ -95,6 +95,9 @@ private:
    */
   ros::Publisher clustersPublisher;
 
+  /// Publishes the first (largest) cluster in the scene.
+  ros::Publisher clusterPublisher;
+
   tf::TransformListener listener;
   std::string transformToFrame;
   /*================================================*/

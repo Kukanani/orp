@@ -3,19 +3,19 @@
 
 int WorldObject::nextValidID = 0;
 
-WorldObject::WorldObject(WorldObjectManager* manage):
+WorldObject::WorldObject(WorldObjectManager* manage, float colocationDist):
   types(),
   lastUpdated(ros::Time::now()),
   id(nextValidID++),
   stale(false),
   manager(manage),
-  strength(1)
+  colocationDistance(colocationDist)
 {
   types.insert(TypeMap::value_type (manager->getUnknownType(), PoseGuess(std::numeric_limits<float>::min())));
   //lowest possible positive value distinguishable from 0
 } //WorldObject constructor
 
-bool WorldObject::mergeIn(WorldObject* other)
+bool WorldObject::merge(WorldObject* other)
 {
   return false;
 } //merge
@@ -253,8 +253,7 @@ void WorldObject::set4DOFPose(std::string wotName, Eigen::Vector4f thePose)
 WorldObjectBayes::WorldObjectBayes(FloatLookupTable model,
                                     float colocationDist,
                                     WorldObjectManager* manage) :
-  WorldObject(manage),
-  colocationDistance(colocationDist)
+  WorldObject(manage, colocationDist)
 {
   //ROS_INFO("creating new Bayesian world object with no inherent type");
   setSensorModel(model);
@@ -265,8 +264,7 @@ WorldObjectBayes::WorldObjectBayes(FloatLookupTable model,
 
 WorldObjectBayes::WorldObjectBayes(FloatLookupTable model, float colocationDist,
                                    WorldObjectManager* manage, orp::WorldObject classRes) :
-  WorldObject(manage),
-  colocationDistance(colocationDist)
+  WorldObject(manage, colocationDist)
 {
   //ROS_INFO("creating new Bayesian world object of type %s", classRes.label.c_str());
   setSensorModel(model);
@@ -288,8 +286,7 @@ WorldObjectBayes::WorldObjectBayes(FloatLookupTable model,
                 WorldObjectManager* manage,
                 orp::WorldObject classRes,
                 TypeMap probDistr) :
-  WorldObject(manage),
-  colocationDistance(colocationDist)
+  WorldObject(manage, colocationDist)
 {
   types = probDistr;
   setSensorModel(model);
@@ -432,15 +429,15 @@ bool WorldObjectBayes::shouldMergeWith(WorldObject* other) {
     //ROS_INFO("object %i stale. Not merging it into %i", other->getID(), getID());
     return false;
   }
-  if(other->getLastUpdated() > getLastUpdated())
-  {
-    //ROS_INFO("Switcheroo, %i to %i", getID(), other->getID());
-    other->mergeIn(this);
-    return false;
-  }
+  //if(other->getLastUpdated() > getLastUpdated())
+  //{
+  //  return false;
+  //}
 
-  //ROS_INFO("actual %f vs threshold %f", tf::tfDistance(this->getPoseTf().getOrigin(),other->getPoseTf().getOrigin()), colocationDistance);
-  if(tf::tfDistance(this->getPoseTf(getBestType().name).getOrigin(),other->getPoseTf(getBestType().name).getOrigin()) > colocationDistance)
+  float coLoc = std::max(colocationDistance, other->getColocationDist());
+
+  ROS_INFO("actual %f vs threshold %f", tf::tfDistance(this->getPoseTf(getBestType().name).getOrigin(),other->getPoseTf(getBestType().name).getOrigin()), coLoc);
+  if(tf::tfDistance(this->getPoseTf(getBestType().name).getOrigin(),other->getPoseTf(getBestType().name).getOrigin()) > coLoc)
   {
     return false;
   }
@@ -473,25 +470,25 @@ bool WorldObjectBayes::shouldMergeWith(WorldObject* other) {
   }
 
   //If we make it to this point, we're going to actually attempt a merge.
+  //ROS_INFO("Giving the go-ahead to merge");
   return true;
 } //shouldMergeWith
-
-bool WorldObjectBayes::mergeIn(WorldObject* other)
-{
-  if(!shouldMergeWith(other)) {
-    return false;
-  }
-  return merge(other);
-} //mergeIn
 
 bool WorldObjectBayes::merge(WorldObject* other) {
     //ROS_INFO("Actually performing a merge");
   WorldObjectType newBest = other->getBestType();
-  strength += other->getStrength();
+
+  colocationDistance = (colocationDistance + other->getColocationDist()) / 2.0f;
 
   if(other->getProbabilityOf(newBest) < 0.5)
   {
     ROS_ERROR("Incoming measurement is very uncertain (%f)!", other->getProbabilityOf(newBest));
+  }
+
+  //naive approach: just average the positions
+  for(TypeMap::iterator k = types.begin(); k != types.end(); k++)
+  {
+    //k->second.pose.translation() = k->second.pose.translation() + other->getPose(k->first.name).translation() / 2.0f;
   }
 
   /*float denominator = 0.0;
@@ -639,10 +636,7 @@ WorldObjectBayesKalman::WorldObjectBayesKalman(FloatLookupTable model,
   sigma(0,0) = 1000; sigma(1,1) = 1000; sigma(2,2) = 1000; sigma(3,3) = 1000;
 } //WorldObjectBayesKalman
 
-bool WorldObjectBayesKalman::mergeIn(WorldObject* other) {
-  if(!WorldObjectBayes::mergeIn(other)) {
-    return true;
-  }
+bool WorldObjectBayesKalman::merge(WorldObject* other) {
   this->types = other->getTypes();
 
   for(TypeMap::iterator it = types.begin(); it != types.end(); ++it) {
@@ -698,7 +692,7 @@ bool WorldObjectBayesKalman::mergeIn(WorldObject* other) {
     // ROS_INFO_STREAM("YXZ: " << getPose().rotation().matrix().eulerAngles(2,1,0));
   }
   return true;
-} //mergeIn
+} //merge
 
 float WorldObjectBayesKalman::subtractAngle(float angle_1, float angle_2)
 {

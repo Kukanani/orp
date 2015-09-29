@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
+#SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 project(orp)
 
 set(GCC_COVERAGE_COMPILE_FLAGS "-Wno-enum-compare -Wno-deprecated -Wformat -Wformat-extra-args")

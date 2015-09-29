@@ -9,7 +9,8 @@ Segmentation::Segmentation() :
 {
   planesPublisher = node.advertise<sensor_msgs::PointCloud2>("/dominant_plane",1);
   boundedScenePublisher = node.advertise<sensor_msgs::PointCloud2>("/bounded_scene",1);
-  clustersPublisher = node.advertise<sensor_msgs::PointCloud2>("/pre_clustering",1);
+  clusterPublisher = node.advertise<sensor_msgs::PointCloud2>("/main_object_cluster",1);
+  clustersPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
   segmentationServer = node.advertiseService("/segmentation", &Segmentation::processSegmentation, this);
   reloadParamsServer = node.advertiseService("/reload_params", &Segmentation::cb_reloadParams, this);
 
@@ -134,12 +135,13 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     //ROS_INFO("%d points remain in dataset after removing planes.", (int) inputCloud->points.size());
 
     pcl::toROSMsg(*inputCloud, pc2_message);
-    //pc2_message.header.frame_id = transformToFrame;
+    pc2_message.header.frame_id = transformToFrame;
     clustersPublisher.publish(pc2_message);
 
-    //ROS_INFO("clustering");
     response.clusters = cluster(inputCloud, clusterTolerance,
       minClusterSize, maxClusterSize);
+    ROS_INFO_STREAM("Segmentation: found " << response.clusters.size() << " clusters");
+    clusterPublisher.publish(response.clusters[0]);
     for(std::vector<sensor_msgs::PointCloud2>::iterator it = response.clusters.begin(); it != response.clusters.end(); ++it) {
       //pcl_ros::transformPointCloud (transformFromFrame, *it, *it, listener);
     }

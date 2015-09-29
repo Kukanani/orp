@@ -1,5 +1,7 @@
 #include "orp/core/recognizer.h"
 
+#include <algorithm>
+
 /**
  * Starts up the name and handles command-line arguments.
  * @param  argc num args
@@ -27,7 +29,10 @@ int main(int argc, char **argv)
   ROS_INFO("Starting Recognizer");
   Recognizer s(n, listFile, autostart);
 
-  ros::spin();
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+  ros::waitForShutdown();
+
   return 1;
 } //main
 
@@ -73,7 +78,7 @@ Recognizer::Recognizer(ros::NodeHandle nh, std::string sensorModelFile, bool _au
 
   detectionSetSub = n.subscribe(
     "/detection_set",
-    50,
+    1,
     &Recognizer::cb_detectionSet,
     this);
 
@@ -304,7 +309,7 @@ void Recognizer::initializeBayesSensorModel(std::string path)
 
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
-  //ROS_INFO("object incoming, type %s...", newObject.result.label.c_str());
+  ROS_DEBUG("object incoming, type %s...", newObject.result.label.c_str());
   tf::Stamped<tf::Pose> objPose;
   tf::poseStampedMsgToTF(newObject.result.pose, objPose);
 
@@ -403,7 +408,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 
     WorldObjectPtr p = WorldObjectPtr(
       new WorldObjectBayes(subSensorModel, 
-                                  colocationDist*2,
+                                  colocationDist,
                                   typeManager,
                                   newObject.result,
                                   probs));
@@ -419,9 +424,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   {
     ROS_ERROR("unknown classification method %s", newObject.method.c_str());
   }
-  //clean up (DELETEs markers for stale objects)
-  //ROS_INFO("killing stale...");
-  killStale();
+  ROS_DEBUG("Added object");
 } //cb_classificationResult
 
 void Recognizer::startRecognition() {
@@ -430,7 +433,7 @@ void Recognizer::startRecognition() {
     ROS_INFO("Starting Visual Recognition");
     recognitionSub = n.subscribe(
       "/classification",
-      50,
+      10,
       &Recognizer::cb_classificationResult,
       this);
 
@@ -452,8 +455,7 @@ void Recognizer::stopRecognition() {
     }
     //say goodbye (send delete markers)
     publishROS();
-    //clear delete markers
-    refreshMarkers();
+    
     //clear all markers
     model.clear();
   } else {
@@ -498,35 +500,46 @@ void Recognizer::cb_detectionSet(orp::DetectionSet msg)
 
 void Recognizer::recognize(const ros::TimerEvent& event)
 {
-  filter();         //set some markers to DELETE
-  publishROS();     //publish all markers
-  refreshMarkers(); //get rid of DELETE markers 
-
   if(shouldDebugPrint) debugPrint();     //list markers 
-} //recognize
+  killStale();
+  filter();                              //set some markers to DELETE
+  publishROS();                          //publish all markers
+  if(shouldDebugPrint) debugPrint();     //list markers 
+  markerMsg.markers.clear();
 
+  //ROS_INFO("===========");
+} //recognize
 
 void Recognizer::filter()
 {
-  //remove objects that are spatial duplicates
-  //ROS_INFO("filtering model of length %i", (int) model.size());
+  if(model.size() < 2) {
+    return;
+  }
+
+  WorldObjectList deleteList;
+
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
-    for(WorldObjectList::iterator it2 = model.begin(); it2 != model.end(); )
+    //TODO: replace boost::next with std::next when C++11 support is added
+    for(WorldObjectList::iterator it2 = boost::next(it,1); it2 != model.end(); ++it2)
     {
-      //ROS_INFO("dist: %f", tf::tfDistance((*it)->getPoseTf().getOrigin(), (*it2)->getPoseTf().getOrigin()));
-      if(it != it2)
-      {
-        // ROS_INFO("merging objects...");
-        (**it).mergeIn(&(**it2));
-        ++it2;
-      }
-      else
-      {
-        ++it2;
+      // ROS_INFO("dist: %f", tf::tfDistance((*it)->getPoseTf().getOrigin(), (*it2)->getPoseTf().getOrigin()));
+      if(std::find(deleteList.begin(), deleteList.end(), *it2) == deleteList.end() &&
+          (**it).shouldMergeWith(&(**it2))) {
+        ROS_INFO_STREAM("merging objects " << (**it).getID() << " and " << (**it2).getID());
+        (**it).merge(&(**it2));
+        deleteList.push_back(*it2);
       }
     }
   }
+
+  //ROS_INFO_STREAM("deleting " << (int)deleteList.size() << "items");
+  for(WorldObjectList::iterator it = deleteList.begin(); it != deleteList.end(); ++it)
+  {
+    deleteMarker(*it);
+    model.remove(*it);
+  }
+  //ROS_INFO_STREAM("done deleting stuff: " << (int)deleteList.size() << ", " << (int)model.size());
 } //filter
 
 void Recognizer::killStale()
@@ -536,8 +549,8 @@ void Recognizer::killStale()
   {
     if((**it).isStale() || now - (**it).getLastUpdated() > staleTime)
     {
-      //ROS_INFO("killing stale world object %i", (**it).getID());
-      deleteMarker((*it));
+      ROS_INFO("killing stale world object %i", (**it).getID());
+      deleteMarker(*it);
       model.erase(it++);
     }
     else
@@ -549,11 +562,6 @@ void Recognizer::killStale()
 
 void Recognizer::debugPrint()
 {
-  if(model.size() == 0)
-  {
-    return;
-  }
-
   ROS_INFO("%d Objects in scene: ", (int)model.size());
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); it++)
   {
@@ -599,23 +607,8 @@ void Recognizer::publishROS()
   //publish 'em
   objectPub.publish(objectMsg);
   markerPub.publish(markerMsg);
+  //ROS_INFO("published markers");
 }
-
-void Recognizer::refreshMarkers()
-{
-  for(std::vector<visualization_msgs::Marker>::iterator it = markerMsg.markers.begin();
-    it != markerMsg.markers.end(); )
-  { //delete old DELETE markers
-    if((*it).action == visualization_msgs::Marker::DELETE)
-    {
-      it = markerMsg.markers.erase(it);
-    }
-    else
-    {
-      ++it;
-    }
-  }
-} //refreshMarkers
 
 void Recognizer::addMarker(WorldObjectPtr wo)
 {
@@ -623,6 +616,8 @@ void Recognizer::addMarker(WorldObjectPtr wo)
   {
     return;
   }
+
+  //ROS_INFO_STREAM("Setting marker number " << (*wo).getID() << "to ADD");
 
   tf::Pose originalPose;
   tf::poseEigenToTF (wo->getBestPose(), originalPose);
@@ -729,21 +724,45 @@ const char* Recognizer::generateMarkerLabel(WorldObject& wo) {
 
 void Recognizer::deleteMarker(WorldObjectPtr wo)
 {
+  // ROS_INFO_STREAM("Setting marker number " << wo->getID() << " to DELETE");
+
+  bool deleted = false;
   for(std::vector<visualization_msgs::Marker>::iterator it2 = markerMsg.markers.begin();
     it2 != markerMsg.markers.end(); ++it2)
   {
     if(it2->id == wo->getID() || it2->id == wo->getID() + 10000)
     {
       it2->action = visualization_msgs::Marker::DELETE;
+      deleted = true;
     }
   }
+  if(deleted) return;
+
+  ros::Time now = ros::Time::now();
+
+  visualization_msgs::Marker newDeleteMarker;
+  newDeleteMarker.header.frame_id    = "world"; //FIXME
+  newDeleteMarker.header.stamp       = now;
+
+  visualization_msgs::Marker newDeleteMarker2;
+  newDeleteMarker.header.frame_id    = "world"; //FIXME
+  newDeleteMarker.header.stamp       = now;
+
+  newDeleteMarker.id = wo->getID();
+  newDeleteMarker2.id = wo->getID()+10000;
+
+  newDeleteMarker.action = visualization_msgs::Marker::DELETE;
+  newDeleteMarker2.action = visualization_msgs::Marker::DELETE;
+
+  markerMsg.markers.push_back(newDeleteMarker);
+  markerMsg.markers.push_back(newDeleteMarker2);
+
 } //deleteMarker
 
 WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
 {
   float max = 0.0;
   float prob = 0.0;
-  int maxStr = 0;
   best = WorldObjectPtr();
   if(model.size() < 1)
   {
@@ -755,16 +774,14 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
   {
     prob = (**it).getProbabilityOf(wot);
     std::string newName = (**it).getBestType().name;
-     ROS_INFO("chance that item %i a %s: %f at position %f %f %f with strength %d. Its most likely a %s and the position is %f %f %f",
-      i, wot.name.c_str(), prob, 
-      (**it).getX(wot.name), (**it).getY(wot.name), (**it).getZ(wot.name),
-      (**it).getStrength(),
-      newName.c_str(), (**it).getX(newName), (**it).getY(newName), (**it).getZ(newName) );
-    if(prob > max && (**it).getX(wot.name) != 0 && (**it).getY(wot.name) != 0 && (**it).getZ(wot.name) != 0 && (**it).getStrength() > maxStr)
+    ROS_INFO_STREAM("chance that item " << i << " is a(n) " << wot.name.c_str() << ": " << prob << " at position "
+      << (**it).getX(wot.name) << ", " << (**it).getY(wot.name) << ", " << (**it).getZ(wot.name)
+      << ". Its most likely a " << newName.c_str() << " and the position is "
+      << (**it).getX(newName) << ", " << (**it).getY(newName) << ", " << (**it).getZ(newName));
+    if(prob > max && (**it).getX(wot.name) != 0 && (**it).getY(wot.name) != 0 && (**it).getZ(wot.name) != 0 )
     {
       max = prob;
       best = *it;
-      maxStr = (**it).getStrength();
     }
     ++i;
   }

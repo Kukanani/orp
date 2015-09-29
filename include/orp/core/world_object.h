@@ -123,14 +123,8 @@ protected:
   bool stale;                 ///If the object is stale, that means it needs to be deleted.
   WorldObjectManager* manager;///Manages global list of types.
 
-  int strength; //Number of other items that have merged into this one.
+  float colocationDistance; ///objects closer than this distance [m] are assumed to be the same one.
 
-  /**
-   * Should we merge with the specified object? For internal use
-   * @param  other the world object proposed for merging
-   * @return       true if should continue with merge process
-   */
-  virtual bool shouldMergeWith(WorldObject* other) = 0;
 
 public:
 
@@ -138,7 +132,14 @@ public:
    * Default constructor
    * @arg manage the object with the global list of types.
    */
-  WorldObject(WorldObjectManager* manage);
+  WorldObject(WorldObjectManager* manage, float colocationDist);
+
+  /**
+   * Should we merge with the specified object? For internal use
+   * @param  other the world object proposed for merging
+   * @return       true if should continue with merge process
+   */
+  virtual bool shouldMergeWith(WorldObject* other) { return false; };
 
   /**
    * Merge this object's data with another object. It's assumed that the other is newer than this object.
@@ -147,7 +148,7 @@ public:
    *
    * @arg other the WorldObject to merge with
    */
-  virtual bool mergeIn(WorldObject* other);
+  virtual bool merge(WorldObject* other);
 
   /**
    * Refreshes this object's last updated time to be ros::Time::now().
@@ -286,11 +287,10 @@ public:
   //should this object be removed?
   bool isStale() { return stale; };
   //set this object as stale to kill it on the next update
-  void setStale(bool s) { stale = s; /*if(s) ROS_INFO("%i set stale!", id);*/};
-
-  /// The number of other objects that have been merged into this one.
-  int getStrength() { return strength; };
+  void setStale(bool s) { stale = s; };
   
+  float getColocationDist() { return colocationDistance; };
+
   //required for using fixed-size vectorizable Eigen types. 
   //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -318,7 +318,6 @@ typedef std::map< std::string, FloatLookupRow > FloatLookupTable;
 class WorldObjectBayes : public WorldObject {
 private:
   float uniformLevel;       ///Used to generate uniform Bayesian priors on-the-fly.
-  float colocationDistance; ///objects closer than this distance [m] are assumed to be the same one.
 
   /**
    * Does the dirty work of looking up a conditional probability from the sensor model.
@@ -339,21 +338,6 @@ private:
    */
   FloatLookupTable sensorModel;
 
-  /**
-   * Should we merge an object into this one?
-   * @param  wo proposed merge.
-   * @return    true if within the colocation distance, and this object has the information
-   * necessary to perform a merge
-   */
-  virtual bool shouldMergeWith(WorldObject* wo);
-
-  /**
-   * Special Bayesian merge function.
-   *
-   * The object being merged into this one is assumed to be a single reading, and
-   * will be combined with this object's results in a Bayesian fashion.
-   */
-  virtual bool merge(WorldObject* other);
 public:
 
   /**
@@ -387,11 +371,20 @@ public:
   FloatLookupTable getSensorModel() { return sensorModel; };
 
   /**
-   * Forward-facing merge wrapper. Attempt to merge the specified object into this one,
-   * @param  other the object to merge in.
-   * @return       true if other was merged.
+   * Should we merge an object into this one?
+   * @param  wo proposed merge.
+   * @return    true if within the colocation distance, and this object has the information
+   * necessary to perform a merge
    */
-  virtual bool mergeIn(WorldObject* other);
+  virtual bool shouldMergeWith(WorldObject* wo);
+
+  /**
+   * Special Bayesian merge function.
+   *
+   * The object being merged into this one is assumed to be a single reading, and
+   * will be combined with this object's results in a Bayesian fashion.
+   */
+  virtual bool merge(WorldObject* other);
 
   ///Overload for more detailed info (if needed in the future)
   virtual void debugPrint();
@@ -437,14 +430,14 @@ public:
                     orp::WorldObject classRes);
   WorldObjectBayesKalman(FloatLookupTable model, float colocationDist, WorldObjectManager* manage,
                     orp::WorldObject classRes, TypeMap probDistr);
+
   /**
-   * Forward-facing merge wrapper. Attempt to merge the specified object into this one,
-   * @param  other the object to merge in.
-   * @return       true if other was merged.
+   * Special Bayesian merge function.
    *
-   * TODO: something about this isn't working, and objects don't merge correctly.
+   * The object being merged into this one is assumed to be a single reading, and
+   * will be combined with this object's results in a Bayesian fashion.
    */
-  virtual bool mergeIn(WorldObject* other);
+  virtual bool merge(WorldObject* other);
   
   //required for using fixed-size vectorizable Eigen types. 
   //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
