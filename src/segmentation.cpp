@@ -285,7 +285,9 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
   int j = 0;
   for (IndexVector::const_iterator it = cluster_indices.begin();
       it != cluster_indices.end(); ++it) {
-    processCloud->resize(0);
+    
+    //TODO: see if this is a memory leak (reassigning a smart pointer)
+    processCloud = PCP(new PC());
     //ROS_INFO("Looping through indices for this cluster");
     for (std::vector<int>::const_iterator pit = it->indices.begin();
         pit != it->indices.end (); pit++) {
