@@ -1,22 +1,22 @@
 <launch>
   <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
   <arg name="home_dir"        default="$(find orp)" />
-  <arg name="sixdof_folder"   default="data/sixdof" />
-  <arg name="fourdof_folder"  default="data/fourdof" />
-  <arg name="cph_folder"      default="data/cph" />
   <arg name="list"            default="cfg/test_1.list" />
+  <arg name="params"          default="" />
+
   <arg name="openni"          default="false"/>
   <arg name="openni2"         default="false"/>
   <arg name="realsense"       default="false"/>
-  <arg name="recognitionview" default="false"/>
+
+  <arg name="autostart"       default="true"/>
   <arg name="sim"             default="false"/>
 
   <arg name="fourdof"         default="false"/>
+  <arg name="fourdof_folder"  default="data/fourdof" />
   <arg name="sixdof"          default="false"/>
+  <arg name="sixdof_folder"   default="data/sixdof" />
   <arg name="cph"             default="false"/>
-
-  <arg name="autostart"       default="true"/>
-
+  <arg name="cph_folder"      default="data/cph" />
 
   <!-- DATA -->
   <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
@@ -24,13 +24,15 @@
   <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
 
+  <node pkg="orp" type="load_item_params.py" name="load_item_params" args="$(arg home_dir)/$(arg params)" output="screen" respawn="false" />
+
   <!-- CLASSIFICATION -->
 
   <node
     name    = "static_transform_publisher"  
     pkg     = "tf"
     type    = "static_transform_publisher"
-    args    = "0 0 0.5 0 0.85 0 world camera_link 100"
+    args    = "0 0 0.5 0 0.8 0 world camera_link 100"
 
     respawn = "true"
     output  = "screen"
@@ -93,6 +95,7 @@
 
   <!-- VISUALIZATION AND CONFIGURATION -->
   <node
+    if      = "$(arg autostart)"
     name    = "rqt_reconfigure"
     pkg     = "rqt_reconfigure"
     type    = "rqt_reconfigure"
@@ -103,7 +106,7 @@
   />
 
   <node
-    if      = "$(arg recognitionview)"
+    if      = "$(arg autostart)"
     name    = "rviz"
     pkg     = "rviz"
     type    = "rviz"

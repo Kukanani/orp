@@ -436,7 +436,7 @@ bool WorldObjectBayes::shouldMergeWith(WorldObject* other) {
 
   float coLoc = std::max(colocationDistance, other->getColocationDist());
 
-  ROS_INFO("actual %f vs threshold %f", tf::tfDistance(this->getPoseTf(getBestType().name).getOrigin(),other->getPoseTf(getBestType().name).getOrigin()), coLoc);
+  // ROS_INFO("actual %f vs threshold %f", tf::tfDistance(this->getPoseTf(getBestType().name).getOrigin(),other->getPoseTf(getBestType().name).getOrigin()), coLoc);
   if(tf::tfDistance(this->getPoseTf(getBestType().name).getOrigin(),other->getPoseTf(getBestType().name).getOrigin()) > coLoc)
   {
     return false;

@@ -3,7 +3,6 @@
 	<include file="$(find orp)/launch/orp.launch">
  		<arg name="openni2"          value="true"/>
  		<arg name="cph"              value="true"/>
- 		<arg name="recognitionview"  value="true"/>
  		<arg name="list"             value="cfg/cph.list"/>
  		<arg name="autostart"        value="true"/>
 	</include>

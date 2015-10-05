@@ -49,6 +49,9 @@
   <include
     file="$(find orp)/launch/pan_table.launch"
   />
+  <include
+    file="$(find orp)/launch/ptt_fiducials.launch"
+  />
 
 
 
@@ -77,6 +80,25 @@
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
     args    = "set camera/driver depth_registration true"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "dynparam2"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_min_y -0.4"
+
+    respawn = "false"
+    output  = "screen"
+  />
+  <node
+    name    = "dynparam3"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation percentage_to_analyze 0.2"
 
     respawn = "false"
     output  = "screen"

@@ -48,9 +48,6 @@ Recognizer::Recognizer(ros::NodeHandle nh, std::string sensorModelFile, bool _au
     markerTopic("/detected_object_markers"),
     objectTopic("/detected_objects"),
     markerMsg(),
-    markerRed(1.0),
-    markerGreen(1.0),
-    markerBlue(0.0),
     markerAlpha(1.0),
     markerSize(0.03),
 
@@ -113,9 +110,6 @@ void Recognizer::paramsChanged(orp::RecognizerConfig &config, uint32_t level)
   colocationDist      = config.colocation_dist;
   setRefreshInterval(config.refresh_interval);
 
-  markerRed   = config.marker_red;
-  markerGreen = config.marker_green;
-  markerBlue  = config.marker_blue;
   markerAlpha = config.marker_alpha;
   markerSize  = config.marker_size;
 
@@ -168,6 +162,11 @@ void Recognizer::fillMarkerStubs() {
         ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/roll", rpy.roll);
         ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/pitch", rpy.pitch);
         ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/yaw", rpy.yaw);
+
+        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *names + "/red", stub.color.r);
+        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *names + "/green", stub.color.g);
+        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *names + "/blue", stub.color.b);
+
         rpy.roll = ORPUtils::radFromDeg(rpy.roll);
         rpy.pitch = ORPUtils::radFromDeg(rpy.pitch);
         rpy.yaw = ORPUtils::radFromDeg(rpy.yaw);
@@ -176,6 +175,10 @@ void Recognizer::fillMarkerStubs() {
         stub.scale.x = 0.1;
         stub.scale.y = 0.1;
         stub.scale.z = 0.1;
+
+        stub.color.r = 0.0;
+        stub.color.g = 0.0;
+        stub.color.b = 0.0;
 
         stub.type = visualization_msgs::Marker::CUBE;
 
@@ -526,7 +529,7 @@ void Recognizer::filter()
       // ROS_INFO("dist: %f", tf::tfDistance((*it)->getPoseTf().getOrigin(), (*it2)->getPoseTf().getOrigin()));
       if(std::find(deleteList.begin(), deleteList.end(), *it2) == deleteList.end() &&
           (**it).shouldMergeWith(&(**it2))) {
-        ROS_INFO_STREAM("merging objects " << (**it).getID() << " and " << (**it2).getID());
+        // ROS_INFO_STREAM("merging objects " << (**it).getID() << " and " << (**it2).getID());
         (**it).merge(&(**it2));
         deleteList.push_back(*it2);
       }
@@ -549,7 +552,7 @@ void Recognizer::killStale()
   {
     if((**it).isStale() || now - (**it).getLastUpdated() > staleTime)
     {
-      ROS_INFO("killing stale world object %i", (**it).getID());
+      //ROS_INFO("killing stale world object %i", (**it).getID());
       deleteMarker(*it);
       model.erase(it++);
     }
@@ -621,42 +624,29 @@ void Recognizer::addMarker(WorldObjectPtr wo)
 
   tf::Pose originalPose;
   tf::poseEigenToTF (wo->getBestPose(), originalPose);
+  //objectBroadcaster->sendTransform(tf::StampedTransform(originalPose, ros::Time::now(), recognitionFrame, wo->getBestType().name));
   //ROS_INFO("Recognizer marker pos: %f %f %f", originalPose.getOrigin().x(), originalPose.getOrigin().y(),  originalPose.getOrigin().z());
   //ROS_INFO("objPose quaternion: %f %f %f %f", rotQ.x(), rotQ.y(), rotQ.z(), rotQ.w());
   
   ros::Time now = ros::Time::now();
+
+  visualization_msgs::Marker objMarker = visualization_msgs::Marker(getStubAt((*wo).getBestType().name).first);
+  objMarker.header.stamp       = now;
+  objMarker.id                 = (*wo).getID()+100000;
+  tf::poseTFToMsg(originalPose, objMarker.pose);
+  objMarker.color.a = markerAlpha*0.5;
+  objMarker.header.frame_id = "world"; //FIXME
 
   visualization_msgs::Marker labelMarker;
   labelMarker.header.frame_id    = "world"; //FIXME
   labelMarker.header.stamp       = now;
   labelMarker.type               = visualization_msgs::Marker::TEXT_VIEW_FACING;
   labelMarker.action             = visualization_msgs::Marker::ADD;
-  //labelMarker.lifetime           = refreshInterval;
   labelMarker.id                 = (*wo).getID();
   labelMarker.text = generateMarkerLabel(*wo);
   tf::poseTFToMsg(originalPose, labelMarker.pose);
   labelMarker.scale.z = markerSize;
-  labelMarker.color.r = markerRed;
-  labelMarker.color.g = markerGreen;
-  labelMarker.color.b = markerBlue;
-  labelMarker.color.a = markerAlpha;
-
-  visualization_msgs::Marker objMarker = visualization_msgs::Marker(getStubAt((*wo).getBestType().name).first);
-  objMarker.header.stamp       = now;
-  //objMarker.lifetime           = ros::Duration(0.2);
-  objMarker.id                 = (*wo).getID()+10000;
-
-  transformListener->waitForTransform("shelf", "base_link", ros::Time(0), ros::Duration(0.1));
-
-  tf::poseTFToMsg(originalPose, objMarker.pose);
-  objMarker.color.r = markerRed;
-  objMarker.color.g = markerGreen;
-  objMarker.color.b = markerBlue;
-  objMarker.color.a = markerAlpha*0.5;
-  objMarker.header.frame_id = "world"; //FIXME
-
-  tf::Transform transform = originalPose;
-  //objectBroadcaster->sendTransform(tf::StampedTransform(transform, ros::Time::now(), recognitionFrame, wo->getBestType().name));
+  labelMarker.color = objMarker.color;
 
   markerMsg.markers.push_back(labelMarker);
   markerMsg.markers.push_back(objMarker);
@@ -730,7 +720,7 @@ void Recognizer::deleteMarker(WorldObjectPtr wo)
   for(std::vector<visualization_msgs::Marker>::iterator it2 = markerMsg.markers.begin();
     it2 != markerMsg.markers.end(); ++it2)
   {
-    if(it2->id == wo->getID() || it2->id == wo->getID() + 10000)
+    if(it2->id == wo->getID() || it2->id == wo->getID() + 100000)
     {
       it2->action = visualization_msgs::Marker::DELETE;
       deleted = true;
@@ -749,7 +739,7 @@ void Recognizer::deleteMarker(WorldObjectPtr wo)
   newDeleteMarker.header.stamp       = now;
 
   newDeleteMarker.id = wo->getID();
-  newDeleteMarker2.id = wo->getID()+10000;
+  newDeleteMarker2.id = wo->getID()+100000;
 
   newDeleteMarker.action = visualization_msgs::Marker::DELETE;
   newDeleteMarker2.action = visualization_msgs::Marker::DELETE;
