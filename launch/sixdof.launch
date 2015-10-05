@@ -1,15 +1,28 @@
 <launch>
 	
 	<arg name="data_folder" default="data" />
-	<arg name="list" default="cfg/sixdof.list" />
+	<arg name="list" default="cfg/apc_all.list" />
+  <arg name="params" />
 
 	<include file="$(find orp)/launch/orp.launch">
  		<arg name="openni2"          value="true"/>
  		<arg name="sixdof"           value="true"/>
- 		<arg name="recognitionview"  value="true"/>
- 		<arg name="sixdof_folder"    value="$(arg data_folder)"/>
+ 		<arg name="sixdof_folder"      value="$(arg data_folder)"/>
  		<arg name="list"             value="$(arg list)"/>
+    <arg name="params"           value="$(arg params)"/>
  		<arg name="autostart"        value="true"/>
 	</include>
+
+  <node
+    name    = "$(anon sixdof)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_min_y -0.4"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+
 
 </launch>

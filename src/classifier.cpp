@@ -38,6 +38,12 @@ void Classifier::init() {
   {
     fullTypeList.push_back(eachLine);
   }
+  if(fullTypeList.size() < 1)
+  {
+    ROS_FATAL ("%s: No types loaded from %s. Quitting.", name.c_str(), path.c_str());
+    ros::shutdown();
+    return;
+  }
   subTypeList = fullTypeList;
 
   objectListFile.close();
@@ -47,7 +53,7 @@ void Classifier::init() {
 
   if(loadedModels.size() < 1)
   {
-    ROS_FATAL ("%s: No models loaded from %s. Quitting.", dataFolder.c_str(), name.c_str());
+    ROS_FATAL ("%s: No models loaded from %s. Quitting.", name.c_str(), dataFolder.c_str());
     ros::shutdown();
     return;
   }
@@ -197,7 +203,6 @@ void Classifier::loadModelsRecursive(
       std::stringstream ss;
       ss << it->path();
       ROS_INFO("NOT traversing into directory %s.", ss.str().c_str());
-      //loadFeatureModels (it->path(), extension, loadedModels);
     }
     if(boost::filesystem::is_regular_file(it->status()) && boost::filesystem::extension(it->path()) == extension) {
       FeatureVector m;
@@ -207,20 +212,20 @@ void Classifier::loadModelsRecursive(
         //match just the filename against the regex
         pattern = boost::regex("(" + *types + ")(.*)");
         if(boost::regex_match(it->path().filename().string().c_str(), what, pattern)) {
-          //ROS_INFO("Loading file %s", it->path().filename().string().c_str());
           if (loadHist(it->path(), m)) {
             loadedModels.push_back(m);
+            ROS_INFO("Loading file %s", it->path().filename().string().c_str());
           } else {
-            //ROS_INFO_STREAM("histogram loader rejected file " << it->path().filename().string().c_str());
+            ROS_INFO_STREAM("histogram loader rejected file " << it->path().filename().string().c_str());
           }
         }
         else {
-          //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
+          ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
         }
       }
     }
     else {
-      //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
+      ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
     }
   }
 } //loadModelsRecursive

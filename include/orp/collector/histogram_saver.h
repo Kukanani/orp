@@ -12,6 +12,7 @@
 #include <pcl/features/crh.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
+
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <dynamic_reconfigure/server.h>
@@ -47,32 +48,34 @@ private:
    */
   ros::NodeHandle n;
 
-  ros::ServiceClient seg_client;
-  ros::ServiceServer SaveCloud_serv;
+  ros::ServiceClient segClient;
+  ros::ServiceServer saveCloudSrv;
 
+  ros::Subscriber tableCenterPointSub;
 
-  /**
-   * Enables usage of dynamic_reconfigure for reognition algorithm parameters.
-   */
-  dynamic_reconfigure::Server<orp::HistogramSaverConfig> 
-    reconfigureServer;
-  /**
-   * Required for using dynamic_reconfigure.
-   */
-  dynamic_reconfigure::Server<orp::HistogramSaverConfig>::CallbackType
-    reconfigureCallbackType;
+  /// Required for using dynamic reconfigure.
+  dynamic_reconfigure::Server<orp::HistogramSaverConfig> reconfigureServer;
+  /// Required for using dynamic reconfigure.
+  dynamic_reconfigure::Server<orp::HistogramSaverConfig>::CallbackType reconfigureCallbackType;
 
+  //where to save histogram-based files
   std::string outDir;
 
+  //method flags
   bool savePCD, saveCPH, saveVFH, saveCVFH, save6DOF;
 
+  //CPH options
   int cphRadialBins;
   int cphVerticalBins;
-  float vfhRadiusSearch;
-  float cvfhRadiusSearch;
 
-  //used to fill with CPH data
-  std::vector<float> feature;
+  //VFH options
+  float vfhRadiusSearch;
+
+  //CVFH options
+  float cvfhRadiusSearch;
+  Eigen::Vector4f tableCenterPoint; ///Used to calculate distance between point cloud center and object center.
+
+  std::vector<float> feature;  ///Gets filled with classifier data
 
   /**
    * Called when dynamic_reconfigure is used to change parameters for the recognition algorithm.
@@ -87,25 +90,42 @@ private:
   void writeCPH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
   void write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int num);
 
+  void setTableCenterPoint(float x, float y, float z);
+
 public:
+  /**
+   * Initialize the histogram saver and set up subscribers.
+   * @param nh the ROS node handle to use for subscribers, etc.
+   * @param location the folder (absolute path) in which to save the output data.
+   */
   HistogramSaver(ros::NodeHandle nh, std::string location);
 
-  bool cloud_cb(orp::SaveCloud::Request &req,
-    orp::SaveCloud::Response &res);
+  /**
+   * Save a point cloud to file. This will automatically save multiple files to the
+   * output folder, depending on which save flags have been enabled.
+   *
+   * @param cluster the PCL point cloud to save to file
+   * @param name the name to save the files under (i.e., the cluster/object name)
+   * @param angle the number for the pose. In a 4-DOF pose estimation (position + rotation
+                  about vertical axis), this would be the angle from which the cluster
+                  was collected. But it can also simply be a sequential number for
+                  keeping track of various views of an object.
+   */
+  bool saveCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+  
+  /**
+   * ROS shadow for saveCloud. Creates a segmentation request to split the large-
+   * scale point cloud into smaller clouds. Then performs saveCloud() on each
+   * smaller point cloud.
+   *
+   * Eventually, this splitting functionality should probably be moved into
+   * the segmentation node, to help keep the code modular.
+   */
+  bool cb_saveCloud(orp::SaveCloud::Request &req, orp::SaveCloud::Response &res);
+
+  ///ROS shadow for setCenterPoint().
+  void cb_setTableCenterPoint(geometry_msgs::Vector3 _centerPoint);
 
 }; // HistogramSaver
 
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "histogram_saver");
-  ros::NodeHandle n;
-
-  std::string location = argc > 1 ? argv[1] : ".";
-
-  ROS_INFO("Starting Histogram Saver");
-  HistogramSaver* hs = new HistogramSaver(n, location);
-  ros::spin();
-  return 0;
-}; //main
-
-#endif // _HISTOGRAM_SAVER_H_
+#endif

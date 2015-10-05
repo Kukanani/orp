@@ -1,1 +1,0 @@
-segmentation: {max_cluster_size: 50000, min_cluster_size: 50, percentage_to_analyze: 1.0, voxel_leaf_size: 0.0035}

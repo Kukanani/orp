@@ -141,7 +141,7 @@ namespace ORPUtils {
       return false;
     }
     node.getParam(paramName, temp);
-    //ROS_INFO("\tloaded parameter %s, value = %f", paramName.c_str(), temp);
+    ROS_INFO("\tloaded parameter %s, value = %f", paramName.c_str(), temp);
     toFill = temp;
     return true;
   } //attemptToReloadFloatParam

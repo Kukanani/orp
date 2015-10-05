@@ -194,21 +194,19 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     alignment.computeRollAngle(*clusterCRH, *viewCRH, angles);
    
     Eigen::Affine3d finalPose;
+    finalPose(0,3) = clusterCentroid(0)+viewCentroid(0);
+    finalPose(1,3) = clusterCentroid(1)+viewCentroid(1);
+    finalPose(2,3) = clusterCentroid(2)+viewCentroid(2);
+
     if (angles.size() == 0)
     {
-      ROS_WARN("No angles correlated.");
-      finalPose(0,3) = clusterCentroid(0)+viewCentroid(0);
-      finalPose(1,3) = clusterCentroid(1)+viewCentroid(1);
-      finalPose(2,3) = clusterCentroid(2)+viewCentroid(2);
+      //ROS_WARN("No angles correlated.");
     }
     else {
       //ROS_INFO("list of correlations:");
       //for(int k = 0; k < angles.size(); k++) {
         //ROS_INFO_STREAM("\t" << angles[k] << "degrees");
       //}
-      finalPose(0,3) = clusterCentroid(0)+viewCentroid(0);
-      finalPose(1,3) = clusterCentroid(1)+viewCentroid(1);
-      finalPose(2,3) = clusterCentroid(2)+viewCentroid(2);
 
       // CRH rotation
       

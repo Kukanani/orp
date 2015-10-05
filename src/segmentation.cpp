@@ -9,7 +9,8 @@ Segmentation::Segmentation() :
 {
   planesPublisher = node.advertise<sensor_msgs::PointCloud2>("/dominant_plane",1);
   boundedScenePublisher = node.advertise<sensor_msgs::PointCloud2>("/bounded_scene",1);
-  clustersPublisher = node.advertise<sensor_msgs::PointCloud2>("/pre_clustering",1);
+  clusterPublisher = node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
+  clustersPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
   segmentationServer = node.advertiseService("/segmentation", &Segmentation::processSegmentation, this);
   reloadParamsServer = node.advertiseService("/reload_params", &Segmentation::cb_reloadParams, this);
 
@@ -91,7 +92,7 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
 
   std::string transformFromFrame = req.scene.header.frame_id;
 
-  //ROS_INFO("segmentation: going from %s to %s", req.scene.header.frame_id.c_str(), transformToFrame.c_str());
+  // ROS_INFO("segmentation: going from %s to %s", req.scene.header.frame_id.c_str(), transformToFrame.c_str());
 
   if(transformToFrame != "" && 
     listener.waitForTransform(req.scene.header.frame_id, transformToFrame, req.scene.header.stamp, ros::Duration(0.5)))
@@ -101,7 +102,7 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     //pc2_message.header.frame_id = transformToFrame;
   }
   else {
-    ROS_WARN_THROTTLE(60, "Segmentation: listen for transformation to %s timed out. Proceeding...", transformToFrame.c_str());
+    ROS_WARN_THROTTLE(60, "Segmentation: listen for transformation from %s to %s timed out. Proceeding...", req.scene.header.frame_id.c_str(), transformToFrame.c_str());
     pcl::fromROSMsg(req.scene, *inputCloud);
     pc2_message.header.frame_id = req.scene.header.frame_id;
   }
@@ -134,12 +135,16 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     //ROS_INFO("%d points remain in dataset after removing planes.", (int) inputCloud->points.size());
 
     pcl::toROSMsg(*inputCloud, pc2_message);
-    //pc2_message.header.frame_id = transformToFrame;
+    pc2_message.header.frame_id = transformToFrame;
     clustersPublisher.publish(pc2_message);
 
-    //ROS_INFO("clustering");
     response.clusters = cluster(inputCloud, clusterTolerance,
       minClusterSize, maxClusterSize);
+    if(!response.clusters.empty()) {
+      // ROS_INFO_STREAM("Segmentation: found " << response.clusters.size() << " clusters");
+      response.clusters[0].header.frame_id = transformToFrame;
+      clusterPublisher.publish(response.clusters[0]);
+    }
     for(std::vector<sensor_msgs::PointCloud2>::iterator it = response.clusters.begin(); it != response.clusters.end(); ++it) {
       //pcl_ros::transformPointCloud (transformFromFrame, *it, *it, listener);
     }
@@ -283,7 +288,9 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
   int j = 0;
   for (IndexVector::const_iterator it = cluster_indices.begin();
       it != cluster_indices.end(); ++it) {
-    processCloud->resize(0);
+    
+    //TODO: see if this is a memory leak (reassigning a smart pointer)
+    processCloud = PCP(new PC());
     //ROS_INFO("Looping through indices for this cluster");
     for (std::vector<int>::const_iterator pit = it->indices.begin();
         pit != it->indices.end (); pit++) {
@@ -296,6 +303,7 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
     //  (int) processCloud->points.size());
     sensor_msgs::PointCloud2 tempROSMsg;
     pcl::toROSMsg(*processCloud, tempROSMsg);
+    tempROSMsg.header.frame_id = transformToFrame;
     clusters.push_back(tempROSMsg);
     j++;
   }

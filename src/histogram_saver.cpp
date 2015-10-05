@@ -1,12 +1,25 @@
 #include "orp/collector/histogram_saver.h"
 
-HistogramSaver::HistogramSaver(ros::NodeHandle nh, std::string location) : n(nh), feature(),
-  savePCD(false), saveCPH(false), saveVFH(false), saveCVFH(false)
+int main(int argc, char **argv)
 {
-  //Offer services that can be called from the terminal:
-  SaveCloud_serv = n.advertiseService("save_cloud", &HistogramSaver::cloud_cb, this );
-  seg_client = n.serviceClient<orp::Segmentation>("segmentation");
-  outDir = location + "/";
+  ros::init(argc, argv, "histogram_saver");
+  ros::NodeHandle n;
+
+  std::string location = argc > 1 ? argv[1] : ".";
+
+  ROS_INFO("Starting Histogram Saver");
+  HistogramSaver* hs = new HistogramSaver(n, location);
+  ros::spin();
+  return 0;
+}; //main
+
+HistogramSaver::HistogramSaver(ros::NodeHandle nh, std::string location) : n(nh), feature(),
+  savePCD(false), saveCPH(false), saveVFH(false), saveCVFH(false), outDir(location), tableCenterPoint()
+{
+  //Set up ROS
+  saveCloudSrv = n.advertiseService("save_cloud", &HistogramSaver::cb_saveCloud, this );
+  segClient = n.serviceClient<orp::Segmentation>("segmentation");
+  tableCenterPointSub = n.subscribe("set_center_point", 1, &HistogramSaver::cb_setTableCenterPoint, this);
 
   reconfigureCallbackType = boost::bind(&HistogramSaver::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
@@ -28,53 +41,65 @@ void HistogramSaver::paramsChanged(
   cphRadialBins = config.cph_radial_bins;
 } //paramsChanaged
 
-bool HistogramSaver::cloud_cb(orp::SaveCloud::Request &req,
+void HistogramSaver::setTableCenterPoint(float x, float y, float z) {
+  tableCenterPoint(0) = x;
+  tableCenterPoint(1) = y;
+  tableCenterPoint(2) = z;
+}
+
+bool HistogramSaver::cb_saveCloud(orp::SaveCloud::Request &req,
   orp::SaveCloud::Response &res)   
 {
-  //Segment from cloud:
+  //Segment cloud
   std::vector<pcl::PointCloud<ORPPoint>::Ptr> clouds;
-  orp::Segmentation seg_srv;
-  seg_srv.request.scene = req.in_cloud;
+  orp::Segmentation segSrvCall;
+  segSrvCall.request.scene = req.in_cloud;
 
-  seg_client.call(seg_srv);
+  segClient.call(segSrvCall);
   
-  if(seg_srv.response.clusters.size() < 1) {
+  if(segSrvCall.response.clusters.size() < 1) {
     ROS_ERROR("no points returned from segmentation node.");
-    return true;
+    return false;
   }
-
   pcl::PointCloud<ORPPoint>::Ptr cluster (new pcl::PointCloud<ORPPoint>);
-  //cluster = clouds.at(0);
-  pcl::fromROSMsg(seg_srv.response.clusters.at(0), *cluster);
-  ROS_INFO_STREAM(req.objectName << " cluster has " << cluster->height*cluster->width << " points.");
+  pcl::fromROSMsg(segSrvCall.response.clusters.at(0), *cluster);
+  return saveCloud(cluster, req.objectName, req.angle);
+} //cb_saveCloud
 
+void HistogramSaver::cb_setTableCenterPoint(geometry_msgs::Vector3 _tableCenterPoint) {
+  setTableCenterPoint(_tableCenterPoint.x, _tableCenterPoint.y, _tableCenterPoint.z);
+}
 
+bool HistogramSaver::saveCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle) {
+  ROS_INFO_STREAM(name << " cluster has " << cluster->height*cluster->width << " points.");
   if(!savePCD && !saveCPH && !saveVFH && !saveCVFH && !save6DOF) {
     ROS_WARN("Not saving any types of output files. Use rqt_reconfigure to turn on output.");
+    return false;
   }
 
   if(savePCD) {
-    writeRawCloud(cluster, req.objectName, req.angle);
+    writeRawCloud(cluster, name, angle);
   }
   if(saveCPH) {
-    writeCPH(cluster, req.objectName, req.angle);
+    writeCPH(cluster, name, angle);
   }
   if(saveVFH) {
-    writeVFH(cluster, req.objectName, req.angle);
+    writeVFH(cluster, name, angle);
   }
   if(saveCVFH) {
-    writeCVFH(cluster, req.objectName, req.angle);
+    writeCVFH(cluster, name, angle);
   }
   if(save6DOF) {
-    write6DOF(cluster, req.objectName, req.angle);
+    write6DOF(cluster, name, angle);
   }
-} //cloud_cb
+  return true;
+} //saveCloud
 
 void HistogramSaver::writeRawCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
   int angle)
 {
   std::stringstream fileName_ss;
-  fileName_ss << outDir << name.c_str() << "_" << angle << ".pcd";
+  fileName_ss << outDir << "/" << name.c_str() << "_" << angle << ".pcd";
 
   char thepath3[200];
   realpath(fileName_ss.str().c_str(), thepath3);
@@ -110,7 +135,7 @@ void HistogramSaver::writeVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::strin
 
   //Write to file: (objectName_angle_vfh.pcd)
   std::stringstream fileName_ss;
-  fileName_ss << outDir << name.c_str() << "_" << angle << ".vfh";
+  fileName_ss << outDir << "/" << name.c_str() << "_" << angle << ".vfh";
 
   char thepath[200];
   realpath(fileName_ss.str().c_str(), thepath);
@@ -130,7 +155,7 @@ void HistogramSaver::writeCPH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::strin
   cph.setInputCloud(cluster);
   cph.compute(feature);
   std::stringstream fileName_ss;
-  fileName_ss << outDir << name.c_str() << "_" << angle << ".cph";
+  fileName_ss << outDir << "/" << name.c_str() << "_" << angle << ".cph";
 
   char thepath2[200];
   realpath(fileName_ss.str().c_str(), thepath2);
@@ -192,13 +217,12 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   pcl::CVFHEstimation<ORPPoint, pcl::Normal, pcl::VFHSignature308> cvfh;
   cvfh.setInputCloud (cluster);
 
-  //ROS_INFO("normals");
   //Estimate normals:
   pcl::NormalEstimation<ORPPoint, pcl::Normal> ne;
   ne.setInputCloud (cluster);
-  pcl::search::KdTree<ORPPoint>::Ptr tree (new pcl::search::KdTree<ORPPoint> ());
+  pcl::search::KdTree<ORPPoint>::Ptr tree(new pcl::search::KdTree<ORPPoint>());
   ne.setSearchMethod (tree);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(new pcl::PointCloud<pcl::Normal>());
   ne.setRadiusSearch (cvfhRadiusSearch);
   ne.compute (*cloud_normals);
   cvfh.setInputNormals (cloud_normals);
@@ -206,7 +230,7 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   //ROS_INFO("prepare to cvfh");
   //Estimate cvfh:
   cvfh.setSearchMethod (tree);
-  pcl::PointCloud<pcl::VFHSignature308>::Ptr cvfhs (new pcl::PointCloud<pcl::VFHSignature308> ());
+  pcl::PointCloud<pcl::VFHSignature308>::Ptr cvfhs(new pcl::PointCloud<pcl::VFHSignature308> ());
 
   // Compute the feature
   //ROS_INFO("cvfh");
@@ -215,7 +239,7 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   //ROS_INFO("prepare to write");
   //Write to file: (objectName_angle.cvfh)
   std::stringstream fileName_ss;
-  fileName_ss << outDir.c_str() << "sixdof/" << name.c_str() << "_" << num << ".cvfh";
+  fileName_ss << outDir << "/sixdof/" << name.c_str() << "_" << num << ".cvfh";
 
   ROS_INFO_STREAM("Writing 6DOF CVFH to file '" << fileName_ss.str().c_str() << "'...");
   pcl::io::savePCDFile(fileName_ss.str(), *cvfhs);
@@ -239,26 +263,37 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
 
   fileName_ss.str("");
   fileName_ss.clear();
-  fileName_ss << outDir << "sixdof/" << name << "_" << num << ".crh";
+  fileName_ss << outDir << "/sixdof/" << name << "_" << num << ".crh";
   ROS_INFO_STREAM("Writing 6DOF CRH to '" << fileName_ss.str().c_str() << "'...");
   pcl::io::savePCDFile(fileName_ss.str(), *histogram); 
-
 
   Eigen::Vector4f cloudCentroid;
   pcl::compute3DCentroid(*cluster, cloudCentroid);
 
-  std::stringstream stream;
-  stream << outDir << "sixdof/" << name << "_" << num << ".mat4";
-  Eigen::Matrix4f poseMatrix;
-  poseMatrix(0,3) -= cloudCentroid(0);
-  poseMatrix(1,3) -= cloudCentroid(1);
-  poseMatrix(2,3) -= cloudCentroid(2);
-  ORPUtils::saveEigenMatrix4f(stream.str(), poseMatrix);
-  stream.str("");
-  stream.clear();
+  ROS_INFO_STREAM("Cloud centroid: " << cloudCentroid(0) << ", " << cloudCentroid(1) << ", " << cloudCentroid(2));
+  ROS_INFO_STREAM("Table enter point " << tableCenterPoint(0) << ", " << tableCenterPoint(1) << ", " << tableCenterPoint(2));
 
+  Eigen::Vector4f cloudToCenter = tableCenterPoint - cloudCentroid;
+  ORPPoint minPoint, maxPoint;
+  pcl::getMinMax3D(*cluster, minPoint, maxPoint);
+  float objectHeight = maxPoint.z - minPoint.z;
+  cloudToCenter(2) += objectHeight / 2.0f;
+  ROS_INFO_STREAM("From cloud centroid to estimated object centroid: " << cloudToCenter(0) << ", " << cloudToCenter(1) << ", " << cloudToCenter(2));
 
-  stream << outDir << "sixdof/" << name << "_" << num << ".pcd";
+  Eigen::Matrix4f cloudToCenterMatrix = Eigen::Matrix4f();
+  cloudToCenterMatrix << 1,0,0,cloudToCenter(0),
+                        0,1,0,cloudToCenter(1),
+                        0,0,1,cloudToCenter(2),
+                        0,0,0,1;
+
+  fileName_ss.str("");
+  fileName_ss.clear();
+  fileName_ss << outDir << "/sixdof/" << name << "_" << num << ".mat4";
+  ORPUtils::saveEigenMatrix4f(fileName_ss.str(), cloudToCenterMatrix);
+
+  fileName_ss.str("");
+  fileName_ss.clear();
+  fileName_ss << outDir << "/sixdof/" << name << "_" << num << ".pcd";
   char thepath3[500];
   realpath(fileName_ss.str().c_str(), thepath3);
 
