@@ -2,7 +2,6 @@
   <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
   <arg name="home_dir"        default="$(find orp)" />
   <arg name="list"            default="cfg/test_1.list" />
-  <arg name="params"          default="" />
 
   <arg name="openni"          default="false"/>
   <arg name="openni2"         default="false"/>
@@ -24,7 +23,6 @@
   <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
 
-  <node pkg="orp" type="load_item_params.py" name="load_item_params" args="$(arg home_dir)/$(arg params)" output="screen" respawn="false" />
 
   <!-- CLASSIFICATION -->
 

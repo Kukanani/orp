@@ -2,16 +2,19 @@
 	
 	<arg name="data_folder" default="data" />
 	<arg name="list" default="cfg/apc_all.list" />
-  <arg name="params" />
 
 	<include file="$(find orp)/launch/orp.launch">
  		<arg name="openni2"          value="true"/>
  		<arg name="sixdof"           value="true"/>
  		<arg name="sixdof_folder"      value="$(arg data_folder)"/>
  		<arg name="list"             value="$(arg list)"/>
-    <arg name="params"           value="$(arg params)"/>
  		<arg name="autostart"        value="true"/>
 	</include>
+
+
+  <node pkg="orp" type="load_item_params.py" name="load_item_params" args="$(arg home_dir)/glovebox.sqlite" output="screen" respawn="false" />
+
+  <node pkg="orp" type="load_item_params.py" name="load_item_params_2" args="$(arg home_dir)/apc.sqlite" output="screen" respawn="false" />
 
   <node
     name    = "$(anon sixdof)"
