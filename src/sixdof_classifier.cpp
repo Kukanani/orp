@@ -113,7 +113,7 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
     //ROS_INFO("Processing one cloud");
     if(eachCloud->width < 3) {
-      ROS_INFO("Cloud too small!");
+      //ROS_INFO("Cloud too small!");
       continue;
     }
     //ROS_INFO("cloud acceptable size");

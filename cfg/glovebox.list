@@ -1,0 +1,7 @@
+tiny_can medium_bowl small_bowl large_slug small_slug ycb_red_bowl
+tiny_can 0.1 1 0 0 0 0 0
+medium_bowl 0.1 0 1 0 0 0 0
+small_bowl 0.1 0 0 1 0 0 0
+large_slug 0.1 0 0 0 1 0 0
+small_slug 0.1 0 0 0 0 1 0
+ycb_red_bowl 0.1 0 0 0 0 0 1

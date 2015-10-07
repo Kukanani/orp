@@ -220,12 +220,12 @@ void Classifier::loadModelsRecursive(
           }
         }
         else {
-          ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
+          //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
         }
       }
     }
     else {
-      ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
+      //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
     }
   }
 } //loadModelsRecursive

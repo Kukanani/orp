@@ -186,6 +186,11 @@ void Recognizer::fillMarkerStubs() {
         rpy.pitch = 0.0;
         rpy.yaw = 0.0;
       }
+      if(stub.scale.x > 1 && stub.scale.y > 1 && stub.scale.z > 1) { //detect sizes in mm instead of m
+        stub.scale.x /= 1000.0f;
+        stub.scale.y /= 1000.0f;
+        stub.scale.z /= 1000.0f;
+      }
     }
     //ROS_INFO("creating marker stub for world object of type '%s'", (*names).c_str());
     stub.header.frame_id = recognitionFrame;
@@ -313,54 +318,26 @@ void Recognizer::initializeBayesSensorModel(std::string path)
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
   ROS_DEBUG("object incoming, type %s...", newObject.result.label.c_str());
-  tf::Stamped<tf::Pose> objPose;
-  tf::poseStampedMsgToTF(newObject.result.pose, objPose);
-
   RPY rpy;
 
-  //ROS_INFO("objPose: %f %f %f", objPose.getOrigin().x(),objPose.getOrigin().y(),objPose.getOrigin().z());
-  //ROS_INFO_STREAM("objPose: " << objPose.getRotation().);
-
   TypeMap probs;
-  tf::Pose stubAdjustmentPose, adjustedObjPose;
-  Eigen::Affine3d eigPose;
-  //eigPose = Eigen::Affine3d();
+  tf::Pose stubAdjustmentPose;
   for(FloatLookupTable::iterator it = subSensorModel.begin(); it != subSensorModel.end(); it++) {
     stubAdjustmentPose = tf::Pose(tf::createQuaternionFromRPY(
       getStubAt(it->first).second.roll,
       getStubAt(it->first).second.pitch,
       getStubAt(it->first).second.yaw
     ));
-     //ROS_INFO("stub adjustment for %s is %f %f %f", it->first.c_str(), getStubAt(it->first).second.roll,
-     //  getStubAt(it->first).second.pitch,
-     //  getStubAt(it->first).second.yaw);
-    tf::poseTFToEigen(objPose, eigPose);
-    Eigen::Matrix3d rotMat = eigPose.linear();
-    Eigen::Quaterniond rotQ; rotQ = rotMat;
-    //ROS_INFO("objPose quaternion: %f %f %f %f", rotQ.x(), rotQ.y(), rotQ.z(), rotQ.w());
-
-    adjustedObjPose = stubAdjustmentPose;
    
-    tf::poseTFToEigen(adjustedObjPose, eigPose);
-
-    rotMat = eigPose.linear();
-    rotQ = rotMat;
-    //ROS_INFO("output pose quaternion: %f %f %f %f", rotQ.x(), rotQ.y(), rotQ.z(), rotQ.w());
-    //ROS_INFO("chance that it's %s is %f", it->first.c_str(), it->second.at(newObject.result.label));
+    Eigen::Affine3d eigPose;
+    tf::poseTFToEigen(stubAdjustmentPose, eigPose);
     probs.insert(TypeMap::value_type(it->first, PoseGuess(it->second.at(newObject.result.label), eigPose)));
   }
-  //ROS_INFO_STREAM("Recognizer result pose: " << newObject.result.pose.pose.position.x << ", " << newObject.result.pose.pose.position.y <<
-  //  ", " << newObject.result.pose.pose.position.z);
-  
-  // for(TypeMap::iterator it = probs.begin(); it != probs.end(); ++it) {
-  //   ROS_INFO_STREAM("actual probs value: " << it->first.name.c_str() << ": " << it->second.prob << "; " << it->second.pose.translation()(0) << ", " << it->second.pose.translation()(3) << ", " << it->second.pose.translation()(3));
-  // }
-  //ROS_INFO("%lf %lf %lf", getStubAt(((*wo).getBestType().name)).second.roll, getStubAt(((*wo).getBestType().name)).second.pitch, getStubAt(((*wo).getBestType().name)).second.yaw);
-  // for(TypeMap::iterator it = probs.begin(); it != probs.end(); ++it) {
-  //   Eigen::Matrix3d rotMat = it->second.pose.linear();
-  //   Eigen::Quaterniond rotQ; rotQ = rotMat;
-  //   ROS_INFO("PreProbs: pose for %s has quat %f, %f, %f, %f", it->first.name.c_str(), rotQ.x(), rotQ.y(), rotQ.z(), rotQ.w());
-  // }
+
+
+  //IMPORTANT HACK (TODO): adjust the item's position upwards by half its height, so it will be sitting on the ground.
+  newObject.result.pose.pose.position.z += 0;//getStubAt(newObject.result.label).first.scale.z / 1.0f;
+
 
   if(newObject.method == "cph")
   {
@@ -416,11 +393,6 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
                                   newObject.result,
                                   probs));
     model.push_back(p);
-    //ROS_INFO("the new object has type %s", p->getBestType().name.c_str());
-    Eigen::Affine3d eigPose = p->getBestPose();
-    //ROS_INFO("recognizer: new object has position %f, %f, %f", eigPose(0,3), eigPose(1,3), eigPose(3,3));
-    //Eigen::Matrix3d rotMat = eigPose.linear();
-    //Eigen::Quaterniond rotQ; rotQ = rotMat;
     addMarker(p);
   }
   else
@@ -645,8 +617,12 @@ void Recognizer::addMarker(WorldObjectPtr wo)
   labelMarker.id                 = (*wo).getID();
   labelMarker.text = generateMarkerLabel(*wo);
   tf::poseTFToMsg(originalPose, labelMarker.pose);
+  labelMarker.pose.position.z += 0.1f;
   labelMarker.scale.z = markerSize;
-  labelMarker.color = objMarker.color;
+  labelMarker.color.r = 1.0f;
+  labelMarker.color.g = 1.0f;
+  labelMarker.color.b = 1.0f;
+  labelMarker.color.a = 1.0f;
 
   markerMsg.markers.push_back(labelMarker);
   markerMsg.markers.push_back(objMarker);
