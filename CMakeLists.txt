@@ -106,6 +106,7 @@ add_dependencies(cvfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_c
 add_dependencies(icp_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(sixdof_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(vision_simulator ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+add_dependencies(orp ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 
 ####################################################################################################
 
