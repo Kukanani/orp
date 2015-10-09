@@ -210,7 +210,13 @@ void WorldObject::setProbabilityOf(WorldObjectType wot, float prob, Eigen::Affin
 
 void WorldObject::setProbabilityOf(std::string wotName, float prob, Eigen::Affine3d pose)
 {
-  setProbabilityOf(manager->getTypeByName(wotName), prob, pose);
+  WorldObjectType type = manager->getUnknownType();
+  try {
+    type = manager->getTypeByName(wotName);
+  } catch(std::logic_error le) {
+    //swallow and use default
+  }
+  setProbabilityOf(type, prob, pose);
 }
 
 float WorldObject::getProbabilityOf(WorldObjectType wot)

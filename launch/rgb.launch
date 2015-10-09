@@ -1,0 +1,27 @@
+<launch>
+	
+	<arg name="data_folder" default="data" />
+	<arg name="list" default="cfg/test_1.list" />
+
+  <node pkg="orp" type="load_item_params.py" name="load_item_params" args="$(find orp)/data/fall_2015/ycb.sqlite" output="screen" respawn="false" />
+
+	<include file="$(find orp)/launch/orp.launch">
+ 		<arg name="openni2"          value="true"/>
+ 		<arg name="list"             value="$(arg list)"/>
+ 		<arg name="autostart"        value="true" />
+	</include>
+
+  <node
+    name    = "rgb_classifier"
+    pkg     = "orp"
+    type    = "rgb_classifier"
+    args    = ". $(find orp)/cfg/test_1.list true"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <include file="$(find orp)/launch/glovebox_geometry.launch">
+  </include>
+
+</launch>

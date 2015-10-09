@@ -40,8 +40,7 @@ void Classifier::init() {
   }
   if(fullTypeList.size() < 1)
   {
-    ROS_FATAL ("%s: No types loaded from %s. Quitting.", name.c_str(), path.c_str());
-    ros::shutdown();
+    ROS_FATAL ("%s: No types loaded from %s. This is gonna be bad.", name.c_str(), path.c_str());
     return;
   }
   subTypeList = fullTypeList;
@@ -53,29 +52,28 @@ void Classifier::init() {
 
   if(loadedModels.size() < 1)
   {
-    ROS_FATAL ("%s: No models loaded from %s. Quitting.", name.c_str(), dataFolder.c_str());
-    ros::shutdown();
-    return;
-  }
-  subModels = loadedModels;
+    ROS_FATAL ("%s: No models loaded from %s. This is going to be worse.", name.c_str(), dataFolder.c_str());
+  } else {
+    subModels = loadedModels;
 
-  // Convert data into FLANN format
-  kData = new flann::Matrix<float>(
-    new float[subModels.size() * subModels[0].second.size()],
-    subModels.size(),
-    subModels[0].second.size());
+    // Convert data into FLANN format
+    kData = new flann::Matrix<float>(
+      new float[subModels.size() * subModels[0].second.size()],
+      subModels.size(),
+      subModels[0].second.size());
 
-  ROS_INFO_STREAM("data size: [" << kData->rows << " , " << kData->cols << "]");
-  for(size_t i = 0; i < kData->rows; ++i)
-  {
-    for(size_t j = 0; j < kData->cols; ++j)
+    ROS_INFO_STREAM("data size: [" << kData->rows << " , " << kData->cols << "]");
+    for(size_t i = 0; i < kData->rows; ++i)
     {
-      *(kData->ptr()+(i*kData->cols + j)) = subModels[i].second[j];
+      for(size_t j = 0; j < kData->cols; ++j)
+      {
+        *(kData->ptr()+(i*kData->cols + j)) = subModels[i].second[j];
+      }
     }
-  }
 
-  kIndex = new flann::Index<flann::ChiSquareDistance<float> >(*kData, flann::LinearIndexParams ());
-  kIndex->buildIndex();
+    kIndex = new flann::Index<flann::ChiSquareDistance<float> >(*kData, flann::LinearIndexParams ());
+    kIndex->buildIndex();
+  }
   ROS_INFO("Training data loaded.");
 
   detectionSetSub = n.subscribe(

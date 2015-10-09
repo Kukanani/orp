@@ -15,6 +15,7 @@ set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAG
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers)
 find_package(Boost REQUIRED COMPONENTS system)
+find_package(OpenCV REQUIRED)
 
 ########################################################
 ## Declare ROS messages, services, and configurations ##
@@ -81,11 +82,12 @@ add_executable(apc_data_collector src/apc_data_collector.cpp)
 add_executable(histogram_saver src/histogram_saver.cpp)
 add_executable(virtual_train src/virtual_train.cpp)
 
-add_executable(cph_classifier src/cph_classifier.cpp)
-add_executable(vfh_classifier src/vfh_classifier.cpp)
-add_executable(cvfh_classifier src/cvfh_classifier.cpp)
-add_executable(icp_classifier src/icp_classifier.cpp)
+#add_executable(cph_classifier src/cph_classifier.cpp)
+#add_executable(vfh_classifier src/vfh_classifier.cpp)
+#add_executable(cvfh_classifier src/cvfh_classifier.cpp)
+#add_executable(icp_classifier src/icp_classifier.cpp)
 add_executable(sixdof_classifier src/sixdof_classifier.cpp)
+add_executable(rgb_classifier src/rgb_classifier.cpp)
 add_executable(vision_simulator src/vision_simulator.cpp)
 
 ####################################################################################################
@@ -100,11 +102,12 @@ add_dependencies(point_cloud_batch_processor ${orp_EXPORTED_TARGETS} orp_generat
 add_dependencies(histogram_saver ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 
-add_dependencies(cph_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-add_dependencies(vfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-add_dependencies(cvfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-add_dependencies(icp_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+#add_dependencies(cph_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+#add_dependencies(vfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+#add_dependencies(cvfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+#add_dependencies(icp_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(sixdof_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+add_dependencies(rgb_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(vision_simulator ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(orp ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 
@@ -122,9 +125,10 @@ target_link_libraries(point_cloud_batch_processor ${Boost_LIBRARIES} ${catkin_LI
 target_link_libraries(histogram_saver ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(virtual_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkIO.so libvtkFiltering.so)
 
-target_link_libraries(cph_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-target_link_libraries(vfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-target_link_libraries(cvfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-target_link_libraries(icp_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+#target_link_libraries(cph_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+#target_link_libraries(vfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+#target_link_libraries(cvfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+#target_link_libraries(icp_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(sixdof_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+target_link_libraries(rgb_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 target_link_libraries(vision_simulator ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )

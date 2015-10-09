@@ -15,7 +15,7 @@
 #include <interactive_markers/interactive_marker_server.h>
 #include <interactive_markers/menu_handler.h>
 
-typedef pcl::PointXYZ ORPPoint;
+typedef pcl::PointXYZRGB ORPPoint;
 
 class file_error: public std::runtime_error
 {

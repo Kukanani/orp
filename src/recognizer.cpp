@@ -317,7 +317,7 @@ void Recognizer::initializeBayesSensorModel(std::string path)
 
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
-  ROS_DEBUG("object incoming, type %s...", newObject.result.label.c_str());
+  ROS_INFO("object incoming, type %s...", newObject.result.label.c_str());
   RPY rpy;
 
   TypeMap probs;
@@ -331,9 +331,15 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
    
     Eigen::Affine3d eigPose;
     tf::poseTFToEigen(stubAdjustmentPose, eigPose);
-    probs.insert(TypeMap::value_type(it->first, PoseGuess(it->second.at(newObject.result.label), eigPose)));
-  }
 
+    float probability = 1.0f;
+    try {
+      probability = it->second.at(newObject.result.label);
+    } catch(std::out_of_range oor) {
+      //swallowed, just default to probability 1
+    }
+    probs.insert(TypeMap::value_type(it->first, PoseGuess(probability, eigPose)));
+  }
 
   //IMPORTANT HACK (TODO): adjust the item's position upwards by half its height, so it will be sitting on the ground.
   newObject.result.pose.pose.position.z += 0;//getStubAt(newObject.result.label).first.scale.z / 1.0f;
@@ -386,6 +392,17 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   else if(newObject.method == "sixdof")
   {
 
+    WorldObjectPtr p = WorldObjectPtr(
+      new WorldObjectBayes(subSensorModel, 
+                                  colocationDist,
+                                  typeManager,
+                                  newObject.result,
+                                  probs));
+    model.push_back(p);
+    addMarker(p);
+  }
+  else if(newObject.method == "rgb")
+  {
     WorldObjectPtr p = WorldObjectPtr(
       new WorldObjectBayes(subSensorModel, 
                                   colocationDist,
@@ -756,7 +773,13 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
 
 WorldObjectPtr Recognizer::getMostLikelyObjectOfType(std::string name)
 {
-  return getMostLikelyObjectOfType(typeManager->getTypeByName(name));
+  WorldObjectType type = typeManager->getUnknownType();
+  try {
+    typeManager->getTypeByName(name);
+  } catch(std::logic_error le) {
+    ROS_WARN_STREAM_THROTTLE(30, "Item type " + name + " not found. Continuing with default unknown object type");
+  }
+  return getMostLikelyObjectOfType(type);
 }; //getMostLikelyObjectOfType
 
 void Recognizer::setRefreshInterval(float interval)
