@@ -1,0 +1,123 @@
+<launch>
+  <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
+  <arg name="home_dir"        default="$(find orp)" />
+  <arg name="list"            default="cfg/test_1.list" />
+
+  <arg name="openni"          default="false"/>
+  <arg name="openni2"         default="false"/>
+  <arg name="realsense"       default="false"/>
+
+  <arg name="autostart"       default="true"/>
+  <arg name="sim"             default="false"/>
+
+  <arg name="fourdof"         default="false"/>
+  <arg name="fourdof_folder"  default="data/fourdof" />
+  <arg name="sixdof"          default="false"/>
+  <arg name="sixdof_folder"   default="data/sixdof" />
+  <arg name="cph"             default="false"/>
+  <arg name="cph_folder"      default="data/cph" />
+
+  <machine 
+    name = "nrg-807196-14" 
+    address = "nrg-807196-14" 
+    user="pioneer" 
+    env-loader="/opt/ros/indigo/pioneer_env.sh" 
+  />
+
+  <!-- DATA -->
+  <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
+  <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">  </include>
+  <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
+  <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
+
+
+  <!-- CLASSIFICATION -->
+  <node
+    name    = "segmentation"  
+    pkg     = "orp"
+    type    = "segmentation"
+    args    = ""
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
+    if      = "$(arg cph)"
+    name    = "cph_classifier"
+    pkg     = "orp"
+    type    = "cph_classifier"
+    args    = "$(arg home_dir)/$(arg cph_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
+    if      = "$(arg sixdof)"
+    name    = "sixdof_classifier"
+    pkg     = "orp"
+    type    = "sixdof_classifier"
+    args    = "$(arg home_dir)/$(arg sixdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <node
+    if      = "$(arg fourdof)"
+    name    = "fourdof_classifier"
+    pkg     = "orp"
+    type    = "cvfh_classifier"
+    args    = "$(arg home_dir)/$(arg fourdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <!-- CONDUCTOR -->
+
+  <node
+    name    = "recognizer"
+    pkg     = "orp"
+    type    = "recognizer"
+    args    = "$(arg home_dir)/$(arg list) $(arg autostart)"
+
+    required= "true"
+    output  = "screen"
+  />
+
+  <!-- VISUALIZATION AND CONFIGURATION -->
+  <node
+    if      = "$(arg autostart)"
+    name    = "rqt_reconfigure"
+    pkg     = "rqt_reconfigure"
+    type    = "rqt_reconfigure"
+    args    = ""
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    if      = "$(arg autostart)"
+    name    = "rviz"
+    pkg     = "rviz"
+    type    = "rviz"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <rosparam command="load" file="$(arg home_dir)/cfg/pioneer.yaml" />
+
+  <node
+    name    = "dynparam"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set camera/driver depth_registration true"
+
+    respawn = "false"
+    output  = "screen"
+  />
+</launch>
