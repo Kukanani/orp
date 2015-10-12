@@ -32,13 +32,13 @@ int main(int argc, char **argv)
   RGBClassifier v(n, directory, listFile, autostart);
   v.init();
 
-  cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
+  //cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
   ros::AsyncSpinner spinner(2);
   spinner.start();
   while(ros::ok()) {
 
   }
-  cv::destroyAllWindows();
+  //cv::destroyAllWindows();
   return 1;
 } //main
 
@@ -88,7 +88,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
 
     std::string color = "unknown";
     M.release();
-    int DISP_HEIGHT=10;
+    int DISP_HEIGHT=1;
     M = cv::Mat(eachCloud->width, DISP_HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
     int i = 0;
 
@@ -101,7 +101,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
         }
       }
       //processColors(M);
-      cv::imshow("RGBCluster", M);
+      //cv::imshow("RGBCluster", M);
       //cout << "M = " << endl << " " << M << endl << endl;
       cv::waitKey(10);
     //} else {

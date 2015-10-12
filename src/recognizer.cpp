@@ -317,7 +317,7 @@ void Recognizer::initializeBayesSensorModel(std::string path)
 
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
-  ROS_INFO("object incoming, type %s...", newObject.result.label.c_str());
+  //ROS_INFO("object incoming, type %s...", newObject.result.label.c_str());
   RPY rpy;
 
   TypeMap probs;
@@ -420,7 +420,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 } //cb_classificationResult
 
 void Recognizer::startRecognition() {
-  if(timer == NULL || recognitionSub == NULL)
+  if(recognitionSub == NULL)
   {
     ROS_INFO("Starting Visual Recognition");
     recognitionSub = n.subscribe(
@@ -437,7 +437,7 @@ void Recognizer::startRecognition() {
 } //startRecognition
 
 void Recognizer::stopRecognition() {
-  if(timer != NULL && recognitionSub != NULL)
+  if(recognitionSub != NULL)
   {
     ROS_INFO("Stopping Visual Recognition");
     timer.stop();
