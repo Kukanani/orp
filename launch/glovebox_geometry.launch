@@ -3,7 +3,7 @@
     name    = "static_transform_publisher"  
     pkg     = "tf"
     type    = "static_transform_publisher"
-    args    = "-1.085 0.65 0.205 0 0.8 0 world camera_link 100-"
+    args    = "-1.085 0.65 0.20 0 0.8 0 world camera_link 100-"
 
     respawn = "true"
     output  = "screen"
@@ -24,16 +24,6 @@
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
     args    = "set segmentation spatial_max_y 1.5"
-
-    respawn = "false"
-    output  = "screen"
-  />
-
-  <node
-    name    = "$(anon sixdof3)"
-    pkg     = "dynamic_reconfigure"
-    type    = "dynparam"
-    args    = "set segmentation min_cluster_size 50"
 
     respawn = "false"
     output  = "screen"

@@ -82,7 +82,7 @@ add_executable(apc_data_collector src/apc_data_collector.cpp)
 add_executable(histogram_saver src/histogram_saver.cpp)
 add_executable(virtual_train src/virtual_train.cpp)
 
-#add_executable(cph_classifier src/cph_classifier.cpp)
+add_executable(cph_classifier src/cph_classifier.cpp)
 #add_executable(vfh_classifier src/vfh_classifier.cpp)
 #add_executable(cvfh_classifier src/cvfh_classifier.cpp)
 #add_executable(icp_classifier src/icp_classifier.cpp)
@@ -102,7 +102,7 @@ add_dependencies(point_cloud_batch_processor ${orp_EXPORTED_TARGETS} orp_generat
 add_dependencies(histogram_saver ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 
-#add_dependencies(cph_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+add_dependencies(cph_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 #add_dependencies(vfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 #add_dependencies(cvfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 #add_dependencies(icp_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
@@ -125,7 +125,7 @@ target_link_libraries(point_cloud_batch_processor ${Boost_LIBRARIES} ${catkin_LI
 target_link_libraries(histogram_saver ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 target_link_libraries(virtual_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkIO.so libvtkFiltering.so)
 
-#target_link_libraries(cph_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+target_link_libraries(cph_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 #target_link_libraries(vfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 #target_link_libraries(cvfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 #target_link_libraries(icp_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )

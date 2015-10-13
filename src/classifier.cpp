@@ -231,16 +231,11 @@ void Classifier::loadModelsRecursive(
 void Classifier::subscribe()
 {
   ROS_INFO("Classifier subscribing");
-  if(depthInfoSubscriber == NULL)
-  {
-    classificationPub = n.advertise<orp::ClassificationResult>("/classification", 1);
-    depthInfoSubscriber = n.subscribe(
-      "/camera/depth_registered/points", 1, &Classifier::cb_classify, this);
-  }
-  if(segmentationClient == NULL)
-  {
-    segmentationClient = n.serviceClient<orp::Segmentation>("/segmentation");
-  }
+  classificationPub = n.advertise<orp::ClassificationResult>("/classification", 1);
+  depthInfoSubscriber = n.subscribe(
+    "/camera/depth_registered/points", 1, &Classifier::cb_classify, this);
+
+  segmentationClient = n.serviceClient<orp::Segmentation>("/segmentation");
 } //subscribe
 
 void Classifier::unsubscribe()
