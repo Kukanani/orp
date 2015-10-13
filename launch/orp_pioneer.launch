@@ -1,7 +1,7 @@
 <launch>
   <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
   <arg name="home_dir"        default="$(find orp)" />
-  <arg name="list"            default="cfg/test_1.list" />
+  <arg name="list"            default="cfg/cph.list" />
 
   <arg name="openni"          default="false"/>
   <arg name="openni2"         default="false"/>
@@ -112,11 +112,30 @@
   <rosparam command="load" file="$(arg home_dir)/cfg/pioneer.yaml" />
 
   <node
-    name    = "dynparam"
+    name    = "$(anon dynparam_seg)" 
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set camera/driver depth_registration true"
+    args    = "set_from_parameters segmentation">
+    <param name ="spatial_min_z" type="double" value="-0.335"/>
+    <param name ="spatial_max_z" type="double" value="10.0"/>
+    <param name ="spatial_min_y" type="double" value="-0.48"/>
+    <param name ="spatial_max_y" type="double" value="0.38"/>
+    <param name ="spatial_min_x" type="double" value="-1.5"/>
+    <param name ="spatial_max_x" type="double" value="3.5"/>
 
+    <param name ="max_cluster_size" type="double" value="3500"/>
+    <param name ="max_plane_segmentation_iterations" type="double" value="200"/>
+    <param name ="min_cluster_size" type="double" value="700"/>
+    <param name ="percentage_to_analyze" type="double" value="0.26"/>
+    
+
+  </node>
+
+  <node
+    name    = "$(anon dynparam_cam)" 
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set camera/driver depth_registration true" 
     respawn = "false"
     output  = "screen"
   />
