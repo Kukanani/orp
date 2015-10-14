@@ -111,6 +111,7 @@
 
   <rosparam command="load" file="$(arg home_dir)/cfg/pioneer.yaml" />
 
+
   <node
     name    = "$(anon dynparam_seg)" 
     pkg     = "dynamic_reconfigure"
