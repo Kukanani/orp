@@ -124,7 +124,7 @@
     <param name ="spatial_min_x" type="double" value="-1.5"/>
     <param name ="spatial_max_x" type="double" value="3.5"/>
 
-    <param name ="max_cluster_size" type="double" value="3500"/>
+    <param name ="max_cluster_size" type="double" value="3600"/>
     <param name ="max_plane_segmentation_iterations" type="double" value="200"/>
     <param name ="min_cluster_size" type="double" value="700"/>
     <param name ="percentage_to_analyze" type="double" value="0.26"/>
