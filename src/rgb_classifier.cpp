@@ -35,9 +35,10 @@ int main(int argc, char **argv)
   //cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
   ros::AsyncSpinner spinner(2);
   spinner.start();
-  while(ros::ok()) {
-
-  }
+  
+  //ros::Duration(10.0).sleep();
+  //ros::shutdown();
+  ros::waitForShutdown();
   //cv::destroyAllWindows();
   return 1;
 } //main
@@ -103,7 +104,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       //processColors(M);
       //cv::imshow("RGBCluster", M);
       //cout << "M = " << endl << " " << M << endl << endl;
-      cv::waitKey(10);
+      //cv::waitKey(10);
     //} else {
     //  ROS_WARN_THROTTLE(10, "No color information in cloud");
     //}

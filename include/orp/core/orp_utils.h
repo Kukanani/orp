@@ -6,10 +6,9 @@
 #include <stdexcept>
 #include <sstream>
 #include <fstream>
-#include <iomanip>
 
 #include <pcl/io/pcd_io.h>
-#include <pcl/io/vtk_lib_io.h>
+//#include <pcl/io/vtk_lib_io.h>
 #include <pcl/point_cloud.h>
 
 #include <interactive_markers/interactive_marker_server.h>
@@ -40,29 +39,31 @@ namespace ORPUtils {
   ///Load a point cloud from the input file, whether that file is an STL, PCD, or PLY file.
   static pcl::PointCloud<ORPPoint>::Ptr loadCloudFrom(std::string path) {
     pcl::PointCloud<ORPPoint>::Ptr cloud_out (new pcl::PointCloud<ORPPoint>);
-    pcl::PolygonMesh testMesh;
+    //pcl::PolygonMesh testMesh;
     std::string arg1 = path;
     std::string filetype1 = path.substr(path.length()-3);
     if(filetype1 == "stl") {
-      if (pcl::io::loadPolygonFileSTL(path.c_str(), testMesh) == -1) // load input
-      {
-        PCL_ERROR ("Couldn't read input STL file\n");
-        throw file_error("Couldn't read input STL file");
-      }
-      else {
-        pcl::fromPCLPointCloud2(testMesh.cloud, *cloud_out);
-      }
+      std::cout << "STL file loading is no longer supported." << std::endl;
+      // if (pcl::io::loadPolygonFileSTL(path.c_str(), testMesh) == -1) // load input
+      // {
+      //   PCL_ERROR ("Couldn't read input STL file\n");
+      //   throw file_error("Couldn't read input STL file");
+      // }
+      // else {
+      //   pcl::fromPCLPointCloud2(testMesh.cloud, *cloud_out);
+      // }
     }
 
     else if(filetype1 == "ply") {
-      if (pcl::io::loadPolygonFilePLY(path.c_str(), testMesh) == -1) // load input
-      {
-        PCL_ERROR ("Couldn't read input PLY file\n");
-        throw file_error("Couldn't read input PLY file");
-      }
-      else {
-        pcl::fromPCLPointCloud2(testMesh.cloud, *cloud_out);
-      }
+      std::cout << "PLY file loading is no longer supported." << std::endl;
+      // if (pcl::io::loadPolygonFilePLY(path.c_str(), testMesh) == -1) // load input
+      // {
+      //   PCL_ERROR ("Couldn't read input PLY file\n");
+      //   throw file_error("Couldn't read input PLY file");
+      // }
+      // else {
+      //   pcl::fromPCLPointCloud2(testMesh.cloud, *cloud_out);
+      // }
     }
 
     else if(filetype1 == "pcd") {

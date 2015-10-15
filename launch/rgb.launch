@@ -10,6 +10,7 @@
  		<arg name="list"             value="$(arg list)"/>
  		<arg name="autostart"        value="false" />
     <arg name="rviz"             value="true" />
+    <arg name="rviz_file"        value="$(find orp)/cfg/moveit.rviz" />
 	</include>
 
   <node
@@ -18,7 +19,7 @@
     type    = "rgb_classifier"
     args    = ". $(find orp)/cfg/test_1.list true"
 
-    respawn = "true"
+    respawn = "false"
     output  = "screen"
   />
 

@@ -92,8 +92,8 @@ void Classifier::init() {
 } //Classifier
 
 Classifier::~Classifier() {
-  delete[] kData->ptr();
-  delete kIndex;
+  //delete[] kData->ptr();
+  //delete kIndex;
 } //~Classifier
 
 

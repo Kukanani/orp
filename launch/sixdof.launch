@@ -1,7 +1,11 @@
 <launch>
 	
-	<arg name="data_folder" default="data" />
-	<arg name="list" default="cfg/apc_all.list" />
+	<arg name="data_folder" default="data/fall_2015/sixdof" />
+	<arg name="list" default="cfg/glovebox.list" />
+
+	<include file="$(find orp)/launch/glovebox_geometry.launch"/>
+
+  	<node pkg="orp" type="load_item_params.py" name="load_item_params" args="$(find orp)/data/fall_2015/glovebox.sqlite" output="screen" respawn="false" />
 
 	<include file="$(find orp)/launch/orp.launch">
  		<arg name="openni2"          value="true"/>
@@ -9,11 +13,47 @@
  		<arg name="sixdof_folder"      value="$(arg data_folder)"/>
  		<arg name="list"             value="$(arg list)"/>
  		<arg name="autostart"        value="true"/>
+ 		<arg name="rviz"             value="true"/>
 	</include>
 
+    <node
+	    name    = "$(anon sixdof)"
+	    pkg     = "dynamic_reconfigure"
+	    type    = "dynparam"
+	    args    = "set segmentation spatial_min_y 0.2"
 
-  <node pkg="orp" type="load_item_params.py" name="load_item_params" args="$(find orp)/data/glovebox.sqlite" output="screen" respawn="false" />
-  
-  <node pkg="orp" type="load_item_params.py" name="load_item_params" args="$(find orp)/data/apc.sqlite" output="screen" respawn="false" />
+	    respawn = "false"
+	    output  = "screen"
+	  />
+
+	  <node
+	    name    = "$(anon sixdof2)"
+	    pkg     = "dynamic_reconfigure"
+	    type    = "dynparam"
+	    args    = "set segmentation spatial_max_y 1.0"
+
+	    respawn = "false"
+	    output  = "screen"
+	  />
+
+	  <node
+	    name    = "$(anon sixdof4)"
+	    pkg     = "dynamic_reconfigure"
+	    type    = "dynparam"
+	    args    = "set segmentation percentage_to_analyze 0.5"
+
+	    respawn = "false"
+	    output  = "screen"
+	  />
+
+	  <node
+	    name    = "$(anon sixdof3)"
+	    pkg     = "dynamic_reconfigure"
+	    type    = "dynparam"
+	    args    = "set segmentation min_cluster_size 35"
+
+	    respawn = "false"
+	    output  = "screen"
+	  />
   
 </launch>
