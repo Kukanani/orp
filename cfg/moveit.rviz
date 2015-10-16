@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /DepthCloud1/Auto Size1
+        - /MarkerArray1
         - /TF1/Frames1
         - /MotionPlanning1
         - /MotionPlanning1/Scene Geometry1
@@ -123,10 +124,11 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /detected_object_markers
+      Marker Topic: /move_group/display_contacts
       Name: MarkerArray
       Namespaces:
-        "": true
+        glovebox=finger_middle_link_2: true
+        glovebox=finger_middle_link_3: true
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -189,6 +191,128 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
+          base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          eef:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          finger_1_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          glovebox:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_b:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_e:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_l:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_r:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_s:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_t:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_u:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          palm:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          visioncal:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          world:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
         Loop Animation: false
         Robot Alpha: 0.5
         Show Robot Collision: false
@@ -232,6 +356,128 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
+          base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          eef:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          finger_1_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_1_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_2_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_0:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_1:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_2:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          finger_middle_link_3:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          glovebox:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_b:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_e:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_l:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_r:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_s:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_t:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          link_u:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          palm:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          visioncal:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          world:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
         Robot Alpha: 0.5
         Show Robot Collision: false
         Show Robot Visual: true
@@ -268,7 +514,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.38836
+      Distance: 1.74156
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -280,10 +526,10 @@ Visualization Manager:
         Z: -0.00464611
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.3148
+      Pitch: 0.6548
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.30857
+      Yaw: 1.43857
     Saved: ~
 Window Geometry:
   Displays:
