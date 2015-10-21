@@ -30,12 +30,17 @@ public:
 
 namespace ORPUtils {
 //public:
+
+  ///Convert degrees to radians.
   static double radFromDeg(double deg) {
     return deg * M_PI / 180.0;
   }
+
+  ///Convert radians to degrees.
   static double degFromRad(double rad) {
     return rad * 180.0 / M_PI;
   }
+
   ///Load a point cloud from the input file, whether that file is an STL, PCD, or PLY file.
   static pcl::PointCloud<ORPPoint>::Ptr loadCloudFrom(std::string path) {
     pcl::PointCloud<ORPPoint>::Ptr cloud_out (new pcl::PointCloud<ORPPoint>);
@@ -43,27 +48,11 @@ namespace ORPUtils {
     std::string arg1 = path;
     std::string filetype1 = path.substr(path.length()-3);
     if(filetype1 == "stl") {
-      std::cout << "STL file loading is no longer supported." << std::endl;
-      // if (pcl::io::loadPolygonFileSTL(path.c_str(), testMesh) == -1) // load input
-      // {
-      //   PCL_ERROR ("Couldn't read input STL file\n");
-      //   throw file_error("Couldn't read input STL file");
-      // }
-      // else {
-      //   pcl::fromPCLPointCloud2(testMesh.cloud, *cloud_out);
-      // }
+      std::cout << "PLY file loading is no longer supported due to deprecated loader libraries. Please load PCD files." << std::endl;
     }
 
     else if(filetype1 == "ply") {
-      std::cout << "PLY file loading is no longer supported." << std::endl;
-      // if (pcl::io::loadPolygonFilePLY(path.c_str(), testMesh) == -1) // load input
-      // {
-      //   PCL_ERROR ("Couldn't read input PLY file\n");
-      //   throw file_error("Couldn't read input PLY file");
-      // }
-      // else {
-      //   pcl::fromPCLPointCloud2(testMesh.cloud, *cloud_out);
-      // }
+      std::cout << "PLY file loading is no longer supported due to deprecated loader libraries. Please load PCD files." << std::endl;
     }
 
     else if(filetype1 == "pcd") {
@@ -80,7 +69,8 @@ namespace ORPUtils {
     return cloud_out;
   }
 
-  static visualization_msgs::Marker makeBox(float xsize, float ysize, float zsize, float r, float g, float b)
+  ///Create a box marker with the specified dimensions and color.
+  static visualization_msgs::Marker makeBoxMarker(float xsize, float ysize, float zsize, float r, float g, float b)
   {
     visualization_msgs::Marker marker;
 
@@ -96,17 +86,19 @@ namespace ORPUtils {
     return marker;
   }
 
+  ///Create an interactive 6DOF box marker with the specified color and dimensions.
   static visualization_msgs::InteractiveMarkerControl& makeBoxControl(
     visualization_msgs::InteractiveMarker &msg,
     float xsize, float ysize, float zsize, float r = 0.5f, float g = 0.5f, float b = 0.5f)
   {
     visualization_msgs::InteractiveMarkerControl control;
     control.always_visible = true;
-    control.markers.push_back(makeBox(xsize, ysize, zsize, r, g, b));
+    control.markers.push_back(makeBoxMarker(xsize, ysize, zsize, r, g, b));
     msg.controls.push_back( control );
     return msg.controls.back();
   }
 
+  ///Attempt to copy a float stored in the parameter server to a different location in the parameter server.
   static bool attemptToCopyFloatParam(const ros::NodeHandle &node, std::string from, std::string to) {
     double temp;
     if(!node.hasParam(from)) {
@@ -123,6 +115,7 @@ namespace ORPUtils {
     return true;
   }
 
+  ///Attempt to put a float into the parameter server.
   static bool attemptToSetFloatParam(const ros::NodeHandle &node, float val, std::string to) {
     double temp;if(!node.hasParam(to)) {
       ROS_ERROR("target param %s not found while attempting to set value=%f", to.c_str(), val);
@@ -133,6 +126,7 @@ namespace ORPUtils {
     return true;
   }
 
+  ///Attempt to put a load a float from the parameter server.
   static bool attemptToReloadFloatParam(const ros::NodeHandle &node, std::string paramName, float &toFill)
   {
     double temp;
@@ -147,6 +141,7 @@ namespace ORPUtils {
     return true;
   } //attemptToReloadFloatParam
 
+  ///Attempt to put a load a double from the parameter server.
   static bool attemptToReloadDoubleParam(const ros::NodeHandle &node, std::string paramName, double &toFill)
   {
     if(!node.hasParam(paramName)) {
@@ -159,6 +154,7 @@ namespace ORPUtils {
     return true;
   } //attemptToReloadFloatParam
 
+  ///Attempt to put a load a string from the parameter server.
   static bool attemptToReloadStringParam(const ros::NodeHandle &node, std::string paramName, std::string &toFill)
   {
     if(!node.hasParam(paramName)) {
@@ -171,6 +167,7 @@ namespace ORPUtils {
     return true;
   } //attemptToReloadFloatParam
 
+  ///Save a 4x4 matrix to a file.
   static void saveEigenMatrix4f(std::string file, Eigen::Matrix4f mat) 
   {
     std::ofstream matFile;
@@ -194,6 +191,7 @@ namespace ORPUtils {
     matFile.close();
   }; //saveEigenMatrix4f
 
+  ///Load a 4x4 matrix from a file.
   static Eigen::Matrix4f loadEigenMatrix4f(std::string file) {
     Eigen::Matrix4f mat;
 
@@ -226,6 +224,7 @@ namespace ORPUtils {
     return mat;
   }
 
+  ///Return a string representation of an integer with a fixed width, padded by leading zeros.
   static std::string zeroPad(int num, int fixedWidth)
   {
       std::ostringstream ss;
