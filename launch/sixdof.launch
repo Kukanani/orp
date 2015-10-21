@@ -20,7 +20,7 @@
 	    name    = "$(anon sixdof)"
 	    pkg     = "dynamic_reconfigure"
 	    type    = "dynparam"
-	    args    = "set segmentation spatial_min_y 0.2"
+	    args    = "set segmentation spatial_min_y 0.25"
 
 	    respawn = "false"
 	    output  = "screen"
