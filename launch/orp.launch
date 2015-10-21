@@ -1,25 +1,25 @@
 <launch>
   <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
-  <arg name="home_dir"        default="$(find orp)" />
-  <arg name="list"            default="cfg/test_1.list" />
+  <arg name="home_dir"         default="$(find orp)" />
+  <arg name="list"             default="cfg/test_1.list" />
 
-  <arg name="openni"          default="false"/>
-  <arg name="openni2"         default="false"/>
-  <arg name="realsense"       default="false"/>
+  <arg name="openni"           default="false"/>
+  <arg name="openni2"          default="false"/>
+  <arg name="realsense"        default="false"/>
 
-  <arg name="autostart"       default="true"/>
-  <arg name="sim"             default="false"/>
-  <arg name="rviz"            default="false"/>
-  <arg name="rviz_file"       default="$(arg home_dir)/cfg/recognition.rviz" />
+  <arg name="autostart"        default="true"/>
+  <arg name="sim"              default="false"/>
+  <arg name="rviz"             default="false"/>
+  <arg name="rviz_file"        default="$(arg home_dir)/cfg/recognition.rviz" />
 
-  <arg name="fourdof"         default="false"/>
-  <arg name="fourdof_folder"  default="data/fourdof" />
-  <arg name="sixdof"          default="false"/>
-  <arg name="sixdof_folder"   default="data/sixdof" />
-  <arg name="cph"             default="false"/>
-  <arg name="cph_folder"      default="data/cph" />
+  <arg name="fourdof"          default="false"/>
+  <arg name="fourdof_folder"   default="data/fourdof" />
+  <arg name="sixdof"           default="false"/>
+  <arg name="sixdof_folder"    default="data/sixdof" />
+  <arg name="cph"              default="false"/>
+  <arg name="cph_folder"       default="data/cph" />
 
-  <arg name="throttle_nodelet"default="100" />
+  <arg name="throttle_nodelet" default="100" />
 
   <!-- DATA -->
   <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
