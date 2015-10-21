@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geom
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 
+
 ########################################################
 ## Declare ROS messages, services, and configurations ##
 ########################################################
