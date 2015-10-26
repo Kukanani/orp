@@ -1,11 +1,9 @@
 #include "orp/core/classifier.h"
 
-Classifier::Classifier(ros::NodeHandle nh, float thresh, std::string _name,
-  std::string _path, std::string folder, std::string fileExt, bool _autostart) :
-    n(nh),
+Classifier::Classifier(float thresh, std::string _name,
+  std::string folder, std::string fileExt, bool _autostart) :
     name(_name),
     dataFolder(folder),
-    path(_path),
     fileExtension(fileExt),
     threshold(thresh),
     autostart(_autostart)
@@ -16,7 +14,6 @@ Classifier::Classifier(const Classifier& other) {
   n = other.n;
   name = other.name;
   dataFolder = other.dataFolder;
-  path = other.path;
   fileExtension = other.fileExtension;
   threshold = other.threshold;
   autostart = other.autostart;
@@ -24,26 +21,14 @@ Classifier::Classifier(const Classifier& other) {
 }
 
 void Classifier::init() {
-  ROS_INFO("%s: Reading list file %s", name.c_str(), path.c_str());
+  ROS_INFO("%s: Reading list file", name.c_str());
 
-  FloatLookupTable table;
   //parse
   std::ifstream objectListFile;
   std::string tempString, eachLine, label;
 
-  objectListFile.open(path.c_str(), std::ios::in);  
-  std::getline(objectListFile, eachLine);
-  std::istringstream nameSS(eachLine);
-  while(nameSS >> eachLine)
-  {
-    fullTypeList.push_back(eachLine);
-  }
-  if(fullTypeList.size() < 1)
-  {
-    ROS_FATAL ("%s: No types loaded from %s. This is gonna be bad.", name.c_str(), path.c_str());
-    return;
-  }
-  subTypeList = fullTypeList;
+  //FIXME
+  //fullTypeList.push_back();
 
   objectListFile.close();
 
@@ -52,7 +37,7 @@ void Classifier::init() {
 
   if(loadedModels.size() < 1)
   {
-    ROS_FATAL ("%s: No models loaded from %s. This is going to be worse.", name.c_str(), dataFolder.c_str());
+    ROS_WARN ("%s: No models loaded from %s.", name.c_str(), dataFolder.c_str());
   } else {
     subModels = loadedModels;
 

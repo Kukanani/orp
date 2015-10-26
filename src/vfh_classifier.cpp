@@ -11,7 +11,6 @@ int main(int argc, char **argv)
   srand (static_cast <unsigned> (time(0)));
 
   ros::init(argc, argv, "vfh_classifier");
-  ros::NodeHandle n;
 
   if(argc < 3) {
     ROS_FATAL("proper usage is 'vfh_classifier data_directory object_list_file");
@@ -21,15 +20,15 @@ int main(int argc, char **argv)
   std::string listFile = argv[2];
 
   ROS_INFO("Starting VFH Classifier");
-  VFHClassifier v = VFHClassifier(n, directory, listFile);
+  VFHClassifier v = VFHClassifier(directory);
   v.init();
 
   ros::spin();
   return 1;
 } //main
 
-VFHClassifier::VFHClassifier(ros::NodeHandle nh, std::string dataFolder, std::string path):
-  Classifier(nh, 10000, "vfh", path, dataFolder, ".vfh")
+VFHClassifier::VFHClassifier(std::string dataFolder):
+  Classifier(10000, "vfh", dataFolder, ".vfh")
 {
 
 } //VFHClassifier

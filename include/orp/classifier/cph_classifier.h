@@ -35,7 +35,7 @@ public:
   /**
    * Constructor
    */
-  CPHClassifier(ros::NodeHandle nh,  std::string directory, std::string path, bool _autostart);
+  CPHClassifier(std::string directory, bool _autostart);
 
   /**
    * Load one histogram from a file, as long as it matches the known list of objects.

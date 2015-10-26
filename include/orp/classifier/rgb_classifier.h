@@ -33,7 +33,7 @@ public:
   /**
    * Constructor
    */
-  RGBClassifier(ros::NodeHandle nh,  std::string directory, std::string path, bool autostart = false);
+  RGBClassifier(std::string directory, bool autostart = false);
   
   /**
    * Load one histogram from a file, as long as it matches the known list of objects.

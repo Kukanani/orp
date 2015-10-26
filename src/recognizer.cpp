@@ -12,9 +12,7 @@ int main(int argc, char **argv)
 {
   srand (static_cast <unsigned> (time(0)));
 
-  ros::init(argc, argv, "recognizer");
-  ros::NodeHandle n;
-
+  //read arguments
   if(argc < 2) {
     ROS_FATAL("proper usage is 'recognizer sensor_model_file [autostart]");
     return -1;
@@ -26,9 +24,12 @@ int main(int argc, char **argv)
       autostart = true;
     }
   }
-  ROS_INFO("Starting Recognizer");
-  Recognizer s(n, listFile, autostart);
 
+  //get started
+  ros::init(argc, argv, "recognizer");
+  Recognizer s(autostart);
+
+  //Run ROS until shutdown
   ros::AsyncSpinner spinner(1);
   spinner.start();
   ros::waitForShutdown();
@@ -38,8 +39,7 @@ int main(int argc, char **argv)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-Recognizer::Recognizer(ros::NodeHandle nh, std::string sensorModelFile, bool _autostart) :
-    n(nh),
+Recognizer::Recognizer(bool _autostart) :
     autostart(_autostart),
     colocationDist(0.01),
     typeManager(0),
@@ -86,7 +86,6 @@ Recognizer::Recognizer(ros::NodeHandle nh, std::string sensorModelFile, bool _au
   typeManager = new WorldObjectManager("unknown");
 
   ROS_INFO("initializing sensor model");
-  initializeBayesSensorModel(sensorModelFile);
 
   fillMarkerStubs();
 
@@ -195,7 +194,7 @@ void Recognizer::fillMarkerStubs() {
     //ROS_INFO("creating marker stub for world object of type '%s'", (*names).c_str());
     stub.header.frame_id = recognitionFrame;
     stub.action          = visualization_msgs::Marker::ADD;
-    markerStubs[*names] = std::make_pair<visualization_msgs::Marker, RPY>(stub, rpy);
+    markerStubs[*names] = std::pair<visualization_msgs::Marker, RPY>(stub, rpy);
   }
   ROS_INFO("The recognizer has created %i visualization marker stubs.", (int) markerStubs.size());
 }
@@ -237,84 +236,6 @@ std::pair<visualization_msgs::Marker, RPY> Recognizer::getStubAt(std::string nam
   return stubby;
 }
 
-
-void Recognizer::initializeBayesSensorModel(std::string path)
-{
-  //parse
-  std::ifstream objectListFile;
-  std::string tempString, eachLine, label;
-
-  int rowCount = 0, columnCount = 0;
-
-  try {
-    objectListFile.open(path.c_str(), std::ios::in);
-    std::getline(objectListFile, eachLine);
-    std::istringstream nameSS(eachLine);
-    while(nameSS >> eachLine) {
-      typeList.push_back(eachLine);
-      WorldObjectType thisType = WorldObjectType(eachLine);
-      typeManager->addType(thisType);
-      columnCount++;
-    }
-
-    ROS_INFO("Done reading list of objects (%i). Now reading each row", columnCount);
-    //continue onwarda
-    while(std::getline(objectListFile, eachLine))
-    {
-      if(eachLine.at(0) == '#') continue;
-
-      //ROS_INFO("row: %s", eachLine.c_str());
-      FloatLookupRow sensorModelRow;
-
-      std::istringstream objectSS(eachLine);
-      //1. Record object name and add to map.
-      objectSS >> label;
-      //ROS_INFO("label: %s", label.c_str());
-
-      //FIXME: rotation standard deviation
-      objectSS >> tempString;  //dummy
-      //ROS_INFO("pose std dev: %s", tempString.c_str());
-      //FIXME FIXME 
-      //typeManager->getTypeByName(label).rotStdDev = atof(tempString.c_str());
-
-      //2. Get the row of the confusion matrix
-      int i = 0;
-      while(objectSS >> tempString)
-      {
-        if(i >= columnCount)
-        {
-          ROS_ERROR("There are too many columns on the line %i, starting with %s.", i, label.c_str());
-        }
-        else
-        {
-          //ROS_INFO("inserting %f as probability for %s/%s (i=%d)", atof(tempString.c_str()), label.c_str(), typeList[i].c_str(), i);
-          sensorModelRow.insert(std::pair<std::string,float>(typeList[i], atof(tempString.c_str())));
-          rowCount++;
-        }
-        i++;
-      }
-      //ROS_INFO("%i rows", rowCount);
-      fullSensorModel.insert(std::make_pair<std::string, FloatLookupRow>(label, sensorModelRow));
-    }
-    //ROS_INFO("%i columns", columnCount);
-    subSensorModel = fullSensorModel;
-    ROS_INFO("done reading sensor file");
-
-    objectListFile.close();
-  }
-  catch(const std::ifstream::failure& e)
-  {
-    ROS_ERROR_STREAM("Exception opening/reading sensor file " << path.c_str() << ": " << e.what());
-    ROS_ERROR("Bayesian sensor model not loaded.");
-  }
-  catch(const std::logic_error& e)
-  {
-    ROS_ERROR("Exception creating type list and sensor model: %s", e.what());
-    ROS_ERROR("Bayesian sensor model not loaded.");
-  }
-
-} //initializeSensorModel
-
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
   //ROS_INFO("object incoming, type %s...", newObject.result.label.c_str());
@@ -322,33 +243,34 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 
   TypeMap probs;
   tf::Pose stubAdjustmentPose;
-  for(FloatLookupTable::iterator it = subSensorModel.begin(); it != subSensorModel.end(); it++) {
-    stubAdjustmentPose = tf::Pose(tf::createQuaternionFromRPY(
-      getStubAt(it->first).second.roll,
-      getStubAt(it->first).second.pitch,
-      getStubAt(it->first).second.yaw
-    ));
+  // for(auto it = subTypeList.begin(); it != subTypeList.end(); it++) {
+     stubAdjustmentPose = tf::Pose(tf::createQuaternionFromRPY(
+       getStubAt(newObject.result.label).second.roll,
+       getStubAt(newObject.result.label).second.pitch,
+       getStubAt(newObject.result.label).second.yaw
+     ));
    
-    Eigen::Affine3d eigPose;
-    tf::poseTFToEigen(stubAdjustmentPose, eigPose);
+     Eigen::Affine3d eigPose;
+     tf::poseTFToEigen(stubAdjustmentPose, eigPose);
 
-    float probability = 1.0f;
-    try {
-      probability = it->second.at(newObject.result.label);
-    } catch(std::out_of_range oor) {
-      //swallowed, just default to probability 1
-    }
-    probs.insert(TypeMap::value_type(it->first, PoseGuess(probability, eigPose)));
-  }
+  //   float probability = 1.0f;
+  //   try {
+  //     probability = 0.0
+  //   } catch(std::out_of_range oor) {
+  //     //swallowed, just default to probability 1
+  //   }
+    //probs.insert(TypeMap::value_type(*it, PoseGuess(probability, eigPose)));
+    probs.insert(TypeMap::value_type(newObject.result.label, PoseGuess(1.0f, eigPose)));
+  // }
 
   //IMPORTANT HACK (TODO): adjust the item's position upwards by half its height, so it will be sitting on the ground.
-  newObject.result.pose.pose.position.z += 0;//getStubAt(newObject.result.label).first.scale.z / 1.0f;
+  //newObject.result.pose.pose.position.z += 0;//getStubAt(newObject.result.label).first.scale.z / 1.0f;
 
 
   if(newObject.method == "cph")
   {
     WorldObjectPtr p = WorldObjectPtr(
-      new WorldObjectBayesKalman(subSensorModel, 
+      new WorldObject(
                                   colocationDist,
                                   typeManager,
                                   newObject.result,
@@ -359,29 +281,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   else if(newObject.method == "vfh")
   {
     WorldObjectPtr p = WorldObjectPtr(
-      new WorldObjectBayesKalman(subSensorModel, 
-                                  colocationDist,
-                                  typeManager,
-                                  newObject.result,
-                                  probs));
-    model.push_back(p);
-    addMarker(p);
-  }
-  else if(newObject.method == "cvfh")
-  {
-    WorldObjectPtr p = WorldObjectPtr(
-      new WorldObjectBayesKalman(subSensorModel, 
-                                  colocationDist,
-                                  typeManager,
-                                  newObject.result,
-                                  probs));
-    model.push_back(p);
-    addMarker(p);
-  }
-  else if(newObject.method == "icp")
-  {
-    WorldObjectPtr p = WorldObjectPtr(
-      new WorldObjectBayesKalman(subSensorModel, 
+      new WorldObject(
                                   colocationDist,
                                   typeManager,
                                   newObject.result,
@@ -393,7 +293,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   {
 
     WorldObjectPtr p = WorldObjectPtr(
-      new WorldObjectBayes(subSensorModel, 
+      new WorldObject(
                                   colocationDist,
                                   typeManager,
                                   newObject.result,
@@ -404,7 +304,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   else if(newObject.method == "rgb")
   {
     WorldObjectPtr p = WorldObjectPtr(
-      new WorldObjectBayes(subSensorModel, 
+      new WorldObject(
                                   colocationDist,
                                   typeManager,
                                   newObject.result,
@@ -456,23 +356,19 @@ void Recognizer::stopRecognition() {
 } //stopRecognition
 
 void Recognizer::setDetectionSet(std::vector<std::string> set) {
-  if(set.size() > fullSensorModel.size()) {
+  if(set.size() > typeList.size()) {
     ROS_ERROR("your desired subset is larger than the number of known items. Something's wrong.");
   }
-  subSensorModel = fullSensorModel; // begin with them equal
-  for(FloatLookupTable::iterator source = fullSensorModel.begin(); source != fullSensorModel.end(); ++source) {
-    if(std::find(set.begin(), set.end(), source->first) == set.end() && source->first != "unknown") {
-      //this row (object type) isn't found in the desired subset.
-      //first, remove its row from the current subset sensor model;
-      subSensorModel.erase(source->first);
-      //now, loop through the subset model and remove this object's column (probability) from each row.
-      for(FloatLookupTable::iterator row = subSensorModel.begin(); row != subSensorModel.end(); ++row) {
-        row->second.erase(source->first);
-      }
-    }
-  }
-  if(subSensorModel.empty()) { //nothing left!
-    ROS_FATAL("No items left in Recognizer detection subset!");
+
+  subTypeList = typeList; // begin with them equal
+
+  std::vector<std::string>::iterator it = std::set_intersection(typeList.begin(), typeList.end(),
+    set.begin(), set.end(), subTypeList.begin());
+
+  subTypeList.resize(it-subTypeList.begin());
+
+  if(subTypeList.empty()) { //nothing left!
+    ROS_FATAL("No items left in Recognizer detection set after specifying a subset");
     return;
   }
 } //setDetectionSet

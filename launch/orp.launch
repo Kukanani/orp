@@ -35,6 +35,7 @@
     pkg     = "orp"
     type    = "segmentation"
     args    = ""
+    launch-prefix="xterm -e gdb --args"
 
     respawn = "true"
     output  = "screen"

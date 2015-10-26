@@ -11,7 +11,6 @@ int main(int argc, char **argv)
   srand (static_cast <unsigned> (time(0)));
 
   ros::init(argc, argv, "sixdof_classifier");
-  ros::NodeHandle n;
 
   if(argc < 3) {
     ROS_FATAL("proper usage is 'sixdof_classifier data_directory object_list_file [autostart]");
@@ -25,15 +24,15 @@ int main(int argc, char **argv)
   }
 
   ROS_INFO("Starting SixDOF Classifier");
-  SixDOFClassifier v(n, directory, listFile, autostart);
+  SixDOFClassifier v(directory, autostart);
   v.init();
 
   ros::spin();
   return 1;
 } //main
 
-SixDOFClassifier::SixDOFClassifier(ros::NodeHandle nh, std::string dataFolder, std::string path, bool autostart):
-  Classifier(nh, 10000, "sixdof", path, dataFolder, ".cvfh", autostart)
+SixDOFClassifier::SixDOFClassifier(std::string dataFolder, bool autostart):
+  Classifier(10000, "sixdof", dataFolder, ".cvfh", autostart)
 {
 
 } //SixDOFClassifier

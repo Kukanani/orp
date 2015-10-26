@@ -21,7 +21,7 @@ try:
 	for row in c:
 		row_names.append(row[1])
 except Exception as inst:
-	rospy.loginfo("Couldn't get table info: %s", inst)
+	rospy.logerr("Couldn't get table info: %s", inst)
 
 try:
 	c.execute('''SELECT * FROM items''')
@@ -32,4 +32,4 @@ try:
 except Exception as inst:
 	rospy.logerr("Couldn't load SQLite parameters: %s", inst)
 finally:
-	rospy.logerr("Done loading SQLite parameters")
+	rospy.loginfo("Done loading SQLite parameters")

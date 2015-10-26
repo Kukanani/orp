@@ -15,7 +15,6 @@ int main(int argc, char **argv)
   srand (static_cast <unsigned> (time(0)));
 
   ros::init(argc, argv, "rgb_classifier");
-  ros::NodeHandle n;
 
   if(argc < 3) {
     ROS_FATAL("proper usage is 'rgb_classifier data_directory object_list_file [autostart]");
@@ -29,7 +28,7 @@ int main(int argc, char **argv)
   }
 
   ROS_INFO("Starting RGB Classifier");
-  RGBClassifier v(n, directory, listFile, autostart);
+  RGBClassifier v(directory, autostart);
   v.init();
 
   //cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
@@ -43,8 +42,8 @@ int main(int argc, char **argv)
   return 1;
 } //main
 
-RGBClassifier::RGBClassifier(ros::NodeHandle nh, std::string dataFolder, std::string path, bool autostart):
-  Classifier(nh, 10000, "rgb", path, dataFolder, ".rgb", autostart)
+RGBClassifier::RGBClassifier(std::string dataFolder, bool autostart):
+  Classifier(10000, "rgb", dataFolder, ".rgb", autostart)
 {
 
 } //RGBClassifier

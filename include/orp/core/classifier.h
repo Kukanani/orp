@@ -80,7 +80,6 @@ protected:
   float threshold;                              /// knn distance threshold
   std::string name;                             /// classifier type (cph, vfh, etc.)
   std::string dataFolder;                       /// folder to load feature vectors from
-  std::string path;                             /// path to list file
   std::string fileExtension;                    /// file extension to load feature vectors from.
 
   boost::mutex rosMutex;                        /// Protects ROS node interfaces
@@ -154,10 +153,8 @@ public:
    * Constructor. Don't forget to call init() afterwards.
    */
   Classifier(
-    ros::NodeHandle nh,
     float thresh,
     std::string _name,
-    std::string path,
     std::string dataFolder,
     std::string fileExt,
     bool autostart = false);

@@ -126,6 +126,9 @@ protected:
   float colocationDistance; ///objects closer than this distance [m] are assumed to be the same one.
 
 
+  std::vector<std::string> fullSensorModel; //list of all detectable items
+  std::vector<std::string> subSensorModel;  //list of items to be detected
+
 public:
 
   /**
@@ -133,6 +136,11 @@ public:
    * @arg manage the object with the global list of types.
    */
   WorldObject(WorldObjectManager* manage, float colocationDist);
+
+  /**
+   * Constructor with more specifications, to be created from a classifier.
+   */
+  WorldObject(float colocationDist, WorldObjectManager* manager_, orp::WorldObject classRes, TypeMap probDistr);
 
   /**
    * Should we merge with the specified object? For internal use
@@ -297,102 +305,99 @@ public:
 
 }; //WorldObject
 
-typedef std::map<std::string, float> FloatLookupRow;
-typedef std::map< std::string, FloatLookupRow > FloatLookupTable;
+// /**
+//  * @brief A special type of WorldObject that merges results based on Bayesian filtering.
+//  *
+//  *
+//  * Stores a Bayesian ground
+//  * truth confusion matrix (the sensor model). See the sensorModel variable for more info.
+//  * 
+//  * @version 1.0
+//  * @ingroup objectrecognition
+//  * @ingroup apc
+//  * 
+//  * @author    Adam Allevato <allevato@utexas.edu>
+//  * @copyright BSD 3-paragraph
+//  * @date      1/29/2015
+//  */
+// class WorldObjectBayes : public WorldObject {
+// private:
+//   float uniformLevel;       ///Used to generate uniform Bayesian priors on-the-fly.
 
-/**
- * @brief A special type of WorldObject that merges results based on Bayesian filtering.
- *
- *
- * Stores a Bayesian ground
- * truth confusion matrix (the sensor model). See the sensorModel variable for more info.
- * 
- * @version 1.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author    Adam Allevato <allevato@utexas.edu>
- * @copyright BSD 3-paragraph
- * @date      1/29/2015
- */
-class WorldObjectBayes : public WorldObject {
-private:
-  float uniformLevel;       ///Used to generate uniform Bayesian priors on-the-fly.
+//   /**
+//    * Does the dirty work of looking up a conditional probability from the sensor model.
+//    * If values aren't found, errors are printed and default values returned.
+//    * The only exception is for the "unknown" type; this function doesn't
+//    * create error messages if unknown can't be found in the sensor model.
+//    * @param  row    The recognition result 
+//    * @param  column The object class to look up
+//    * @return        The conditional probability of "column" given recognition result "row"
+//    */
+//   float sensorModelAt(std::string row, std::string column);
 
-  /**
-   * Does the dirty work of looking up a conditional probability from the sensor model.
-   * If values aren't found, errors are printed and default values returned.
-   * The only exception is for the "unknown" type; this function doesn't
-   * create error messages if unknown can't be found in the sensor model.
-   * @param  row    The recognition result 
-   * @param  column The object class to look up
-   * @return        The conditional probability of "column" given recognition result "row"
-   */
-  float sensorModelAt(std::string row, std::string column);
+//   /**
+//    * Stores each row of the confusion matrix associated with this world sensor model.
+//    * This encodes the conditional probability, p(z|C_j), or the probability of 
+//    * getting result z given class C_j. z is the key of this map (std::string),
+//    * and C_j is this class itself (with name WorldObjectType::name, an std::string).
+//    */
+//   FloatLookupTable sensorModel;
 
-  /**
-   * Stores each row of the confusion matrix associated with this world sensor model.
-   * This encodes the conditional probability, p(z|C_j), or the probability of 
-   * getting result z given class C_j. z is the key of this map (std::string),
-   * and C_j is this class itself (with name WorldObjectType::name, an std::string).
-   */
-  FloatLookupTable sensorModel;
+// public:
 
-public:
+//   /**
+//    * Default constructor; calls createUniformPrior
+//    * @arg model the sensor model to use for Bayesian merging
+//    * @arg colocationDist the max separation distance between objects
+//    * @arg manage the object with the global list of types.
+//    */
+//   WorldObjectBayes(FloatLookupTable model, float colocationDist, WorldObjectManager* manage);
+//   WorldObjectBayes(FloatLookupTable model, float colocationDist, WorldObjectManager* manage, 
+//                     orp::WorldObject classRes);
+//   WorldObjectBayes(FloatLookupTable model, float colocationDist, WorldObjectManager* manage,
+//                     orp::WorldObject classRes, TypeMap probDistr);
+//   /**
+//    * Initializes the probabilities with a uniform prior.
+//    * Set a uniform prior.
+//    * This is a Bad Idea for a number of reasons, and I'm trying to come up with
+//    * other ways of dealing with it. But for now, it's what Brian used, and I'm
+//    * trying to recreate his methods before moving on.
+//    */
+//   void createUniformPrior();
 
-  /**
-   * Default constructor; calls createUniformPrior
-   * @arg model the sensor model to use for Bayesian merging
-   * @arg colocationDist the max separation distance between objects
-   * @arg manage the object with the global list of types.
-   */
-  WorldObjectBayes(FloatLookupTable model, float colocationDist, WorldObjectManager* manage);
-  WorldObjectBayes(FloatLookupTable model, float colocationDist, WorldObjectManager* manage, 
-                    orp::WorldObject classRes);
-  WorldObjectBayes(FloatLookupTable model, float colocationDist, WorldObjectManager* manage,
-                    orp::WorldObject classRes, TypeMap probDistr);
-  /**
-   * Initializes the probabilities with a uniform prior.
-   * Set a uniform prior.
-   * This is a Bad Idea for a number of reasons, and I'm trying to come up with
-   * other ways of dealing with it. But for now, it's what Brian used, and I'm
-   * trying to recreate his methods before moving on.
-   */
-  void createUniformPrior();
+//   /**
+//    * VALIDATE and set the Bayesian sensor model for this world. This may have to
+//    * be augmented in the future, when we have multisensory methods, but
+//    * for now, it works.
+//    * @param model the new sensor model.
+//    */
+//   void setSensorModel(FloatLookupTable model);
 
-  /**
-   * VALIDATE and set the Bayesian sensor model for this world. This may have to
-   * be augmented in the future, when we have multisensory methods, but
-   * for now, it works.
-   * @param model the new sensor model.
-   */
-  void setSensorModel(FloatLookupTable model);
+//   FloatLookupTable getSensorModel() { return sensorModel; };
 
-  FloatLookupTable getSensorModel() { return sensorModel; };
+//   /**
+//    * Should we merge an object into this one?
+//    * @param  wo proposed merge.
+//    * @return    true if within the colocation distance, and this object has the information
+//    * necessary to perform a merge
+//    */
+//   virtual bool shouldMergeWith(WorldObject* wo);
 
-  /**
-   * Should we merge an object into this one?
-   * @param  wo proposed merge.
-   * @return    true if within the colocation distance, and this object has the information
-   * necessary to perform a merge
-   */
-  virtual bool shouldMergeWith(WorldObject* wo);
+//   /**
+//    * Special Bayesian merge function.
+//    *
+//    * The object being merged into this one is assumed to be a single reading, and
+//    * will be combined with this object's results in a Bayesian fashion.
+//    */
+//   virtual bool merge(WorldObject* other);
 
-  /**
-   * Special Bayesian merge function.
-   *
-   * The object being merged into this one is assumed to be a single reading, and
-   * will be combined with this object's results in a Bayesian fashion.
-   */
-  virtual bool merge(WorldObject* other);
-
-  ///Overload for more detailed info (if needed in the future)
-  virtual void debugPrint();
+//   ///Overload for more detailed info (if needed in the future)
+//   virtual void debugPrint();
   
-  //required for using fixed-size vectorizable Eigen types. 
-  //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-}; //WorldObjectBayes
+//   //required for using fixed-size vectorizable Eigen types. 
+//   //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
+//   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+// }; //WorldObjectBayes
 
 /**
  * @brief A special type of WorldObject that merges results based on Bayesian filtering, and uses
@@ -409,40 +414,41 @@ public:
  * @copyright BSD 3-paragraph
  * @date      1/29/2015
  */
-class WorldObjectBayesKalman : public WorldObjectBayes {
-protected:
+
+// class WorldObjectBayesKalman : public WorldObjectBayes {
+// protected:
   
-  /**
-   * Sensor noise covariance.
-   */
-  Eigen::Matrix4d sigma;
+//   /**
+//    * Sensor noise covariance.
+//    */
+//   Eigen::Matrix4d sigma;
 
-  float subtractAngle(float angle_1, float angle_2);
-public:
-  /**
-   * Default constructor; calls createUniformPrior
-   * @arg model the sensor model to use for Bayesian merging
-   * @arg colocationDist the max separation distance between objects
-   * @arg manage the object with the global list of types.
-   */
-  WorldObjectBayesKalman(FloatLookupTable model, float colocationDist, WorldObjectManager* manage);
-  WorldObjectBayesKalman(FloatLookupTable model, float colocationDist, WorldObjectManager* manage, 
-                    orp::WorldObject classRes);
-  WorldObjectBayesKalman(FloatLookupTable model, float colocationDist, WorldObjectManager* manage,
-                    orp::WorldObject classRes, TypeMap probDistr);
+//   float subtractAngle(float angle_1, float angle_2);
+// public:
+//   /**
+//    * Default constructor; calls createUniformPrior
+//    * @arg model the sensor model to use for Bayesian merging
+//    * @arg colocationDist the max separation distance between objects
+//    * @arg manage the object with the global list of types.
+//    */
+//   WorldObjectBayesKalman(FloatLookupTable model, float colocationDist, WorldObjectManager* manage);
+//   WorldObjectBayesKalman(FloatLookupTable model, float colocationDist, WorldObjectManager* manage, 
+//                     orp::WorldObject classRes);
+//   WorldObjectBayesKalman(FloatLookupTable model, float colocationDist, WorldObjectManager* manage,
+//                     orp::WorldObject classRes, TypeMap probDistr);
 
-  /**
-   * Special Bayesian merge function.
-   *
-   * The object being merged into this one is assumed to be a single reading, and
-   * will be combined with this object's results in a Bayesian fashion.
-   */
-  virtual bool merge(WorldObject* other);
+//   /**
+//    * Special Bayesian merge function.
+//    *
+//    * The object being merged into this one is assumed to be a single reading, and
+//    * will be combined with this object's results in a Bayesian fashion.
+//    */
+//   virtual bool merge(WorldObject* other);
   
-  //required for using fixed-size vectorizable Eigen types. 
-  //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+//   //required for using fixed-size vectorizable Eigen types. 
+//   //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
+//   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-}; //WorldObjectBayesKalman
+// }; //WorldObjectBayesKalman
 
 #endif //_WORLD_OBJECT_H_

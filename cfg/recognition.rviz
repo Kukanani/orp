@@ -7,7 +7,7 @@ Panels:
         - /DepthCloud1/Auto Size1
         - /TF1/Frames1
       Splitter Ratio: 0.846154
-    Tree Height: 740
+    Tree Height: 359
   - Class: rviz/Selection
     Name: Selection
   - Class: rviz/Tool Properties
@@ -26,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: DepthCloud
+    SyncSource: ""
   - Class: Status
     Name: Status
     topic: /status

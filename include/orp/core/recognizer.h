@@ -51,9 +51,8 @@ private:
   std::string markerTopic;              /// Where to publish the RViz markers for visualization
   visualization_msgs::MarkerArray markerMsg; /// The marker message to send out after each recognition. Used in multiple methods.
 
-  FloatLookupTable fullSensorModel;         ///The general sensor model. TODO: replace with each individual sensor model for each sensing method
-  FloatLookupTable subSensorModel;         ///Sensor model for detectable subset
   std::vector<std::string> typeList;    /// List of object names that the cph can recognize.
+  std::vector<std::string> subTypeList;    /// List of object names that the cph can recognize.
   std::map<std::string, std::pair<visualization_msgs::Marker, RPY> > markerStubs; //used to create object markers
 
   ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
@@ -94,19 +93,6 @@ private:
    * @param newObject the passed message from the classifier topic
    */
   void cb_classificationResult(orp::ClassificationResult newObject);
-
-  /**
-   * Set up the sensor model used in all the Bayesian objects by reading in the specified file.
-   * The file should have the following form:
-   *
-   * object1 object2
-   * object1 rot_std_dev1 1.0 0.0
-   * object2 rot_std_dev2 0.0 1.0
-   *
-   * This is basically defining a 2-dimensional table of probabilities, with the ground truth
-   * on the row and the object probability on the column.
-   */
-  void initializeBayesSensorModel(std::string file);
 
   /**
    * Get the object in the world that has the best shot at being the given object type.
@@ -220,10 +206,9 @@ public:
   /**
    * Main Recognizer constructor.
    * @arg nh The NodeHandle to use for all ROS functionality.
-   * @arg sensorModelFile the CPH sensor model file
    * @arg autostart whether or not to start recognition automatically. Default is false (wait for a message to be published to /orp_start_recognition)
    */
-  Recognizer(ros::NodeHandle nh, std::string sensorModelFile, bool autostart = false);
+  Recognizer(bool autostart = false);
   /**
    * Main Recognizer destructor
    */

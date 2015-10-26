@@ -25,7 +25,7 @@ public:
   /**
    * Constructor
    */
-  VFHClassifier(ros::NodeHandle nh,  std::string directory, std::string path);
+  VFHClassifier(std::string directory);
   
   /**
    * Load one histogram from a file, as long as it matches the known list of objects.

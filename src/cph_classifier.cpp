@@ -11,7 +11,6 @@ int main(int argc, char **argv)
   srand (static_cast <unsigned> (time(0)));
 
   ros::init(argc, argv, "cph_classifier");
-  ros::NodeHandle n;
 
   if(argc < 3) {
     ROS_FATAL("proper usage is 'cph_classifier data_directory object_list_file");
@@ -25,15 +24,15 @@ int main(int argc, char **argv)
   }
 
   ROS_INFO("Starting CPH Classifier");
-  CPHClassifier c = CPHClassifier(n, directory, listFile, autostart);
+  CPHClassifier c = CPHClassifier(directory, autostart);
   c.init();
 
   ros::spin();
   return 1;
 } //main
 
-CPHClassifier::CPHClassifier(ros::NodeHandle nh, std::string dataFolder, std::string path, bool _autostart):
-  Classifier(nh, 10000, "cph", path, dataFolder, ".cph", _autostart),
+CPHClassifier::CPHClassifier(std::string dataFolder, bool _autostart):
+  Classifier(10000, "cph", dataFolder, ".cph", _autostart),
   cph(5,72)
 {
   yBins = 5;
