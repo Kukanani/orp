@@ -3,7 +3,11 @@
     name    = "static_transform_publisher"  
     pkg     = "tf"
     type    = "static_transform_publisher"
-    args    = "-1.085 0.662 0.195 0 0.8 0 world camera_link 100"
+<<<<<<< HEAD
+    args    = "-1.1 0.64 0.195 0 0.8 0 world camera_link 100"
+=======
+    args    = "-1.085 0.65 0.20 0 0.8 0 world camera_link 100-"
+>>>>>>> parent of 79242e2... DEMO CODE, DO NOT CHANGE ORP OR CANNED DEMO
 
     respawn = "true"
     output  = "screen"
