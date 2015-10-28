@@ -94,7 +94,6 @@
     args    = ""
 
     respawn = "false"
-    output  = "screen"
   />
 
   <node
@@ -102,10 +101,9 @@
     name    = "rviz"
     pkg     = "rviz"
     type    = "rviz"
-    args    = "-l -d $(arg rviz_file) -s $(arg home_dir)/rviz/splash.png"
+    args    = "-d $(arg rviz_file) -s $(arg home_dir)/rviz/splash.png"
 
     respawn = "false"
-    output  = "screen"
   />
 
   <rosparam command="load" file="$(arg home_dir)/cfg/default.yaml" />
@@ -117,6 +115,5 @@
     args    = "set camera/driver depth_registration true"
 
     respawn = "false"
-    output  = "screen"
   />
 </launch>

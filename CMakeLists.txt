@@ -13,7 +13,7 @@ set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAG
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers)
+find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers cv_bridge)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 
@@ -105,6 +105,9 @@ add_executable(rgb_classifier src/rgb_classifier.cpp)
 add_dependencies(rgb_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(rgb_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
+add_executable(opencv_classifier src/opencv_classifier.cpp)
+add_dependencies(opencv_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+target_link_libraries(opencv_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 ####################################################################################################
 
@@ -112,17 +115,17 @@ add_executable(pan_data_collector src/pan_data_collector.cpp)
 add_dependencies(pan_data_collector ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(pan_data_collector ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
-add_executable(apc_data_collector src/apc_data_collector.cpp)
-add_dependencies(apc_data_collector ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-target_link_libraries(apc_data_collector ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+#add_executable(apc_data_collector src/apc_data_collector.cpp)
+#add_dependencies(apc_data_collector ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+#target_link_libraries(apc_data_collector ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
 add_executable(histogram_saver src/histogram_saver.cpp)
 add_dependencies(histogram_saver ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(histogram_saver ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
-add_executable(virtual_train src/virtual_train.cpp)
-add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-target_link_libraries(virtual_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkIO.so libvtkFiltering.so)
+#add_executable(virtual_train src/virtual_train.cpp)
+#add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+#target_link_libraries(virtual_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkIO.so libvtkFiltering.so)
 
 add_executable(vision_simulator src/vision_simulator.cpp)
 add_dependencies(vision_simulator ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
