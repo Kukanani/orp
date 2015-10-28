@@ -23,14 +23,15 @@ Classifier::Classifier(const Classifier& other) {
 void Classifier::init() {
   ROS_INFO("%s: Reading list file", name.c_str());
 
-  //parse
-  std::ifstream objectListFile;
-  std::string tempString, eachLine, label;
-
-  //FIXME
-  //fullTypeList.push_back();
-
-  objectListFile.close();
+  //parse the params on the parameter server
+  
+  std::vector<std::string> paramMap;
+  if(!n.getParam("/items/list", paramMap)) {
+    ROS_ERROR("couldn't load items from parameter server.");
+  }
+  for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
+    fullTypeList.push_back(*it);
+  }
 
   loadModelsRecursive(dataFolder, fileExtension, loadedModels);
   ROS_INFO("%s: Loaded %d models.\n", name.c_str(), (int)loadedModels.size());

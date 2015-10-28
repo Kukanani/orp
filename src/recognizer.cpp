@@ -43,7 +43,7 @@ Recognizer::Recognizer(bool _autostart) :
     autostart(_autostart),
     colocationDist(0.01),
     typeManager(0),
-    recognitionFrame("camera_depth_optical_frame"),
+    recognitionFrame("world"),
 
     markerTopic("/detected_object_markers"),
     objectTopic("/detected_objects"),
@@ -86,7 +86,16 @@ Recognizer::Recognizer(bool _autostart) :
   typeManager = new WorldObjectManager("unknown");
 
   ROS_INFO("initializing sensor model");
-
+  
+  std::vector<std::string> paramMap;
+  if(!n.getParam("/items/list", paramMap)) {
+    ROS_ERROR("couldn't load items from parameter server.");
+  }
+  for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
+    typeList.push_back(*it);
+    typeManager->addType(WorldObjectType(*it));
+  }
+  
   fillMarkerStubs();
 
   if(autostart) {
@@ -209,8 +218,8 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
 
   geometry_msgs::PoseStamped pose;
   tf::Pose originalPose;
-  tf::poseEigenToTF (found->getPose(req.name), originalPose);
-  ROS_ERROR_STREAM("found->getPose(" << req.name << "): " << originalPose.getOrigin().x() << ", " << originalPose.getOrigin().y() << "," << originalPose.getOrigin().z());
+  tf::poseEigenToTF (found->getPose(), originalPose);
+  ROS_ERROR_STREAM("found->getPose(): " << originalPose.getOrigin().x() << ", " << originalPose.getOrigin().y() << "," << originalPose.getOrigin().z());
   tf::poseTFToMsg(originalPose, pose.pose);
   ROS_ERROR_STREAM("pose.pose: " << pose.pose.position.x << ", " << pose.pose.position.y << "," << pose.pose.position.z);
 
@@ -241,81 +250,28 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   //ROS_INFO("object incoming, type %s...", newObject.result.label.c_str());
   RPY rpy;
 
-  TypeMap probs;
   tf::Pose stubAdjustmentPose;
-  // for(auto it = subTypeList.begin(); it != subTypeList.end(); it++) {
-     stubAdjustmentPose = tf::Pose(tf::createQuaternionFromRPY(
-       getStubAt(newObject.result.label).second.roll,
-       getStubAt(newObject.result.label).second.pitch,
-       getStubAt(newObject.result.label).second.yaw
-     ));
-   
-     Eigen::Affine3d eigPose;
-     tf::poseTFToEigen(stubAdjustmentPose, eigPose);
+  
+  stubAdjustmentPose = tf::Pose(tf::createQuaternionFromRPY(
+    getStubAt(newObject.result.label).second.roll,
+    getStubAt(newObject.result.label).second.pitch,
+    getStubAt(newObject.result.label).second.yaw
+  ));
 
-  //   float probability = 1.0f;
-  //   try {
-  //     probability = 0.0
-  //   } catch(std::out_of_range oor) {
-  //     //swallowed, just default to probability 1
-  //   }
-    //probs.insert(TypeMap::value_type(*it, PoseGuess(probability, eigPose)));
-    probs.insert(TypeMap::value_type(newObject.result.label, PoseGuess(1.0f, eigPose)));
-  // }
+  Eigen::Affine3d eigStubAdjustment;
+  tf::poseTFToEigen(stubAdjustmentPose, eigStubAdjustment);
+  
+  Eigen::Affine3d objPose;
+  tf::Pose tfPose;
+  tf::poseMsgToTF(newObject.result.pose.pose, tfPose);
+  tf::poseTFToEigen(tfPose, objPose);
+  
+  objPose = objPose * eigStubAdjustment;
 
-  //IMPORTANT HACK (TODO): adjust the item's position upwards by half its height, so it will be sitting on the ground.
-  //newObject.result.pose.pose.position.z += 0;//getStubAt(newObject.result.label).first.scale.z / 1.0f;
-
-
-  if(newObject.method == "cph")
-  {
-    WorldObjectPtr p = WorldObjectPtr(
-      new WorldObject(
-                                  colocationDist,
-                                  typeManager,
-                                  newObject.result,
-                                  probs));
-    model.push_back(p);
-    addMarker(p);
-  }
-  else if(newObject.method == "vfh")
-  {
-    WorldObjectPtr p = WorldObjectPtr(
-      new WorldObject(
-                                  colocationDist,
-                                  typeManager,
-                                  newObject.result,
-                                  probs));
-    model.push_back(p);
-    addMarker(p);
-  }
-  else if(newObject.method == "sixdof")
-  {
-
-    WorldObjectPtr p = WorldObjectPtr(
-      new WorldObject(
-                                  colocationDist,
-                                  typeManager,
-                                  newObject.result,
-                                  probs));
-    model.push_back(p);
-    addMarker(p);
-  }
-  else if(newObject.method == "rgb")
-  {
-    WorldObjectPtr p = WorldObjectPtr(
-      new WorldObject(
-                                  colocationDist,
-                                  typeManager,
-                                  newObject.result,
-                                  probs));
-    model.push_back(p);
-    addMarker(p);
-  }
-  else
-  {
-    ROS_ERROR("unknown classification method %s", newObject.method.c_str());
-  }
+  WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,typeManager,newObject.result.label, objPose, 1.0f));
+  model.push_back(p);
+  addMarker(p);
+  
   ROS_DEBUG("Added object");
 } //cb_classificationResult
 
@@ -482,13 +438,13 @@ void Recognizer::publishROS()
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     orp::WorldObject newObject;
-    newObject.label              = (**it).getBestType().name;
+    newObject.label              = (**it).getType().name;
 
     tf::Pose intPose;
-    tf::poseEigenToTF((**it).getBestPose(), intPose);
+    tf::poseEigenToTF((**it).getPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
 
-    newObject.pose.header.frame_id = "world";
+    newObject.pose.header.frame_id = recognitionFrame;
     objectMsg.objects.insert(objectMsg.objects.end(), newObject);
   }
 
@@ -500,7 +456,7 @@ void Recognizer::publishROS()
 
 void Recognizer::addMarker(WorldObjectPtr wo)
 {
-  if((*wo).getBestType().name == "unknown" && showUnknownLabels)
+  if((*wo).getType().name == "unknown" && showUnknownLabels)
   {
     return;
   }
@@ -508,22 +464,22 @@ void Recognizer::addMarker(WorldObjectPtr wo)
   //ROS_INFO_STREAM("Setting marker number " << (*wo).getID() << "to ADD");
 
   tf::Pose originalPose;
-  tf::poseEigenToTF (wo->getBestPose(), originalPose);
+  tf::poseEigenToTF (wo->getPose(), originalPose);
   //objectBroadcaster->sendTransform(tf::StampedTransform(originalPose, ros::Time::now(), recognitionFrame, wo->getBestType().name));
   //ROS_INFO("Recognizer marker pos: %f %f %f", originalPose.getOrigin().x(), originalPose.getOrigin().y(),  originalPose.getOrigin().z());
   //ROS_INFO("objPose quaternion: %f %f %f %f", rotQ.x(), rotQ.y(), rotQ.z(), rotQ.w());
   
   ros::Time now = ros::Time::now();
 
-  visualization_msgs::Marker objMarker = visualization_msgs::Marker(getStubAt((*wo).getBestType().name).first);
+  visualization_msgs::Marker objMarker = visualization_msgs::Marker(getStubAt((*wo).getType().name).first);
   objMarker.header.stamp       = now;
   objMarker.id                 = (*wo).getID()+100000;
   tf::poseTFToMsg(originalPose, objMarker.pose);
   objMarker.color.a = markerAlpha*0.5;
-  objMarker.header.frame_id = "world"; //FIXME
+  objMarker.header.frame_id = recognitionFrame;
 
   visualization_msgs::Marker labelMarker;
-  labelMarker.header.frame_id    = "world"; //FIXME
+  labelMarker.header.frame_id    = recognitionFrame;
   labelMarker.header.stamp       = now;
   labelMarker.type               = visualization_msgs::Marker::TEXT_VIEW_FACING;
   labelMarker.action             = visualization_msgs::Marker::ADD;
@@ -551,12 +507,12 @@ void Recognizer::updateMarker(WorldObjectPtr wo)
   {
     if(it->id == wo->getID())
     {
-      woName = (*wo).getBestType().name;
+      woName = (*wo).getType().name;
       (*it).header.stamp       = now;
       (*it).id                 = (*wo).getID();
 
       tf::Pose intPose;
-      tf::poseEigenToTF((*wo).getBestPose(), intPose);
+      tf::poseEigenToTF((*wo).getPose(), intPose);
       tf::poseTFToMsg(intPose,(*it).pose);
 
       if(!(showUnknownLabels && woName == "unknown"))
@@ -573,11 +529,10 @@ void Recognizer::updateMarker(WorldObjectPtr wo)
 
 const char* Recognizer::generateMarkerLabel(WorldObject& wo) {
   std::stringstream markerstream;
-  std::string woName = wo.getBestType().name;
-  markerstream << woName;
+  markerstream << wo.getType().name;
   if(showRecognitionProbability)
   {
-    markerstream << " (" << wo.getBestProbability() << ")";
+    markerstream << " (" << wo.getProbability() << ")";
   }
 
   if(showPose || showPosition || showPoseStdDev)
@@ -586,13 +541,13 @@ const char* Recognizer::generateMarkerLabel(WorldObject& wo) {
   }
   if(showPosition)
   {
-    markerstream << "[" << wo.getX(woName) << ", "
-                        << wo.getY(woName) << ", "
-                        << wo.getZ(woName) << "]";
+    markerstream << "[" << wo.getX() << ", "
+                        << wo.getY() << ", "
+                        << wo.getZ() << "]";
   }
   if(showPose)
   {
-    markerstream << "[P: " << wo.getPoseTf(woName).getRotation().getY() << "]";
+    markerstream << "[P: " << wo.getPoseTf().getRotation().getY() << "]";
   }
   if(showPoseStdDev)
   {
@@ -620,11 +575,11 @@ void Recognizer::deleteMarker(WorldObjectPtr wo)
   ros::Time now = ros::Time::now();
 
   visualization_msgs::Marker newDeleteMarker;
-  newDeleteMarker.header.frame_id    = "world"; //FIXME
+  newDeleteMarker.header.frame_id    = recognitionFrame;
   newDeleteMarker.header.stamp       = now;
 
   visualization_msgs::Marker newDeleteMarker2;
-  newDeleteMarker.header.frame_id    = "world"; //FIXME
+  newDeleteMarker.header.frame_id    = recognitionFrame;
   newDeleteMarker.header.stamp       = now;
 
   newDeleteMarker.id = wo->getID();
@@ -645,19 +600,14 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
   best = WorldObjectPtr();
   if(model.size() < 1)
   {
-    ROS_ERROR("Recognizer: No vision objects while trying to get most likely object of type");
-    //throw std::runtime_error("No vision objects while trying to get most likely object of type");
+    ROS_ERROR_STREAM("Recognizer: No vision objects while trying to get most likely object of type " << wot.name);
   }
+  
   int i = 0;
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); it++)
   {
-    prob = (**it).getProbabilityOf(wot);
-    std::string newName = (**it).getBestType().name;
-    ROS_INFO_STREAM("chance that item " << i << " is a(n) " << wot.name.c_str() << ": " << prob << " at position "
-      << (**it).getX(wot.name) << ", " << (**it).getY(wot.name) << ", " << (**it).getZ(wot.name)
-      << ". Its most likely a " << newName.c_str() << " and the position is "
-      << (**it).getX(newName) << ", " << (**it).getY(newName) << ", " << (**it).getZ(newName));
-    if(prob > max && (**it).getX(wot.name) != 0 && (**it).getY(wot.name) != 0 && (**it).getZ(wot.name) != 0 )
+    prob = (**it).getProbability();
+    if(prob > max)
     {
       max = prob;
       best = *it;

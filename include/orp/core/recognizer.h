@@ -21,6 +21,18 @@
 #include "orp/core/orp_utils.h"
 
 /**
+ * roll, pitch and yaw (orientation) struct
+ */
+struct RPY {
+  double roll; //x axis
+  double pitch; //y axis
+  double yaw; //z axis
+
+  RPY() : roll(0), pitch(0), yaw(0) {};
+};
+
+
+/**
  * @brief   Base recognizer class.
  *
  * Stores a list of objects that it thinks are currently in the world.

@@ -35,7 +35,6 @@
     pkg     = "orp"
     type    = "segmentation"
     args    = ""
-    launch-prefix="xterm -e gdb --args"
 
     respawn = "true"
     output  = "screen"
@@ -74,7 +73,7 @@
     output  = "screen"
   />
 
-  <!-- CONDUCTOR -->
+  <!-- CONDUCTOR     -->
 
   <node
     name    = "recognizer"
@@ -103,7 +102,7 @@
     name    = "rviz"
     pkg     = "rviz"
     type    = "rviz"
-    args    = "-d $(arg rviz_file) -s $(arg home_dir)/rviz/splash.png"
+    args    = "-l -d $(arg rviz_file) -s $(arg home_dir)/rviz/splash.png"
 
     respawn = "false"
     output  = "screen"

@@ -19,39 +19,8 @@
 class WorldObject;
 struct WorldObjectType;
 class WorldObjectManager;
-struct PoseGuess;
 typedef boost::shared_ptr< WorldObject > WorldObjectPtr;
 typedef std::list< WorldObjectPtr > WorldObjectList;
-typedef std::map< WorldObjectType , PoseGuess,
-  std::less<WorldObjectType>,
-  Eigen::aligned_allocator<std::pair<const WorldObjectType, PoseGuess > > >
-    TypeMap;
-
-#define MIN_PROB 0.001f
-
-struct PoseGuess {
-  Eigen::Affine3d pose;
-  float prob;
-
-  PoseGuess(float probability = MIN_PROB, Eigen::Affine3d pos = Eigen::Affine3d()) :
-    prob(probability), pose(pos)
-  {
-
-  };
-public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};
-
-/**
- * roll, pitch and yaw (orientation) struct
- */
-struct RPY {
-  double roll; //x axis
-  double pitch; //y axis
-  double yaw; //z axis
-
-  RPY() : roll(0), pitch(0), yaw(0) {};
-};
 
 /**
  * @brief Represents a type of object that can be found in the world.
@@ -119,28 +88,22 @@ private:
 protected:
   ros::Time lastUpdated;      /// When this object was last updated by a recognition event
   int id;                     /// This object's unique ID. This is mainly used for ROS markers.
-  TypeMap types;              /// The probability (normalized 0-1) that this object is each type.
+  WorldObjectType type;       /// The type of this object
+  float probability;          /// Certainty of classification/pose
+  Eigen::Affine3d pose;       /// position and orientation of this object (center of object)
   bool stale;                 ///If the object is stale, that means it needs to be deleted.
   WorldObjectManager* manager;///Manages global list of types.
 
-  float colocationDistance; ///objects closer than this distance [m] are assumed to be the same one.
-
+  float colocationDistance; ///objects closer than this distance (in meters) are assumed to be the same one.
 
   std::vector<std::string> fullSensorModel; //list of all detectable items
   std::vector<std::string> subSensorModel;  //list of items to be detected
 
 public:
-
-  /**
-   * Default constructor
-   * @arg manage the object with the global list of types.
-   */
-  WorldObject(WorldObjectManager* manage, float colocationDist);
-
   /**
    * Constructor with more specifications, to be created from a classifier.
    */
-  WorldObject(float colocationDist, WorldObjectManager* manager_, orp::WorldObject classRes, TypeMap probDistr);
+  WorldObject(float colocationDist, WorldObjectManager* manager_, std::string type_, Eigen::Affine3d pose_, float probability_);
 
   /**
    * Should we merge with the specified object? For internal use
@@ -151,8 +114,6 @@ public:
 
   /**
    * Merge this object's data with another object. It's assumed that the other is newer than this object.
-   * TODO: This is where the Bayesian reliability updates can take place. Perhaps this 
-   * method should be overloaded in a child class?
    *
    * @arg other the WorldObject to merge with
    */
@@ -173,124 +134,51 @@ public:
   void setLastUpdated(ros::Time time);
 
   /**
-   * Get the best guess as to what type of object this is.
-   *
-   * If multiple objects are tied for most probable, it will return the
-   * label that comes first in alphabetical order
-   * 
-   * @return the most likely WorldObjectType for this object
+   * Get this item's certainty.
    */
-  WorldObjectType getBestType();
-
-  /**
-   * Get the worst guess as to what type of object this is.
-   *
-   * If multiple objects are tied for least probable, it will return the
-   * label that comes first in alphabetical order
-   * 
-   * @return the least likely WorldObjectType for this object
-   */
-  WorldObjectType getWorstType();
-
-  /**
-   * Get the best guess as to what type of object this is, subject to a threshold
-   *
-   * If multiple objects are tied for most probable, it will return the
-   * label that comes first in alphabetical order.
-   * 
-   * @return the most likely WorldObjectType for this object, as long as the likelihood
-   * is greater than the supplied threshold value.
-   */
-  WorldObjectType getType(float threshold);
-
-  /**
-   * Give the pose for the best-probability object out of all defined types.
-   */
-  Eigen::Affine3d& getBestPose();
-
-  /**
-   * Give the pose/probability for the best-probability object out of all defined types.
-   */
-  PoseGuess getBestPoseGuess();
-
-  /**
-   * Get the best probability of any types out of all the types defined for this object.This
-   * gives no information about what the most likely type is.
-   */
-  float getBestProbability();
-
-  /**
-   * Get the worst probability of any types out of all the types defined for this object. This
-   * gives no information about what the most likely type is.
-   */
-  float getWorstProbability();
+  float getProbability();
 
   /// @return the ROS time when this object was last updated/recognized.
   ros::Time getLastUpdated() { return lastUpdated; };
 
-  /// Force-set the probability of a given WorldObjectType.
-  void setProbabilityOf(WorldObjectType wot, float prob, Eigen::Affine3d pose);
-
-  /**
-   * Convenience method
-   * @arg wotName the name of the word object type for which to set the probability
-   * @arg prob the proability that this object is the given class.
-   */
-  void setProbabilityOf(std::string wotName, float prob, Eigen::Affine3d pose);
-
-  /// @return the probability that this object is of the specified type.
-  float getProbabilityOf(WorldObjectType wot);
-  /**
-   * Convience method
-   * @return the probability that this object is of the type specified by the given name.
-   */
-  float getProbabilityOf(std::string name);
-
+  void setProbability(float probability_);
+  
   ///Get the object's autogenerated ID number
   int getID() { return id; };
 
-  TypeMap getTypes() { return types; };  
+  WorldObjectType getType() { return type; };
 
   //set the object pose
-  void setPose(std::string wotName, tf::Pose pos);
+  void setPose( Eigen::Affine3d pos) { pose = pos; };
+  
+  //set the object pose
+  void setPose(tf::Pose pos);
+  void setPose(geometry_msgs::Pose pos);
 
-  //set the object pose from the given message
-  void setPose(std::string wotName, geometry_msgs::Pose pos);
-
-  //set the pose using the x,y,z coordinates and the rotation about the vertical axis.
-  void set4DOFPose(std::string wotName, Eigen::Vector4f thePose);
-
-  //return the x,y,z position and the rotation about the vertical axis.
-  Eigen::Vector4f get4DOFPose(std::string wotName);
   ///Get the object pose
-  tf::Pose getPoseTf(std::string wotName);
+  tf::Pose getPoseTf();
   ///Get the object pose
-  Eigen::Affine3d getPose(std::string wotName) { return types[wotName].pose; };
+  Eigen::Affine3d getPose() { return pose; };
    /**
    * convienience method: set the translation portion of the object pose
    * @param pos The position to set the object pose's origin to 
    */
-  void setPosition(std::string wotName, tf::Vector3 pos);
+  void setPosition(tf::Vector3 pos);
   ///Get the pose position
-  tf::Vector3 getPosition(std::string wotName) { return getPoseTf(wotName).getOrigin(); }; ///Get the pose position
-  float getBestX() { return getBestPose()(0,3); };
-  ///Get the Y-component of pose position
-  float getBestY() { return getBestPose()(1,3); };
-  ///Get the Z-component of pose position
-  float getBestZ() { return getBestPose()(2,3); };
+  tf::Vector3 getPosition() { return getPoseTf().getOrigin(); }; ///Get the pose position
 
-  float getX(std::string wotName) { return types[wotName].pose(0,3); };
+  float getX() { return getPose()(0,3); };
   ///Get the Y-component of pose position
-  float getY(std::string wotName) { return types[wotName].pose(1,3); };
+  float getY() { return getPose()(1,3); };
   ///Get the Z-component of pose position
-  float getZ(std::string wotName) { return types[wotName].pose(2,3); };
+  float getZ() { return getPose()(2,3); };
 
   ///Set the X-component of pose position
-  float setX(std::string wotName, float x) { types[wotName].pose(0,3) = x; };
+  float setX(float x) { pose(0,3) = x; };
   ///Set the Y-component of pose position
-  float setY(std::string wotName, float y) { types[wotName].pose(1,3) = y; };
+  float setY(float y) { pose(1,3) = y; };
   ///Set the Z-component of pose position
-  float setZ(std::string wotName, float z) { types[wotName].pose(2,3) = z; };
+  float setZ(float z) { pose(2,3) = z; };
 
   //should this object be removed?
   bool isStale() { return stale; };
