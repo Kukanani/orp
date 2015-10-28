@@ -19,7 +19,7 @@
     type    = "rgb_classifier"
     args    = ". $(find orp)/cfg/test_1.list true"
 
-    respawn = "false"
+    respawn = "true"
     output  = "screen"
   />
 
