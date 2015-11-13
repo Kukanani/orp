@@ -1,5 +1,20 @@
 #include "orp/core/segmentation.h"
 
+/**
+ * Start the segmentation node and all ROS publishers
+ * @param  argc num args
+ * @param  argv args
+ * @return      1 if all is well.
+ */
+int main(int argc, char **argv)
+{
+  ros::init(argc, argv, "segmentation");
+  ROS_INFO("Starting Segmentation");
+  Segmentation s;
+  s.run();
+  return 1;
+} //main
+
 Segmentation::Segmentation() :
   node("segmentation"),
   transformToFrame("world"), //FIXME
@@ -52,7 +67,6 @@ void Segmentation::paramsChanged(orp::SegmentationConfig &config, uint32_t level
 
 bool Segmentation::reloadParams()
 {
-  ROS_INFO("reloading spatial segmentation parameters from parameter server");
   bool result = true;
   result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_min_x", minX);
   result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_max_x", maxX);
@@ -81,77 +95,66 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     ROS_DEBUG("Not segmenting cloud, it's too small.");
     return false;
   }
-
-  ROS_DEBUG("Segmenting...");
+  
   inputCloud = PCP(new PC());
   processCloud = PCP(new PC());
   inputCloud->points.clear();
 
   sensor_msgs::PointCloud2 transformedMessage;
-  sensor_msgs::PointCloud2 pc2_message;
+  sensor_msgs::PointCloud2 rawMessage;
 
   std::string transformFromFrame = req.scene.header.frame_id;
 
-  // ROS_INFO("segmentation: going from %s to %s", req.scene.header.frame_id.c_str(), transformToFrame.c_str());
-
-  if(transformToFrame != "" && 
-    listener.waitForTransform(req.scene.header.frame_id, transformToFrame, req.scene.header.stamp, ros::Duration(0.5)))
+  if(transformToFrame == "") {
+    pcl::fromROSMsg(req.scene, *inputCloud);
+    rawMessage.header.frame_id = req.scene.header.frame_id;
+  }
+  else if(listener.waitForTransform(req.scene.header.frame_id, transformToFrame, req.scene.header.stamp, ros::Duration(0.5)))
   {
     pcl_ros::transformPointCloud (transformToFrame, req.scene, transformedMessage, listener);
     pcl::fromROSMsg(transformedMessage, *inputCloud);
-    //pc2_message.header.frame_id = transformToFrame;
   }
   else {
     ROS_WARN_THROTTLE(60, "Segmentation: listen for transformation from %s to %s timed out. Proceeding...", req.scene.header.frame_id.c_str(), transformToFrame.c_str());
     pcl::fromROSMsg(req.scene, *inputCloud);
-    pc2_message.header.frame_id = req.scene.header.frame_id;
+    rawMessage.header.frame_id = req.scene.header.frame_id;
   }
 
   if(inputCloud->points.size() <= minClusterSize) {
-    ROS_INFO("Segmentation point cloud is too small.");
+    ROS_INFO_STREAM("[segmentation] point cloud is too small to segment: Min: " << minClusterSize << ", actual: " << inputCloud.points.size());
     return false;
   }
-
-  //ROS_INFO("%d points remain in dataset before spatial/voxel filtering (%f).",
-  //  (int) inputCloud->points.size(), voxelLeafSize);
-  //ROS_INFO_STREAM("The first point in the cloud is " << inputCloud->points.front().x << ", " << inputCloud->points.front().y << ", " << inputCloud->points.front().z);
 
   //clip
   int preVoxel = inputCloud->points.size();
   *inputCloud = *(clipByDistance(inputCloud, minX, maxX, minY, maxY, minZ, maxZ));
   *inputCloud = *(voxelGridify(inputCloud, voxelLeafSize));
 
-  //ROS_INFO("%d points remain in dataset after spatial/voxel filtering (%f).",
-  //  (int) inputCloud->points.size(), voxelLeafSize);
-
-  if(inputCloud->points.size() > 0 && inputCloud->points.size() < preVoxel) {
-
-    pcl::toROSMsg(*inputCloud, pc2_message);
-    boundedScenePublisher.publish(pc2_message);
+  if(!inputCloud->points.empty() && inputCloud->points.size() < preVoxel) {
+    pcl::toROSMsg(*inputCloud, transformedMessage);
+    transformedMessage.header.frame_id = transformToFrame;
+    boundedScenePublisher.publish(transformedMessage);
 
     //remove planes
-    inputCloud = removePrimaryPlanes(inputCloud, maxPlaneSegmentationIterations,
-      segmentationDistanceThreshold, percentageToAnalyze);
-    //ROS_INFO("%d points remain in dataset after removing planes.", (int) inputCloud->points.size());
+    inputCloud = removePrimaryPlanes(inputCloud, maxPlaneSegmentationIterations, segmentationDistanceThreshold, percentageToAnalyze);
 
-    pcl::toROSMsg(*inputCloud, pc2_message);
-    pc2_message.header.frame_id = transformToFrame;
-    clustersPublisher.publish(pc2_message);
+    pcl::toROSMsg(*inputCloud, transformedMessage);
+    transformedMessage.header.frame_id = transformToFrame;
+    clustersPublisher.publish(transformedMessage);
 
-    response.clusters = cluster(inputCloud, clusterTolerance,
-      minClusterSize, maxClusterSize);
+    response.clusters = cluster(inputCloud, clusterTolerance, minClusterSize, maxClusterSize);
     if(!response.clusters.empty()) {
-      // ROS_INFO_STREAM("Segmentation: found " << response.clusters.size() << " clusters");
       response.clusters[0].header.frame_id = transformToFrame;
       clusterPublisher.publish(response.clusters[0]);
     }
-    for(std::vector<sensor_msgs::PointCloud2>::iterator it = response.clusters.begin(); it != response.clusters.end(); ++it) {
-      //pcl_ros::transformPointCloud (transformFromFrame, *it, *it, listener);
-    }
   } else {
-    ROS_WARN_STREAM("not clustering filtered point cloud containing " << inputCloud->points.size() << " points.");
+    if(inputCloud->points.empty()) {
+      ROS_WARN_STREAM("After filtering, the cloud contained no points. No segmentation will occur.");
+    }
+    else {
+      ROS_ERROR_STREAM("After filtering, the cloud contained " << inputCloud->points.size() << " points. This is more than BEFORE the voxel filter was applied, so something is wrong. No segmentation will occur.");
+    }
   }
-  // ROS_INFO("segmentation call finished");
   return true;
 } //processSegmentation
 
@@ -230,7 +233,6 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thre
   //ROS_INFO("target size: %d", targetSize);
 
   while(input->points.size() > targetSize) {
-    //ROS_INFO_STREAM("num points in cloud: " << input->points.size());
     seg.setInputCloud(input);
     seg.segment (*planeIndices, *coefficients);
 
@@ -274,38 +276,32 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
 
   IndexVector cluster_indices;
   pcl::EuclideanClusterExtraction<ORPPoint> ec;
+  ec.setInputCloud(input);
+  
   ec.setClusterTolerance(clusterTolerance); 
   ec.setMinClusterSize(minClusterSize); 
   ec.setMaxClusterSize(maxClusterSize);
   ec.setSearchMethod(tree);
-  ec.setInputCloud(input);
-  //ROS_INFO("extracting clusters...");
+  
   ec.extract (cluster_indices);
 
-  //ROS_INFO("found %d clusters", (int) cluster_indices.size());
-  if(cluster_indices.size() <= 0) return clusters;
+  if(cluster_indices.empty()) return clusters;
 
-  int j = 0;
-  for (IndexVector::const_iterator it = cluster_indices.begin();
-      it != cluster_indices.end(); ++it) {
+  for (IndexVector::const_iterator it = cluster_indices.begin(); it != cluster_indices.end(); ++it) {
     
-    //TODO: see if this is a memory leak (reassigning a smart pointer)
     processCloud = PCP(new PC());
-    //ROS_INFO("Looping through indices for this cluster");
-    for (std::vector<int>::const_iterator pit = it->indices.begin();
-        pit != it->indices.end (); pit++) {
+    for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); ++pit) {
       processCloud->points.push_back (input->points[*pit]);
     }
     processCloud->width = processCloud->points.size();
     processCloud->height = 1;
     processCloud->is_dense = true;
-    //ROS_INFO("writing cluster to segmentation service response. It has %d points.",
-    //  (int) processCloud->points.size());
+  
     sensor_msgs::PointCloud2 tempROSMsg;
-    pcl::toROSMsg(*processCloud, tempROSMsg);
     tempROSMsg.header.frame_id = transformToFrame;
+    
+    pcl::toROSMsg(*processCloud, tempROSMsg);
     clusters.push_back(tempROSMsg);
-    j++;
   }
 
   if(clusters.size() > 0) {
@@ -314,18 +310,3 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
 
   return clusters;
 } //cluster
-
-/**
- * Start the segmentation node and all ROS publishers
- * @param  argc num args
- * @param  argv args
- * @return      1 if all is well.
- */
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "segmentation");
-  ROS_INFO("Starting Segmentation");
-  Segmentation s;
-  s.run();
-  return 1;
-} //main

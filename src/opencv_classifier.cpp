@@ -62,9 +62,18 @@ double testLast = 0; // used for debug testing
 void OpenCVClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
   orp::ClassificationResult classRes;
+
+  orp::Segmentation seg_srv;
+  seg_srv.request.scene = cloud;
+  segmentationClient.call(seg_srv);
+  std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
+  if(clouds.size() == 0) return;
+  for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
+    
+  }
+  cloud = clouds[0];
   
   sensor_msgs::Image image_;
-  image_.encoding;
   pcl::toROSMsg (cloud, image_);
   cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(image_);
   M.release();
@@ -116,6 +125,8 @@ void OpenCVClassifier::process(cv::Mat& img)
             pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
             pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
             pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
+            
+            
             if(pixelPtr[pi+0] == 64) pixelPtr[pi+0] = 127;
             if(pixelPtr[pi+1] == 64) pixelPtr[pi+1] = 127;
             if(pixelPtr[pi+2] == 64) pixelPtr[pi+2] = 127;
