@@ -25,7 +25,7 @@
 	    respawn = "false"
 	    output  = "screen"
 	  />
-
+    
 	  <node
 	    name    = "$(anon sixdof2)"
 	    pkg     = "dynamic_reconfigure"
