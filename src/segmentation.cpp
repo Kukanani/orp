@@ -121,7 +121,7 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
   }
 
   if(inputCloud->points.size() <= minClusterSize) {
-    ROS_INFO_STREAM("[segmentation] point cloud is too small to segment: Min: " << minClusterSize << ", actual: " << inputCloud.points.size());
+    ROS_INFO_STREAM("[segmentation] point cloud is too small to segment: Min: " << minClusterSize << ", actual: " << inputCloud->points.size());
     return false;
   }
 
