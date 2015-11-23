@@ -3,6 +3,8 @@
 #include <sstream>
 
 #include "orp/app/vision_simulator.h"
+#include "orp/WorldObjects.h"
+#include "orp/WorldObject.h"
 /**
  * Starts up the name and handles command-line arguments.
  * @param  argc num args
@@ -21,10 +23,11 @@ int main(int argc, char **argv)
   std::string filename = argv[1];
   std::string outputFrame = argv[2];
   ROS_INFO("Starting Vision Simulator");
+  
+  ros::AsyncSpinner spinner(2);
+  spinner.start();
+  
   VisionSimulator s(n, filename, outputFrame);
-
-  ros::spin();
-  ROS_INFO("Vision simulator done");
   return 1;
 } //main
 
@@ -40,27 +43,43 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename, std::
 
   markerServer.reset( new interactive_markers::InteractiveMarkerServer("vision_simulator_objects","",false) );
   objectPoseServer = n.advertiseService("/get_object_pose", &VisionSimulator::getObjectPose, this);
+  
+  ros::Publisher objectsPub = n.advertise<orp::WorldObjects>("detected_objects", 1);
 
   std::string line;
   float x, y, z;
   std::string objName;
   tf::Vector3 position;
 
+  orp::WorldObjects theMessage;
+    
   std::ifstream infile(filename.c_str());
   while (std::getline(infile, line))
   {
-      std::istringstream iss(line);
-      if (!(iss >> objName >> x >> y >> z )) { ROS_ERROR("Error while parsing file!"); } // error
+    std::istringstream iss(line);
+    if (!(iss >> objName >> x >> y >> z )) { ROS_ERROR("Error while parsing file!"); } // error
 
-      ROS_INFO_STREAM("creating marker for object type " << objName << " at " << x << ", " << y << ", " << z);
-      position = tf::Vector3(x,y,z);
-      make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position, true, objName );
+    ROS_INFO_STREAM("creating marker for object type " << objName << " at " << x << ", " << y << ", " << z);
+    position = tf::Vector3(x,y,z);
+    make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position, true, objName );
 
-      // process pair (a,b)
+  
+    orp::WorldObject theObject;
+    theObject.label = objName;
+    theObject.pose.header.frame_id = outputFrame;
+    theMessage.objects.push_back(theObject);
   }
 
   markerServer->applyChanges();
   ROS_INFO("vision simulator loaded");
+
+  ros::Rate loop(2.0f); //2 Hz
+  while(ros::ok() && loop.sleep()) {
+    for(int i = 0; i < theMessage.objects.size(); ++i) {
+      theMessage.objects[i].pose.pose = int_markers.at(theMessage.objects[i].label).pose;
+    }
+    objectsPub.publish(theMessage);
+  }
 } //VisionSimulator constructor
 
 VisionSimulator::~VisionSimulator()
@@ -104,7 +123,7 @@ void VisionSimulator::make6DofMarker( unsigned int interaction_mode, const tf::V
 
   visualization_msgs::InteractiveMarker int_marker;
 
-  int_marker.header.frame_id = "/base_link";
+  int_marker.header.frame_id = frame;
   tf::pointTFToMsg(position, int_marker.pose.position);
   int_marker.scale = std::max(std::max(xsize, ysize), zsize);
 
