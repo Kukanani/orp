@@ -5,6 +5,8 @@
 #include "orp/app/vision_simulator.h"
 #include "orp/WorldObjects.h"
 #include "orp/WorldObject.h"
+
+std::vector<std::string> labelsi;
 /**
  * Starts up the name and handles command-line arguments.
  * @param  argc num args
@@ -76,7 +78,7 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename, std::
   ros::Rate loop(2.0f); //2 Hz
   while(ros::ok() && loop.sleep()) {
     for(int i = 0; i < theMessage.objects.size(); ++i) {
-      theMessage.objects[i].pose.pose = int_markers.at(theMessage.objects[i].label).pose;
+      theMessage.objects[i].pose.pose = int_markers.at(labelsi[i]).pose;
     }
     objectsPub.publish(theMessage);
   }
@@ -128,6 +130,7 @@ void VisionSimulator::make6DofMarker( unsigned int interaction_mode, const tf::V
   int_marker.scale = std::max(std::max(xsize, ysize), zsize);
 
   int_marker.name = name + "_" + ORPUtils::zeroPad(simCount, 10);
+  labelsi.push_back(int_marker.name);
   int_marker.description = "simulated " + name;
   int_marker.pose.orientation.x = 0;
   int_marker.pose.orientation.y = 0;
@@ -193,7 +196,7 @@ void VisionSimulator::make6DofMarker( unsigned int interaction_mode, const tf::V
   markerServer->setCallback(int_marker.name, updateCallback);
   markerServer->applyChanges();
 
-  int_markers.insert(std::pair<std::string, visualization_msgs::InteractiveMarker>(name, int_marker));
+  int_markers.insert(std::pair<std::string, visualization_msgs::InteractiveMarker>(int_marker.name, int_marker));
   ++simCount;
 }
 
