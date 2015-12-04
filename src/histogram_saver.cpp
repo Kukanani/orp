@@ -1,4 +1,4 @@
-#include "orp/collector/histogram_saver.h"
+#include "collector/histogram_saver.h"
 
 int main(int argc, char **argv)
 {

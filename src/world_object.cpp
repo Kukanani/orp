@@ -1,5 +1,5 @@
-#include "orp/core/world_object.h"
-#include "orp/core/world_object_manager.h"
+#include "core/world_object.h"
+#include "core/world_object_manager.h"
 
 int WorldObject::nextValidID = 0;
 

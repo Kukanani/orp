@@ -1,4 +1,4 @@
-#include "orp/collector/pan_data_collector.h"
+#include "collector/pan_data_collector.h"
 
 /**
  * Program entry point

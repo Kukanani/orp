@@ -1,4 +1,4 @@
-#include "orp/classifier/sixdof_classifier.h"
+#include "classifier/sixdof_classifier.h"
 
 /**
  * Starts up the name and handles command-line arguments.

@@ -13,7 +13,7 @@
 
 #include <pcl_ros/transforms.h>
 
-#include "orp/core/orp_utils.h"
+#include "core/orp_utils.h"
 
 int
 main(int argc, char** argv)

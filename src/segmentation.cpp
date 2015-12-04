@@ -1,4 +1,4 @@
-#include "orp/core/segmentation.h"
+#include "core/segmentation.h"
 
 /**
  * Start the segmentation node and all ROS publishers

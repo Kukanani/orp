@@ -1,4 +1,4 @@
-#include "orp/classifier/opencv_classifier.h"
+#include "classifier/opencv_classifier.h"
 
 #include <opencv2/highgui/highgui.hpp>
 #include <pcl/io/pcd_io.h>

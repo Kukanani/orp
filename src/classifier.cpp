@@ -1,4 +1,4 @@
-#include "orp/core/classifier.h"
+#include "core/classifier.h"
 
 Classifier::Classifier(float thresh, std::string _name,
   std::string folder, std::string fileExt, bool _autostart) :

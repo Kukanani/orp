@@ -1,4 +1,4 @@
-#include "orp/classifier/vfh_classifier.h"
+#include "classifier/vfh_classifier.h"
 
 /**
  * Starts up the name and handles command-line arguments.

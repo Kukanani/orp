@@ -1,5 +1,5 @@
-#include "orp/core/world_object_manager.h"
-#include "orp/core/world_object.h"
+#include "core/world_object_manager.h"
+#include "core/world_object.h"
 
 WorldObjectManager::WorldObjectManager(std::string unknownName) :
 	unknownType(WorldObjectType(unknownName))

@@ -1,4 +1,4 @@
-#include "orp/classifier/rgb_classifier.h"
+#include "classifier/rgb_classifier.h"
 
 #include <opencv2/highgui/highgui.hpp>
 
