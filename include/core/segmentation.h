@@ -240,7 +240,7 @@ public:
    * @param  cloud the cloud to segment
    */
   //void cb_segment(sensor_msgs::PointCloud2 incoming);
-  std::vector<PCP> processSegmentation(orp::Segmentation::Request &req, orp::Segmentation::Response &response);
+  bool processSegmentation(orp::Segmentation::Request &req, orp::Segmentation::Response &response);
 }; //Segmentation
 
 #endif //_SEGMENTATION_H_
