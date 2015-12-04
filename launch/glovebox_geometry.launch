@@ -3,7 +3,7 @@
     name    = "static_transform_publisher"  
     pkg     = "tf"
     type    = "static_transform_publisher"
-    args    = "-1.065 0.63 0.25 0 0.75 -0.02 world camera_link 100"
+    args    = "-1.03 0.63 0.25 0 0.75 -0.02 world camera_link 100"
 
     respawn = "true"
     output  = "screen"
