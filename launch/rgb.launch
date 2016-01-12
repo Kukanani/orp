@@ -8,9 +8,9 @@
 	<include file="$(find orp)/launch/orp.launch">
  		<arg name="openni2"          value="true"/>
  		<arg name="list"             value="$(arg list)"/>
- 		<arg name="autostart"        value="false" />
-    <arg name="rviz"             value="true" />
-    <arg name="rviz_file"        value="$(find orp)/cfg/moveit.rviz" />
+ 		<arg name="autostart"        value="true" />
+		<arg name="rviz"             value="true" />
+		<arg name="rviz_file"        value="$(find orp)/cfg/recognition.rviz" />
 	</include>
 
   <node

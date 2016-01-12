@@ -21,7 +21,7 @@ private:
 	WorldObjectType unknownType; ///Default object type
 public:
 	std::map<std::string, WorldObjectType> types; //The possible world object types
-
+	
 	/**
 	 * Create a new world object manager with the specified default type.
 	 * @arg unknown the world object to fall back on when nothing can be found.

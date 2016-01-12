@@ -2,6 +2,11 @@
 
 #include <algorithm>
 
+#include <eigen_conversions/eigen_msg.h>
+#include <tf/transform_datatypes.h>
+
+#include "grasp_generator.h"
+
 /**
  * Starts up the name and handles command-line arguments.
  * @param  argc num args
@@ -14,23 +19,17 @@ int main(int argc, char **argv)
 
   //read arguments
   if(argc < 2) {
-    ROS_FATAL("proper usage is 'recognizer sensor_model_file [autostart]");
+    ROS_FATAL("proper usage is 'recognizer [autostart]");
     return -1;
   }
-  bool autostart = false;
-  std::string listFile = argv[1];
-  if(argc >= 3) {
-    if(std::string(argv[2]) == "true") {
-      autostart = true;
-    }
-  }
+  bool autostart = (argc >= 3 && std::string(argv[2]) == "true");
 
   //get started
   ros::init(argc, argv, "recognizer");
   Recognizer s(autostart);
 
   //Run ROS until shutdown
-  ros::AsyncSpinner spinner(1);
+  ros::AsyncSpinner spinner(2);
   spinner.start();
   ros::waitForShutdown();
 
@@ -41,13 +40,13 @@ int main(int argc, char **argv)
 
 Recognizer::Recognizer(bool _autostart) :
     autostart(_autostart),
-    colocationDist(0.01),
+    colocationDist(0.05),
     typeManager(0),
     recognitionFrame("world"),
 
     markerTopic("/detected_object_markers"),
+    labelTopic("/detected_object_labels"),
     objectTopic("/detected_objects"),
-    markerMsg(),
     markerAlpha(1.0),
     markerSize(0.03),
 
@@ -58,7 +57,7 @@ Recognizer::Recognizer(bool _autostart) :
     showPoseStdDev(false),
     shouldDebugPrint(false),
 
-    refreshInterval(0.1)
+    refreshInterval(0.01)
 {
 
   //dynamic reconfigure
@@ -67,7 +66,9 @@ Recognizer::Recognizer(bool _autostart) :
 
   //ROS clients and publishers
   markerPub = n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1);
+  labelPub = n.advertise<visualization_msgs::MarkerArray>(labelTopic, 1);
   objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
+  graspMarkerPub = n.advertise<visualization_msgs::MarkerArray>("/detected_object_grasp_markers", 1);
 
   objectPoseServer = n.advertiseService("/get_object_pose", &Recognizer::getObjectPose, this);
   startSub = n.subscribe("orp_start_recognition", 1, &Recognizer::cb_startRecognition, this);
@@ -87,16 +88,7 @@ Recognizer::Recognizer(bool _autostart) :
 
   ROS_INFO("initializing sensor model");
   
-  std::vector<std::string> paramMap;
-  if(!n.getParam("/items/list", paramMap)) {
-    ROS_ERROR("couldn't load items from parameter server.");
-  }
-  for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
-    typeList.push_back(*it);
-    typeManager->addType(WorldObjectType(*it));
-  }
-  
-  fillMarkerStubs();
+  fillTypes();
 
   if(autostart) {
     ROS_INFO("Autostarting recognition");
@@ -109,6 +101,16 @@ Recognizer::~Recognizer()
   model.clear();
   delete typeManager;
 } //Recognizer destructor
+
+void Recognizer::recognize(const ros::TimerEvent& event)
+{
+  update();
+  showGrasps();
+  publishROS();                          //publish all markers
+  killStale();
+  
+  //ROS_INFO("===========");
+} //recognize
 
 //use the form
 //local_var_name = config.config_var_name;
@@ -131,13 +133,18 @@ void Recognizer::paramsChanged(orp::RecognizerConfig &config, uint32_t level)
 
 } //paramsChanged
 
-void Recognizer::fillMarkerStubs() {
-  for(std::vector<std::string>::iterator names = typeList.begin(); names != typeList.end(); names++)
-  {
+  
+void Recognizer::fillTypes() {
+  std::vector<std::string> paramMap;
+  if(!n.getParam("/items/list", paramMap)) {
+    ROS_ERROR("couldn't load items from parameter server.");
+  }
+  for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
+    WorldObjectType thisType = WorldObjectType(*it);
     visualization_msgs::Marker stub;
     RPY rpy;
 
-    if(*names == "unknown") {
+    if(*it == "unknown") {
       stub.scale.x = 0.1;
       stub.scale.y = 0.1;
       stub.scale.z = 0.1;
@@ -150,7 +157,7 @@ void Recognizer::fillMarkerStubs() {
     } else {
       try {
         std::string geom;
-        ORPUtils::attemptToReloadStringParam(n, "/items/" + *names + "/geometry", geom);
+        ORPUtils::attemptToReloadStringParam(n, "/items/" + *it + "/geometry", geom);
         if(geom == "BOX") {
           stub.type            = visualization_msgs::Marker::CUBE;
         } else if(geom == "CYLINDER") {
@@ -163,23 +170,23 @@ void Recognizer::fillMarkerStubs() {
           ROS_ERROR("Did not understand geometry type %s while creating marker stubs", geom.c_str());
           stub.type            = visualization_msgs::Marker::CUBE;
         }
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/depth", stub.scale.x);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/width", stub.scale.y);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/height", stub.scale.z);
+        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/depth", stub.scale.x);
+        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/width", stub.scale.y);
+        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/height", stub.scale.z);
 
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/roll", rpy.roll);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/pitch", rpy.pitch);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *names + "/yaw", rpy.yaw);
+        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/roll", rpy.roll);
+        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/pitch", rpy.pitch);
+        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/yaw", rpy.yaw);
 
-        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *names + "/red", stub.color.r);
-        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *names + "/green", stub.color.g);
-        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *names + "/blue", stub.color.b);
+        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/red", stub.color.r);
+        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/green", stub.color.g);
+        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/blue", stub.color.b);
 
         rpy.roll = ORPUtils::radFromDeg(rpy.roll);
         rpy.pitch = ORPUtils::radFromDeg(rpy.pitch);
         rpy.yaw = ORPUtils::radFromDeg(rpy.yaw);
       } catch(std::exception e) {
-        ROS_ERROR("error while creating marker stub for world object of type '%s': %s", e.what(), (*names).c_str());
+        ROS_ERROR("error while creating marker stub for world object of type '%s': %s", e.what(), (*it).c_str());
         stub.scale.x = 0.1;
         stub.scale.y = 0.1;
         stub.scale.z = 0.1;
@@ -200,12 +207,15 @@ void Recognizer::fillMarkerStubs() {
         stub.scale.z /= 1000.0f;
       }
     }
-    //ROS_INFO("creating marker stub for world object of type '%s'", (*names).c_str());
+    //ROS_INFO("creating marker stub for world object of type '%s'", (*it).c_str());
     stub.header.frame_id = recognitionFrame;
     stub.action          = visualization_msgs::Marker::ADD;
-    markerStubs[*names] = std::pair<visualization_msgs::Marker, RPY>(stub, rpy);
+    
+    thisType.offset = rpy;
+    thisType.stub = stub;
+    typeManager->addType(thisType);
   }
-  ROS_INFO("The recognizer has created %i visualization marker stubs.", (int) markerStubs.size());
+//   ROS_INFO("The recognizer has created %i visualization marker stubs.", typeManager->getNumTypes());
 }
 
 bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
@@ -219,60 +229,44 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
   geometry_msgs::PoseStamped pose;
   tf::Pose originalPose;
   tf::poseEigenToTF (found->getPose(), originalPose);
-  ROS_ERROR_STREAM("found->getPose(): " << originalPose.getOrigin().x() << ", " << originalPose.getOrigin().y() << "," << originalPose.getOrigin().z());
+//   ROS_ERROR_STREAM("found->getPose(): " << originalPose.getOrigin().x() << ", " << originalPose.getOrigin().y() << "," << originalPose.getOrigin().z());
   tf::poseTFToMsg(originalPose, pose.pose);
-  ROS_ERROR_STREAM("pose.pose: " << pose.pose.position.x << ", " << pose.pose.position.y << "," << pose.pose.position.z);
+//   ROS_ERROR_STREAM("pose.pose: " << pose.pose.position.x << ", " << pose.pose.position.y << "," << pose.pose.position.z);
 
   pose.header.stamp = ros::Time::now();
   pose.header.frame_id = recognitionFrame;
   response.poses.push_back(pose);
   response.num_found++;
-  ROS_INFO_STREAM("Recognizer returned pose to get_object_pose: " << pose.pose.position.x << ", " << pose.pose.position.y <<
-    ", " << pose.pose.position.z);
+//   ROS_INFO_STREAM("Recognizer returned pose to get_object_pose: " << pose.pose.position.x << ", " << pose.pose.position.y <<
+//     ", " << pose.pose.position.z);
 
   return true;
 } //getObjectPose
 
-std::pair<visualization_msgs::Marker, RPY> Recognizer::getStubAt(std::string name) {
-  std::pair<visualization_msgs::Marker, RPY> stubby;
-  try {
-    stubby = markerStubs.at(name);
-  } catch(std::out_of_range oor) {
-    ROS_ERROR("marker stub not found for incoming classification of type %s", name.c_str());
-    ROS_ERROR("continuing with 'unknown' marker");
-    stubby = markerStubs.at("unknown");
-  }
-  return stubby;
-}
-
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
-  //ROS_INFO("object incoming, type %s...", newObject.result.label.c_str());
-  RPY rpy;
+  Eigen::Affine3d eigPose;
+  tf::poseMsgToEigen(newObject.result.pose.pose, eigPose);
 
-  tf::Pose stubAdjustmentPose;
+  bool merged = false;
   
-  stubAdjustmentPose = tf::Pose(tf::createQuaternionFromRPY(
-    getStubAt(newObject.result.label).second.roll,
-    getStubAt(newObject.result.label).second.pitch,
-    getStubAt(newObject.result.label).second.yaw
-  ));
+  WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,typeManager,newObject.result.label, recognitionFrame, eigPose, 1.0f));
+  for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
+    if((*it)->isColocatedWith(p)) {
+      merged = true;
+      (*it)->merge(p);
+      //ROS_INFO("Merged object");
+    }
+  }
 
-  Eigen::Affine3d eigStubAdjustment;
-  tf::poseTFToEigen(stubAdjustmentPose, eigStubAdjustment);
+  if(!merged) { //new object
+//    if(!model.empty()) {
+//       ROS_INFO_STREAM("Adding object, it's distance from the first in the scene is %f" << ((*(model.begin()))->getPose().translation() - p->getPose().translation()).norm());
+//    }
+    model.push_back(p);
+    //ROS_INFO("Added object");
+  }
   
-  Eigen::Affine3d objPose;
-  tf::Pose tfPose;
-  tf::poseMsgToTF(newObject.result.pose.pose, tfPose);
-  tf::poseTFToEigen(tfPose, objPose);
-  
-  objPose = objPose * eigStubAdjustment;
-
-  WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,typeManager,newObject.result.label, objPose, 1.0f));
-  model.push_back(p);
-  addMarker(p);
-  
-  ROS_DEBUG("Added object");
 } //cb_classificationResult
 
 void Recognizer::startRecognition() {
@@ -299,7 +293,7 @@ void Recognizer::stopRecognition() {
     timer.stop();
     recognitionSub.shutdown();
     for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it) {
-      deleteMarker(*it);
+      (*it)->setStale(true);
     }
     //say goodbye (send delete markers)
     publishROS();
@@ -307,27 +301,9 @@ void Recognizer::stopRecognition() {
     //clear all markers
     model.clear();
   } else {
-    ROS_ERROR("attempted to stop recognition, but it hasn't started or the timer doesn't exist.");
+    ROS_WARN("attempted to stop recognition, but it hasn't started.");
   }
 } //stopRecognition
-
-void Recognizer::setDetectionSet(std::vector<std::string> set) {
-  if(set.size() > typeList.size()) {
-    ROS_ERROR("your desired subset is larger than the number of known items. Something's wrong.");
-  }
-
-  subTypeList = typeList; // begin with them equal
-
-  std::vector<std::string>::iterator it = std::set_intersection(typeList.begin(), typeList.end(),
-    set.begin(), set.end(), subTypeList.begin());
-
-  subTypeList.resize(it-subTypeList.begin());
-
-  if(subTypeList.empty()) { //nothing left!
-    ROS_FATAL("No items left in Recognizer detection set after specifying a subset");
-    return;
-  }
-} //setDetectionSet
 
 void Recognizer::cb_startRecognition(std_msgs::Empty msg) {
   startRecognition();
@@ -339,259 +315,98 @@ void Recognizer::cb_stopRecognition(std_msgs::Empty msg) {
 
 void Recognizer::cb_detectionSet(orp::DetectionSet msg)
 {
-  setDetectionSet(msg.objects);
+  //FIXME: nothing
+  //setDetectionSet(msg.objects);
 } //cb_detectionSet
 
-void Recognizer::recognize(const ros::TimerEvent& event)
-{
-  if(shouldDebugPrint) debugPrint();     //list markers 
-  killStale();
-  filter();                              //set some markers to DELETE
-  publishROS();                          //publish all markers
-  if(shouldDebugPrint) debugPrint();     //list markers 
-  markerMsg.markers.clear();
 
-  //ROS_INFO("===========");
-} //recognize
-
-void Recognizer::filter()
-{
-  if(model.size() < 2) {
-    return;
-  }
-
-  WorldObjectList deleteList;
-
-  for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
-  {
-    //TODO: replace boost::next with std::next when C++11 support is added
-    for(WorldObjectList::iterator it2 = boost::next(it,1); it2 != model.end(); ++it2)
-    {
-      // ROS_INFO("dist: %f", tf::tfDistance((*it)->getPoseTf().getOrigin(), (*it2)->getPoseTf().getOrigin()));
-      if(std::find(deleteList.begin(), deleteList.end(), *it2) == deleteList.end() &&
-          (**it).shouldMergeWith(&(**it2))) {
-        // ROS_INFO_STREAM("merging objects " << (**it).getID() << " and " << (**it2).getID());
-        (**it).merge(&(**it2));
-        deleteList.push_back(*it2);
-      }
-    }
-  }
-
-  //ROS_INFO_STREAM("deleting " << (int)deleteList.size() << "items");
-  for(WorldObjectList::iterator it = deleteList.begin(); it != deleteList.end(); ++it)
-  {
-    deleteMarker(*it);
-    model.remove(*it);
-  }
-  //ROS_INFO_STREAM("done deleting stuff: " << (int)deleteList.size() << ", " << (int)model.size());
-} //filter
-
-void Recognizer::killStale()
+void Recognizer::update()
 {
   ros::Time now = ros::Time::now();
-  for(WorldObjectList::iterator it = model.begin(); it != model.end(); )
+  for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
-    if((**it).isStale() || now - (**it).getLastUpdated() > staleTime)
+    if(now - (**it).getLastUpdated() > staleTime)
     {
-      //ROS_INFO("killing stale world object %i", (**it).getID());
-      deleteMarker(*it);
-      model.erase(it++);
+      //ROS_INFO("stale-ing world object %i", (**it).getID());
+      (**it).setStale(true);
     }
-    else
-    {
-      ++it;
+    else {
+      (**it).setStale(false);
     }
   }
-} //killStale
+} //update
 
-void Recognizer::debugPrint()
-{
-  ROS_INFO("%d Objects in scene: ", (int)model.size());
-  for(WorldObjectList::iterator it = model.begin(); it != model.end(); it++)
+void Recognizer::showGrasps() {
+  float approachDist = 0.05;
+  
+  visualization_msgs::MarkerArray graspMarkers;
+  for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
-    (**it).debugPrint();
-  }
-
-  ROS_INFO("MARKERS:");
-  for(std::vector<visualization_msgs::Marker>::iterator it2 = markerMsg.markers.begin();
-    it2 != markerMsg.markers.end(); ++it2)
-  {
-    if((*it2).action == visualization_msgs::Marker::DELETE)
-    {
-      ROS_INFO("\tDELETE: %i", (*it2).id);
-    }
-    else if((*it2).action == visualization_msgs::Marker::ADD)
-    {
-      ROS_INFO("\tADD: %i", (*it2).id);
-    }
-    else
-    {
-      ROS_INFO("\tUNKNOWN: %i", (*it2).id);
+    visualization_msgs::Marker arrow;
+    arrow.type = visualization_msgs::Marker::ARROW;
+    arrow.header.frame_id = recognitionFrame;
+    
+    GraspGenerator g = GraspGenerator(ROBOTIQ_S_MODEL);
+    std::vector<Grasp> grasps = g.createGrasps(tf::Stamped<tf::Pose>((**model.begin()).getPoseTf(), ros::Time::now(), recognitionFrame), approachDist);
+    
+    for(std::vector<Grasp>::iterator grasp = grasps.begin(); grasp != grasps.end(); ++it) {
+      arrow.points.clear();
+      geometry_msgs::Point point;
+      tf::pointTFToMsg(grasp->approachPose.getOrigin(), point);
+      arrow.points.push_back(point);
+      tf::pointTFToMsg(grasp->graspPose.getOrigin(), point);
+      arrow.points.push_back(point);
+      graspMarkers.markers.push_back(arrow);
     }
   }
-} //debugPrint
+  graspMarkerPub.publish(graspMarkers);
+}
 
 void Recognizer::publishROS()
 {
   //add all world objects to message
   orp::WorldObjects objectMsg;
-  for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
-  {
-    orp::WorldObject newObject;
-    newObject.label              = (**it).getType().name;
-
-    tf::Pose intPose;
-    tf::poseEigenToTF((**it).getPose(), intPose);
-    tf::poseTFToMsg(intPose, newObject.pose.pose);
-
-    newObject.pose.header.frame_id = recognitionFrame;
-    objectMsg.objects.insert(objectMsg.objects.end(), newObject);
-  }
-
-  //publish 'em
-  objectPub.publish(objectMsg);
-  markerPub.publish(markerMsg);
-  //ROS_INFO("published markers");
-}
-
-void Recognizer::addMarker(WorldObjectPtr wo)
-{
-  if((*wo).getType().name == "unknown" && showUnknownLabels)
-  {
-    return;
-  }
-
-  //ROS_INFO_STREAM("Setting marker number " << (*wo).getID() << "to ADD");
-
-  tf::Pose originalPose;
-  tf::poseEigenToTF (wo->getPose(), originalPose);
-  //objectBroadcaster->sendTransform(tf::StampedTransform(originalPose, ros::Time::now(), recognitionFrame, wo->getBestType().name));
-  //ROS_INFO("Recognizer marker pos: %f %f %f", originalPose.getOrigin().x(), originalPose.getOrigin().y(),  originalPose.getOrigin().z());
-  //ROS_INFO("objPose quaternion: %f %f %f %f", rotQ.x(), rotQ.y(), rotQ.z(), rotQ.w());
-  
-  ros::Time now = ros::Time::now();
-
-  visualization_msgs::Marker objMarker = visualization_msgs::Marker(getStubAt((*wo).getType().name).first);
-  objMarker.header.stamp       = now;
-  objMarker.id                 = (*wo).getID()+100000;
-  tf::poseTFToMsg(originalPose, objMarker.pose);
-  objMarker.color.a = markerAlpha*0.5;
-  objMarker.header.frame_id = recognitionFrame;
-
-  visualization_msgs::Marker labelMarker;
-  labelMarker.header.frame_id    = recognitionFrame;
-  labelMarker.header.stamp       = now;
-  labelMarker.type               = visualization_msgs::Marker::TEXT_VIEW_FACING;
-  labelMarker.action             = visualization_msgs::Marker::ADD;
-  labelMarker.id                 = (*wo).getID();
-  labelMarker.text = generateMarkerLabel(*wo);
-  tf::poseTFToMsg(originalPose, labelMarker.pose);
-  labelMarker.pose.position.z += 0.1f;
-  labelMarker.scale.z = markerSize;
-  labelMarker.color.r = 1.0f;
-  labelMarker.color.g = 1.0f;
-  labelMarker.color.b = 1.0f;
-  labelMarker.color.a = 1.0f;
-
-  markerMsg.markers.push_back(labelMarker);
-  markerMsg.markers.push_back(objMarker);
-
-} //addMarker
-
-void Recognizer::updateMarker(WorldObjectPtr wo)
-{
-  ros::Time now = ros::Time(0);
-  std::string woName;
-  for(std::vector<visualization_msgs::Marker>::iterator it = markerMsg.markers.begin();
-    it != markerMsg.markers.end(); ++it)
-  {
-    if(it->id == wo->getID())
+  visualization_msgs::MarkerArray markerMsg, labelMsg;
+  if(!model.empty()) {
+    for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
     {
-      woName = (*wo).getType().name;
-      (*it).header.stamp       = now;
-      (*it).id                 = (*wo).getID();
+      orp::WorldObject newObject;
+      newObject.label              = (**it).getType().name;
 
       tf::Pose intPose;
-      tf::poseEigenToTF((*wo).getPose(), intPose);
-      tf::poseTFToMsg(intPose,(*it).pose);
+      tf::poseEigenToTF((**it).getPose(), intPose);
+      tf::poseTFToMsg(intPose, newObject.pose.pose);
 
-      if(!(showUnknownLabels && woName == "unknown"))
-      {
-        (*it).text = generateMarkerLabel(*wo);
-      }
-      else
-      {
-        (*it).text = "";
-      }
+      newObject.pose.header.frame_id = recognitionFrame;
+      objectMsg.objects.insert(objectMsg.objects.end(), newObject);
+      
+      //if((**it).getObjectMarker().action == visualization_msgs::Marker::DELETE) {
+	//ROS_INFO("creating delete marker.");
+      //}
+      markerMsg.markers.insert(markerMsg.markers.end(), (**it).getObjectMarker());
+      labelMsg.markers.insert(labelMsg.markers.end(), (**it).getLabelMarker());
+    }
+    //publish 'em
+    //ROS_INFO_STREAM("Publishing " << objectMsg.objects.size() << " objects and " << markerMsg.markers.size() << " markers.");
+    objectPub.publish(objectMsg);
+    markerPub.publish(markerMsg);
+    labelPub.publish(labelMsg);
+  }
+}
+
+void Recognizer::killStale() {
+  WorldObjectList::iterator it = model.begin();
+  while(it != model.end()) {
+    bool isStale = (*it)->isStale();
+    if(isStale) {
+      //ROS_INFO_STREAM("Deleting stale object " << (**it).getID());
+      it = model.erase(it); //increments it
+    }
+    else {
+      ++it;
     }
   }
-} //updateMarker
-
-const char* Recognizer::generateMarkerLabel(WorldObject& wo) {
-  std::stringstream markerstream;
-  markerstream << wo.getType().name;
-  if(showRecognitionProbability)
-  {
-    markerstream << " (" << wo.getProbability() << ")";
-  }
-
-  if(showPose || showPosition || showPoseStdDev)
-  {
-    markerstream << "\n";
-  }
-  if(showPosition)
-  {
-    markerstream << "[" << wo.getX() << ", "
-                        << wo.getY() << ", "
-                        << wo.getZ() << "]";
-  }
-  if(showPose)
-  {
-    markerstream << "[P: " << wo.getPoseTf().getRotation().getY() << "]";
-  }
-  if(showPoseStdDev)
-  {
-    //markerstream << "[S: " << wo.getPoseStdDev() << "]";
-  }
-  return markerstream.str().c_str();
-} //generateMarkerLabel
-
-void Recognizer::deleteMarker(WorldObjectPtr wo)
-{
-  // ROS_INFO_STREAM("Setting marker number " << wo->getID() << " to DELETE");
-
-  bool deleted = false;
-  for(std::vector<visualization_msgs::Marker>::iterator it2 = markerMsg.markers.begin();
-    it2 != markerMsg.markers.end(); ++it2)
-  {
-    if(it2->id == wo->getID() || it2->id == wo->getID() + 100000)
-    {
-      it2->action = visualization_msgs::Marker::DELETE;
-      deleted = true;
-    }
-  }
-  if(deleted) return;
-
-  ros::Time now = ros::Time::now();
-
-  visualization_msgs::Marker newDeleteMarker;
-  newDeleteMarker.header.frame_id    = recognitionFrame;
-  newDeleteMarker.header.stamp       = now;
-
-  visualization_msgs::Marker newDeleteMarker2;
-  newDeleteMarker.header.frame_id    = recognitionFrame;
-  newDeleteMarker.header.stamp       = now;
-
-  newDeleteMarker.id = wo->getID();
-  newDeleteMarker2.id = wo->getID()+100000;
-
-  newDeleteMarker.action = visualization_msgs::Marker::DELETE;
-  newDeleteMarker2.action = visualization_msgs::Marker::DELETE;
-
-  markerMsg.markers.push_back(newDeleteMarker);
-  markerMsg.markers.push_back(newDeleteMarker2);
-
-} //deleteMarker
+}
 
 WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
 {

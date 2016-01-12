@@ -18,6 +18,9 @@
 
 //ROS Messages
 #include <orp/ClassificationResult.h>
+#include <visualization_msgs/Marker.h>
+
+#include "core/orp_utils.h"
 
 //helpful typedefs and forward declarations
 class WorldObject;
@@ -64,6 +67,9 @@ struct WorldObjectType {
   WorldObjectType(): name("notset") {};
   WorldObjectType(std::string n): name(n) {};
 
+  visualization_msgs::Marker stub;
+  RPY offset;
+  
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 }; //WorldObjectType
@@ -89,6 +95,8 @@ public:
 class WorldObject {
 private:
   static int nextValidID;     /// ncremented on new object creation.
+  
+  static const int KALMAN_SIZE = 3;
 protected:
   ros::Time lastUpdated;      /// When this object was last updated by a recognition event
   int id;                     /// This object's unique ID. This is mainly used for ROS markers.
@@ -102,12 +110,18 @@ protected:
 
   std::vector<std::string> fullSensorModel; //list of all detectable items
   std::vector<std::string> subSensorModel;  //list of items to be detected
+  
+  visualization_msgs::Marker objectMarker; //visual representation of this
+  visualization_msgs::Marker labelMarker; //the object's name
 
+  
+  Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> covariance; //for Kalman filter
+  Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> Q; // for Kalman filter
 public:
   /**
    * Constructor with more specifications, to be created from a classifier.
    */
-  WorldObject(float colocationDist, WorldObjectManager* manager_, std::string type_, Eigen::Affine3d pose_, float probability_);
+  WorldObject(float colocationDist, WorldObjectManager* manager_, std::string type_, std::string frame, Eigen::Affine3d pose_, float probability_);
 
   /**
    * Should we merge with the specified object? For internal use
@@ -121,7 +135,7 @@ public:
    *
    * @arg other the WorldObject to merge with
    */
-  virtual bool merge(WorldObject* other);
+  virtual bool merge(WorldObjectPtr other);
 
   /**
    * Refreshes this object's last updated time to be ros::Time::now().
@@ -151,26 +165,27 @@ public:
   int getID() { return id; };
 
   WorldObjectType getType() { return type; };
+  
+  visualization_msgs::Marker getObjectMarker() { return objectMarker; };
+  
+  visualization_msgs::Marker getLabelMarker() { return labelMarker; };
 
   //set the object pose
-  void setPose( Eigen::Affine3d pos) { pose = pos; };
-  
-  //set the object pose
-  void setPose(tf::Pose pos);
-  void setPose(geometry_msgs::Pose pos);
+  void setPose( Eigen::Affine3d pos, bool hard = false);
 
   ///Get the object pose
   tf::Pose getPoseTf();
   ///Get the object pose
-  Eigen::Affine3d getPose() { return pose; };
-   /**
+  Eigen::Affine3d getPose();
+  /**
    * convienience method: set the translation portion of the object pose
    * @param pos The position to set the object pose's origin to 
    */
-  void setPosition(tf::Vector3 pos);
+  //void setPosition(tf::Vector3 pos);
   ///Get the pose position
-  tf::Vector3 getPosition() { return getPoseTf().getOrigin(); }; ///Get the pose position
+  //tf::Vector3 getPosition() { return getPoseTf().getOrigin(); }; ///Get the pose position
 
+  //get the X-component of pose position
   float getX() { return getPose()(0,3); };
   ///Get the Y-component of pose position
   float getY() { return getPose()(1,3); };
@@ -178,19 +193,21 @@ public:
   float getZ() { return getPose()(2,3); };
 
   ///Set the X-component of pose position
-  float setX(float x) { pose(0,3) = x; };
+  //float setX(float x) { pose(0,3) = x; };
   ///Set the Y-component of pose position
-  float setY(float y) { pose(1,3) = y; };
+  //float setY(float y) { pose(1,3) = y; };
   ///Set the Z-component of pose position
-  float setZ(float z) { pose(2,3) = z; };
+  //float setZ(float z) { pose(2,3) = z; };
 
   //should this object be removed?
   bool isStale() { return stale; };
   //set this object as stale to kill it on the next update
-  void setStale(bool s) { stale = s; };
+  void setStale(bool s);
   
   float getColocationDist() { return colocationDistance; };
 
+  bool isColocatedWith(WorldObjectPtr other);
+  
   //required for using fixed-size vectorizable Eigen types. 
   //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

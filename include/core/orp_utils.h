@@ -16,6 +16,18 @@
 
 typedef pcl::PointXYZRGB ORPPoint;
 
+
+/**
+ * roll, pitch and yaw (orientation) struct
+ */
+struct RPY {
+  double roll; //x axis
+  double pitch; //y axis
+  double yaw; //z axis
+
+  RPY() : roll(0), pitch(0), yaw(0) {};
+};
+
 class file_error: public std::runtime_error
 {
 public:
