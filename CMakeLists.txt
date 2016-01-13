@@ -13,10 +13,9 @@ set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAG
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers cv_bridge grasp_interface)
+find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers cv_bridge grasp_interface obj_interface)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
-
 
 ########################################################
 ## Declare ROS messages, services, and configurations ##
@@ -69,8 +68,6 @@ include_directories(include
 ####################################################################################################
 
 add_library(orp
-    src/world_object.cpp
-    src/world_object_manager.cpp
     src/classifier.cpp
     src/orp_utils.cpp
 )

@@ -80,7 +80,7 @@
     pkg     = "orp"
     type    = "recognizer"
     args    = "$(arg home_dir)/$(arg list) $(arg autostart)"
-
+    launch-prefix="xterm -e gdb --args"
     required= "true"
     output  = "screen"
   />

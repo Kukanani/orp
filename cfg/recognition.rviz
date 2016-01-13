@@ -6,7 +6,7 @@ Panels:
       Expanded:
         - /DepthCloud1/Auto Size1
         - /TF1/Frames1
-      Splitter Ratio: 0.846154
+      Splitter Ratio: 0.717472
     Tree Height: 740
   - Class: rviz/Selection
     Name: Selection
@@ -196,6 +196,14 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /detected_object_grasp_markers
+      Name: MarkerArray
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -220,7 +228,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.34172
+      Distance: 0.726938
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -232,10 +240,10 @@ Visualization Manager:
         Z: 0.183164
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.5698
+      Pitch: 0.914797
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.71859
+      Yaw: 4.73358
     Saved: ~
 Window Geometry:
   Displays:

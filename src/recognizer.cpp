@@ -141,78 +141,59 @@ void Recognizer::fillTypes() {
   }
   for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
     WorldObjectType thisType = WorldObjectType(*it);
-    visualization_msgs::Marker stub;
-    RPY rpy;
+    double x, y, z, roll, pitch, yaw;
+    float r, g, b;
+    ObjectShape shape;
 
-    if(*it == "unknown") {
-      stub.scale.x = 0.1;
-      stub.scale.y = 0.1;
-      stub.scale.z = 0.1;
-
-      stub.type = visualization_msgs::Marker::CUBE;
-
-      rpy.roll = 0.0;
-      rpy.pitch = 0.0;
-      rpy.yaw = 0.0;
-    } else {
-      try {
-        std::string geom;
-        ORPUtils::attemptToReloadStringParam(n, "/items/" + *it + "/geometry", geom);
-        if(geom == "BOX") {
-          stub.type            = visualization_msgs::Marker::CUBE;
-        } else if(geom == "CYLINDER") {
-          stub.type            = visualization_msgs::Marker::CYLINDER;
-        } else if(geom == "FLAT") {
-          stub.type            = visualization_msgs::Marker::CUBE;
-        } else if(geom == "BLOB") {
-          stub.type            = visualization_msgs::Marker::SPHERE;
-        } else {
-          ROS_ERROR("Did not understand geometry type %s while creating marker stubs", geom.c_str());
-          stub.type            = visualization_msgs::Marker::CUBE;
-        }
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/depth", stub.scale.x);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/width", stub.scale.y);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/height", stub.scale.z);
-
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/roll", rpy.roll);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/pitch", rpy.pitch);
-        ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/yaw", rpy.yaw);
-
-        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/red", stub.color.r);
-        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/green", stub.color.g);
-        ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/blue", stub.color.b);
-
-        rpy.roll = ORPUtils::radFromDeg(rpy.roll);
-        rpy.pitch = ORPUtils::radFromDeg(rpy.pitch);
-        rpy.yaw = ORPUtils::radFromDeg(rpy.yaw);
-      } catch(std::exception e) {
-        ROS_ERROR("error while creating marker stub for world object of type '%s': %s", e.what(), (*it).c_str());
-        stub.scale.x = 0.1;
-        stub.scale.y = 0.1;
-        stub.scale.z = 0.1;
-
-        stub.color.r = 0.0;
-        stub.color.g = 0.0;
-        stub.color.b = 0.0;
-
-        stub.type = visualization_msgs::Marker::CUBE;
-
-        rpy.roll = 0.0;
-        rpy.pitch = 0.0;
-        rpy.yaw = 0.0;
+    try {
+      std::string geom;
+      ORPUtils::attemptToReloadStringParam(n, "/items/" + *it + "/geometry", geom);
+      if(geom == "BOX") {
+	shape = BOX;
+      } else if(geom == "CYLINDER") {
+	shape = CYLINDER;
+      } else if(geom == "FLAT") {
+	shape = FLAT;
+      } else if(geom == "BLOB") {
+	shape = BLOB;
+      } else {
+	ROS_ERROR("Did not understand geometry type %s while creating marker stubs", geom.c_str());
+	shape = BLOB;
       }
-      if(stub.scale.x > 1 && stub.scale.y > 1 && stub.scale.z > 1) { //detect sizes in mm instead of m
-        stub.scale.x /= 1000.0f;
-        stub.scale.y /= 1000.0f;
-        stub.scale.z /= 1000.0f;
-      }
+      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/depth", x);
+      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/width", y);
+      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/height", z);
+
+      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/roll", roll);
+      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/pitch", pitch);
+      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/yaw", yaw);
+      roll = ORPUtils::radFromDeg(roll);
+      pitch = ORPUtils::radFromDeg(pitch);
+      yaw = ORPUtils::radFromDeg(yaw);
+      
+      ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/red", r);
+      ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/green", g);
+      ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/blue", b);
+
+    } catch(std::exception e) {
+      ROS_ERROR("error while creating marker stub for world object of type '%s': %s", e.what(), (*it).c_str());
+      x = 0.1; y = 0.1; z = 0.1;
+      r = 0.0; g = 0.0; b = 0.0;
+      roll = 0.0; pitch = 0.0; yaw = 0.0;
+      shape = BLOB;
     }
-    //ROS_INFO("creating marker stub for world object of type '%s'", (*it).c_str());
-    stub.header.frame_id = recognitionFrame;
-    stub.action          = visualization_msgs::Marker::ADD;
+    if(x > 1 && y > 1 && z > 1) { //detect sizes in mm instead of m
+      ROS_WARN("This object is bigger than 1meter in one direction! Since that's highly unlikely for our tasks, I'm going to scale it down by 1000 (assuming you specified it in mm).");
+      x /= 1000.0f;
+      y /= 1000.0f;
+      z /= 1000.0f;
+    }
+    thisType.setShape(shape);
+    thisType.setColor(r,g,b);
+    thisType.setSize(x,y,z);
+    thisType.setOffset(roll,pitch,yaw);
+    thisType.setFrame(recognitionFrame);
     
-    thisType.offset = rpy;
-    thisType.stub = stub;
     typeManager->addType(thisType);
   }
 //   ROS_INFO("The recognizer has created %i visualization marker stubs.", typeManager->getNumTypes());
@@ -319,7 +300,6 @@ void Recognizer::cb_detectionSet(orp::DetectionSet msg)
   //setDetectionSet(msg.objects);
 } //cb_detectionSet
 
-
 void Recognizer::update()
 {
   ros::Time now = ros::Time::now();
@@ -339,17 +319,21 @@ void Recognizer::update()
 void Recognizer::showGrasps() {
   float approachDist = 0.05;
   
+  GraspGenerator g = GraspGenerator(ROBOTIQ_S_MODEL);
   visualization_msgs::MarkerArray graspMarkers;
+  visualization_msgs::Marker arrow;
+  arrow.type = visualization_msgs::Marker::ARROW;
+  arrow.action = visualization_msgs::Marker::ADD;
+  arrow.color.a = 1.0;
+  arrow.color.r = 1.0;
+  arrow.header.frame_id = recognitionFrame;
+  arrow.scale.x = 0.01; arrow.scale.y = 0.02; arrow.scale.z=0.03;
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
-    visualization_msgs::Marker arrow;
-    arrow.type = visualization_msgs::Marker::ARROW;
-    arrow.header.frame_id = recognitionFrame;
+    std::vector<Grasp> grasps = g.createGrasps((**model.begin()), approachDist);
     
-    GraspGenerator g = GraspGenerator(ROBOTIQ_S_MODEL);
-    std::vector<Grasp> grasps = g.createGrasps(tf::Stamped<tf::Pose>((**model.begin()).getPoseTf(), ros::Time::now(), recognitionFrame), approachDist);
-    
-    for(std::vector<Grasp>::iterator grasp = grasps.begin(); grasp != grasps.end(); ++it) {
+    for(std::vector<Grasp>::iterator grasp = grasps.begin(); grasp != grasps.end(); ++grasp) {
+      arrow.id++;
       arrow.points.clear();
       geometry_msgs::Point point;
       tf::pointTFToMsg(grasp->approachPose.getOrigin(), point);
@@ -371,7 +355,7 @@ void Recognizer::publishROS()
     for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
     {
       orp::WorldObject newObject;
-      newObject.label              = (**it).getType().name;
+      newObject.label  = (**it).getType().getName();
 
       tf::Pose intPose;
       tf::poseEigenToTF((**it).getPose(), intPose);
@@ -415,7 +399,7 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
   best = WorldObjectPtr();
   if(model.size() < 1)
   {
-    ROS_ERROR_STREAM("Recognizer: No vision objects while trying to get most likely object of type " << wot.name);
+    ROS_ERROR_STREAM("Recognizer: No vision objects while trying to get most likely object of type " << wot.getName());
   }
   
   int i = 0;

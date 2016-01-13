@@ -16,8 +16,8 @@
 #include <orp/DetectionSet.h>
 #include <orp/WorldObjects.h>
 
-#include "core/world_object.h"
-#include "core/world_object_manager.h"
+#include "world_object.h"
+#include "world_object_manager.h"
 #include "core/orp_utils.h"
 
 /**
