@@ -24,7 +24,7 @@
   <!-- DATA -->
   <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
   <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">  </include>
-  <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
+  <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_rviz.launch"> </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
 
   <node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/>
