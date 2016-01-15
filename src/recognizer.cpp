@@ -308,6 +308,7 @@ void Recognizer::update()
       (**it).setStale(false);
     }
   }
+  dirty = false;
 } //update
 
 void Recognizer::publishROS()

@@ -127,38 +127,19 @@ Visualization Manager:
       Queue Size: 100
       Value: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        camera_depth_frame:
-          Value: true
-        camera_depth_optical_frame:
-          Value: true
-        camera_link:
-          Value: true
-        camera_rgb_frame:
-          Value: true
-        camera_rgb_optical_frame:
-          Value: true
-        world:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          camera_link:
-            camera_depth_frame:
-              camera_depth_optical_frame:
-                {}
-            camera_rgb_frame:
-              camera_rgb_optical_frame:
-                {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 0.25
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -212,22 +193,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.537512
+      Distance: 1.09923
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.439902
-        Y: 0.723035
-        Z: 0.183164
+        X: 0.273073
+        Y: 0.834971
+        Z: 0.203221
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.214797
+      Pitch: 0.479797
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.380403
+      Yaw: 3.95859
     Saved: ~
 Window Geometry:
   Displays:
