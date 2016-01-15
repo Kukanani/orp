@@ -1,0 +1,134 @@
+<launch>
+  <node
+    name    = "static_transform_publisher"  
+    pkg     = "tf"
+    type    = "static_transform_publisher"
+    args    = "0 0 0 0 0 0  world camera_link 100"
+
+    respawn = "true"
+    output  = "screen"
+  />
+  
+
+  <node
+    name    = "$(anon sixdof_min_x)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_min_x 0.08"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon sixdof_max_x)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_max_x 0.2"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon sixdof_min_y)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_min_y -0.1"
+
+    respawn = "false"
+    output  = "screen"
+  />
+  
+
+  <node
+    name    = "$(anon sixdof_max_y)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_max_y 0"
+
+    respawn = "false"
+    output  = "screen"
+  />
+  
+  <node
+    name    = "$(anon sixdof_min_z)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_min_z -0.1"
+
+    respawn = "false"
+    output  = "screen"
+  />
+  
+  <node
+    name    = "$(anon sixdof_max_z)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation spatial_max_z 0.1"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon sixdof_segmentation_distance_threshold)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation segmentation_distance_threshold 0.002"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon sixdof_voxel_leaf_size)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation voxel_leaf_size 0.0001"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon cylinder_classifier_min_radius)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set cylinder_classifier min_radius 0.002"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon cylinder_classifier_max_radius)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set cylinder_classifier max_radius 0.005"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon realsense_node_accuracy)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set realsense_node accuracy 1"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon realsense_filter_option)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set realsense_node filter_option 1"
+
+    respawn = "false"
+    output  = "screen"
+  />
+    
+</launch>
