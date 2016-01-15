@@ -49,14 +49,11 @@ private:
   WorldObjectManager* typeManager;      /// Manages the list of world object types.
   std::string objectTopic;              /// Where to publish the WorldObjects
   std::string markerTopic;              /// Where to publish the RViz markers for visualization
-  std::string labelTopic;               /// Where to publish the markers with object labels
 
   ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
   ros::Subscriber detectionSetSub;      /// Listens for a subset of objects to detect.
   ros::Publisher objectPub;             /// Publishes a MarkerArray with information about detected objects
-  ros::Publisher labelPub;             /// Publishes a MarkerArray with the names of detected objects
   ros::Publisher markerPub;             /// Publishes a WorldObjects message that contains all the recognized objects from 
-  ros::Publisher graspMarkerPub;        /// temp: grasp arrows
   tf::TransformBroadcaster* objectBroadcaster; /// broadcast frames for each found object
   tf::TransformListener* transformListener;    /// listen for necessary transformations before publishing
   tf::Transformer* objectTransformer;          /// transform object poses from one frame to another
@@ -116,10 +113,7 @@ private:
    * loads info from the parameter server and stores basic information about each item
    * being detected.
    */
-  void fillTypes();
-  
-  //test method
-  void showGrasps();
+  void loadTypesFromParameterServer();
 
   /**
    * ROS service call handler. Searches the known world model for objects that match

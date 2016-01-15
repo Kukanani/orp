@@ -13,7 +13,7 @@ set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAG
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers cv_bridge grasp_interface obj_interface)
+find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers cv_bridge obj_interface)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 
@@ -45,6 +45,7 @@ generate_dynamic_reconfigure_options(
     cfg/Recognizer.cfg
     cfg/Segmentation.cfg
     cfg/HistogramSaver.cfg
+    cfg/CylinderClassifier.cfg
 )
 
 generate_messages(
@@ -77,8 +78,8 @@ target_link_libraries(orp ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES
 ####################################################################################################
 
 add_executable(recognizer src/recognizer.cpp)
-add_dependencies(recognizer ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp grasp_interface)
-target_link_libraries(recognizer ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp grasp_interface)
+add_dependencies(recognizer ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+target_link_libraries(recognizer ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp)
 
 add_executable(segmentation src/segmentation.cpp)
 add_dependencies(segmentation ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
@@ -101,6 +102,10 @@ target_link_libraries(sixdof_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} o
 add_executable(rgb_classifier src/rgb_classifier.cpp)
 add_dependencies(rgb_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(rgb_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
+
+add_executable(cylinder_classifier src/cylinder_classifier.cpp)
+add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 add_executable(opencv_classifier src/opencv_classifier.cpp)
 add_dependencies(opencv_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
