@@ -39,6 +39,9 @@
 
   <build_depend>tf</build_depend>
   <run_depend>tf</run_depend>
+  
+  <build_depend>obj_interface</build_depend>
+  <run_depend>obj_interface</run_depend>
 
   <build_depend>interactive_markers</build_depend>
   <run_depend>interactive_markers</run_depend>

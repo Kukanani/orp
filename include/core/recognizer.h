@@ -16,21 +16,9 @@
 #include <orp/DetectionSet.h>
 #include <orp/WorldObjects.h>
 
-#include "core/world_object.h"
-#include "core/world_object_manager.h"
+#include "world_object.h"
+#include "world_object_manager.h"
 #include "core/orp_utils.h"
-
-/**
- * roll, pitch and yaw (orientation) struct
- */
-struct RPY {
-  double roll; //x axis
-  double pitch; //y axis
-  double yaw; //z axis
-
-  RPY() : roll(0), pitch(0), yaw(0) {};
-};
-
 
 /**
  * @brief   Base recognizer class.
@@ -61,11 +49,7 @@ private:
   WorldObjectManager* typeManager;      /// Manages the list of world object types.
   std::string objectTopic;              /// Where to publish the WorldObjects
   std::string markerTopic;              /// Where to publish the RViz markers for visualization
-  visualization_msgs::MarkerArray markerMsg; /// The marker message to send out after each recognition. Used in multiple methods.
-
-  std::vector<std::string> typeList;    /// List of object names that the cph can recognize.
-  std::vector<std::string> subTypeList;    /// List of object names that the cph can recognize.
-  std::map<std::string, std::pair<visualization_msgs::Marker, RPY> > markerStubs; //used to create object markers
+  bool dirty;                           /// If true, udpate our model of the world (and remove old objects). Used for lazy updates
 
   ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
   ros::Subscriber detectionSetSub;      /// Listens for a subset of objects to detect.
@@ -86,12 +70,6 @@ private:
   ros::Duration staleTime;          /// Number of seconds that an object will persist in the world model after being updated
   float colocationDist;             /// Distance, in m, that objects must be separated by in order to be thought of as separate objects.
   ros::Duration refreshInterval;    /// The wait between recognition calls
-
-  float markerRed;                  ///Red component of RViz marker color (0 to 1)
-  float markerGreen;                ///Green component of RViz marker color (0 to 1)
-  float markerBlue;                 ///Blue component of RViz marker color (0 to 1)
-  float markerAlpha;                ///Alpha component of RViz marker color (1.0 = opaque)
-  float markerSize;                 ///Marker size (height of uppercase "A")
 
   bool showUnknownLabels;           ///Show "unknown" labels
   bool showRecognitionProbability;  ///Show the decimal recognition probability
@@ -130,7 +108,7 @@ private:
    * loads info from the parameter server and stores basic information about each item
    * being detected.
    */
-  void fillMarkerStubs();
+  void loadTypesFromParameterServer();
 
   /**
    * ROS service call handler. Searches the known world model for objects that match
@@ -157,12 +135,8 @@ private:
    */
   void recognize(const ros::TimerEvent& event);
 
-  /**
-   * Filter objects in the scene. This performs necessary
-   * steps such as removing duplicates. Call it after a call to classify().
-   */
-  void filter();
-
+  void update();
+  
   /**
    * Removes any objects that are older than the "stale time" (i.e., haven't
    * been detected for a while)
@@ -170,18 +144,10 @@ private:
   void killStale();
 
   /**
-   * List out the current model (list of objects) to the console
-   */
-  void debugPrint();
-
-  /**
    * Prepares and sends out ROS-related messages with classification information.
    * This includes object information as well as RViz markers.
    */
   void publishROS();
-
-  /// Get a pre-loaded stub, or return an unknown stub if one can't be found
-  std::pair<visualization_msgs::Marker, RPY> getStubAt(std::string);
 
   /**
    * Creates a new marker for the given object. This should be called when adding an object
@@ -189,11 +155,6 @@ private:
    * @arg wo the WorldObjectPtr to add
    */
   void addMarker(WorldObjectPtr wo);
-
-  /**
-   * Generate the human-readable marker label for this object.
-   */
-  const char* generateMarkerLabel(WorldObject& wo);
 
   /**
    * Update a marker with information from the given world object.
@@ -207,8 +168,6 @@ private:
    * @arg wo the WorldObjectPtr to delete from the world model.
    */
   void deleteMarker(WorldObjectPtr wo);
-
-  void setDetectionSet(std::vector<std::string> set);
 
   /// ROS wrappers
   void cb_startRecognition(std_msgs::Empty msg); 

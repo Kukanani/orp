@@ -136,7 +136,6 @@ namespace ORPUtils {
       return false;
     }
     node.getParam(paramName, temp);
-    ROS_INFO("\tloaded parameter %s, value = %f", paramName.c_str(), temp);
     toFill = temp;
     return true;
   } //attemptToReloadFloatParam
@@ -150,7 +149,6 @@ namespace ORPUtils {
       return false;
     }
     node.getParam(paramName, toFill);
-    //ROS_INFO("\tloaded parameter %s, value = %lf", paramName.c_str(), toFill);
     return true;
   } //attemptToReloadFloatParam
 
@@ -163,7 +161,6 @@ namespace ORPUtils {
       return false;
     }
     node.getParam(paramName, toFill);
-    //ROS_INFO("\tloaded parameter %s, value = %s", paramName.c_str(), toFill.c_str());
     return true;
   } //attemptToReloadFloatParam
 
@@ -174,11 +171,6 @@ namespace ORPUtils {
     std::stringstream thisLine;
 
     matFile.open(file.c_str());
-   // if(!matFile) 
-    //{
-    //  ROS_INFO("Can't save matrix file %s", file.c_str());
-      ///return;
-    //}
     ROS_INFO("Saving matrix to file %s...", file.c_str());
     for(int i=0; i<mat.rows(); i++) {
       thisLine.str("");
@@ -206,7 +198,6 @@ namespace ORPUtils {
     }
     else 
     {
-      //ROS_INFO_STREAM("Reading transformation file %s..." << file.c_str());
       int i = 0;
       while(std::getline(transformationFile, thisLine) && i<4) 
       {
@@ -220,7 +211,6 @@ namespace ORPUtils {
       }
     }
     transformationFile.close();
-    //ROS_INFO("done");
     return mat;
   }
 

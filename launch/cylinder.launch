@@ -14,10 +14,10 @@
 	</include>
 
   <node
-    name    = "rgb_classifier"
+    name    = "cylinder_classifier"
     pkg     = "orp"
-    type    = "rgb_classifier"
-    args    = ". $(find orp)/cfg/test_1.list true"
+    type    = "cylinder_classifier"
+    args    = "true"
 
     respawn = "true"
     output  = "screen"

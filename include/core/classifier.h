@@ -24,7 +24,7 @@
 #include <orp/Segmentation.h>
 #include <orp/DetectionSet.h>
 
-#include "core/world_object.h"
+#include "world_object.h"
 #include "core/orp_utils.h"
 
 //http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_5:_3D_object_recognition_(pipeline)
