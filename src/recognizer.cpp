@@ -41,13 +41,12 @@ int main(int argc, char **argv)
 Recognizer::Recognizer(bool _autostart) :
     autostart(_autostart),
     colocationDist(0.05),
+    dirty(false),
     typeManager(0),
     recognitionFrame("world"),
 
     markerTopic("/detected_object_markers"),
     objectTopic("/detected_objects"),
-    markerAlpha(1.0),
-    markerSize(0.03),
 
     showUnknownLabels(true),
     showRecognitionProbability(true),
@@ -115,9 +114,6 @@ void Recognizer::paramsChanged(orp::RecognizerConfig &config, uint32_t level)
   staleTime           = ros::Duration(config.stale_time);
   colocationDist      = config.colocation_dist;
   setRefreshInterval(config.refresh_interval);
-
-  markerAlpha = config.marker_alpha;
-  markerSize  = config.marker_size;
 
   showUnknownLabels          = config.show_unknown_labels;
   showRecognitionProbability = config.show_recognition_probability;
@@ -243,7 +239,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
     model.push_back(p);
     //ROS_INFO("Added object");
   }
-  
+  dirty = true; //queue an update
 } //cb_classificationResult
 
 void Recognizer::startRecognition() {
@@ -298,6 +294,8 @@ void Recognizer::cb_detectionSet(orp::DetectionSet msg)
 
 void Recognizer::update()
 {
+  //only update the stale objects if we have new data. No camera points->no updates (lazy)
+  if(!dirty) return;
   ros::Time now = ros::Time::now();
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {

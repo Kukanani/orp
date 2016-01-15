@@ -49,6 +49,7 @@ private:
   WorldObjectManager* typeManager;      /// Manages the list of world object types.
   std::string objectTopic;              /// Where to publish the WorldObjects
   std::string markerTopic;              /// Where to publish the RViz markers for visualization
+  bool dirty;                           /// If true, udpate our model of the world (and remove old objects). Used for lazy updates
 
   ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
   ros::Subscriber detectionSetSub;      /// Listens for a subset of objects to detect.
@@ -69,12 +70,6 @@ private:
   ros::Duration staleTime;          /// Number of seconds that an object will persist in the world model after being updated
   float colocationDist;             /// Distance, in m, that objects must be separated by in order to be thought of as separate objects.
   ros::Duration refreshInterval;    /// The wait between recognition calls
-
-  float markerRed;                  ///Red component of RViz marker color (0 to 1)
-  float markerGreen;                ///Green component of RViz marker color (0 to 1)
-  float markerBlue;                 ///Blue component of RViz marker color (0 to 1)
-  float markerAlpha;                ///Alpha component of RViz marker color (1.0 = opaque)
-  float markerSize;                 ///Marker size (height of uppercase "A")
 
   bool showUnknownLabels;           ///Show "unknown" labels
   bool showRecognitionProbability;  ///Show the decimal recognition probability
