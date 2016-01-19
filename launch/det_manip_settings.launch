@@ -55,7 +55,7 @@
     name    = "$(anon sixdof_min_z)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_min_z -0.1"
+    args    = "set segmentation spatial_min_z -0.034"
 
     respawn = "false"
     output  = "screen"
@@ -65,7 +65,7 @@
     name    = "$(anon sixdof_max_z)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_max_z 0.1"
+    args    = "set segmentation spatial_max_z -0.028"
 
     respawn = "false"
     output  = "screen"
@@ -86,6 +86,16 @@
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
     args    = "set segmentation voxel_leaf_size 0.0001"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <node
+    name    = "$(anon segmentation_percentage_to_analyze)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation percentage_to_analyze 1.0"
 
     respawn = "false"
     output  = "screen"
@@ -130,5 +140,5 @@
     respawn = "false"
     output  = "screen"
   />
-    
+   
 </launch>
