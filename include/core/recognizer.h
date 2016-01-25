@@ -13,8 +13,8 @@
 
 #include <orp/RecognizerConfig.h>
 #include <orp/GetObjectPose.h>
-#include <orp/DetectionSet.h>
 #include <orp/WorldObjects.h>
+#include <orp/ClassificationResult.h>
 
 #include "world_object.h"
 #include "world_object_manager.h"
@@ -46,13 +46,12 @@ private:
   ros::Timer timer;                     /// Used to schedule the recognition calls
   std::string recognitionFrame;         /// What frame the objects are being detected in
   WorldObjectList model;                /// A list of currently-accepted objects in the world.
-  WorldObjectManager* typeManager;      /// Manages the list of world object types.
+  WorldObjectManager typeManager;       /// Manages the list of world object types.
   std::string objectTopic;              /// Where to publish the WorldObjects
   std::string markerTopic;              /// Where to publish the RViz markers for visualization
   bool dirty;                           /// If true, udpate our model of the world (and remove old objects). Used for lazy updates
 
   ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
-  ros::Subscriber detectionSetSub;      /// Listens for a subset of objects to detect.
   ros::Publisher objectPub;             /// Publishes a MarkerArray with information about detected objects
   ros::Publisher markerPub;             /// Publishes a WorldObjects message that contains all the recognized objects from 
   tf::TransformBroadcaster* objectBroadcaster; /// broadcast frames for each found object
@@ -172,7 +171,6 @@ private:
   /// ROS wrappers
   void cb_startRecognition(std_msgs::Empty msg); 
   void cb_stopRecognition(std_msgs::Empty msg);
-  void cb_detectionSet(orp::DetectionSet msg);
 public:
   /**
    * Main Recognizer constructor.

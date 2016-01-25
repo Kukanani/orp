@@ -193,3 +193,58 @@ std::string RGBClassifier::getColor(cv::Mat& img) {
   else if(g > r && g > b) return "green";
   return "blue";
 }
+
+
+///////////////////////////////
+// Example of OpenCV-based point cloud filtering
+//   pcl::PointCloud<ORPPoint>::Ptr pclCloud = pcl::PointCloud<ORPPoint>::Ptr(new pcl::PointCloud<ORPPoint>());
+//   pcl::fromROSMsg(cloud, *pclCloud);
+//   
+//   uint8_t* pixelPtr = (uint8_t*)cv_ptr->image.data;
+//   int cn = cv_ptr->image.channels();
+//   cv::Scalar_<uint8_t> bgrPixel;
+//   int i= 0;
+//   for (size_t u = 0; u < cloud.height; ++u)   // rows
+//   {
+//     for (size_t v = 0; v < cloud.width; ++v, ++i)  // cols
+//     {
+//       if(cv_ptr->image.at<cv::Vec3b>(u,v).val[0] > 128) { //blue channel check
+//         pclCloud->points[i].x = std::numeric_limits<float>::quiet_NaN();
+//         pclCloud->points[i].y = std::numeric_limits<float>::quiet_NaN();
+//         pclCloud->points[i].z = std::numeric_limits<float>::quiet_NaN();
+//       }
+//     }
+//   }
+//   pcl::toROSMsg(*pclCloud, cloud);
+//   filterPub.publish(cloud);
+//   
+// } //classify
+// 
+// 
+// ///http://stackoverflow.com/questions/5906693/how-to-reduce-the-number-of-colors-in-an-image-with-opencv-in-python
+// inline uchar reduceVal(const uchar val)
+// {
+//     if (val < 64) return 0;
+//     if (val < 128) return 64;
+//     return 255;
+// }
+// 
+// void OpenCVClassifier::process(cv::Mat& img)
+// {
+//     uchar* pixelPtr = img.data;
+//     for (int i = 0; i < img.rows; i++)
+//     {
+//         for (int j = 0; j < img.cols; j++)
+//         {
+//             const int pi = i*img.cols*3 + j*3;
+//             pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
+//             pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
+//             pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
+//             
+//             
+//             if(pixelPtr[pi+0] == 64) pixelPtr[pi+0] = 127;
+//             if(pixelPtr[pi+1] == 64) pixelPtr[pi+1] = 127;
+//             if(pixelPtr[pi+2] == 64) pixelPtr[pi+2] = 127;
+//         }
+//     }
+// }

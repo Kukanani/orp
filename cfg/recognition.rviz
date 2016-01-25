@@ -5,12 +5,13 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /DepthCloud1/Auto Size1
+        - /PointCloud21
         - /TF1/Frames1
-        - /MotionPlanning1
         - /MotionPlanning1/Scene Geometry1
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planned Path1
+        - /Marker1
       Splitter Ratio: 0.717472
     Tree Height: 296
   - Class: rviz/Selection
@@ -128,119 +129,23 @@ Visualization Manager:
       Marker Topic: /detected_object_markers
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_link:
-          Value: true
-        camera_depth_frame:
-          Value: true
-        camera_depth_optical_frame:
-          Value: true
-        camera_link:
-          Value: true
-        camera_rgb_frame:
-          Value: true
-        camera_rgb_optical_frame:
-          Value: true
-        eef:
-          Value: true
-        finger_1_link_0:
-          Value: true
-        finger_1_link_1:
-          Value: true
-        finger_1_link_2:
-          Value: true
-        finger_1_link_3:
-          Value: true
-        finger_2_link_0:
-          Value: true
-        finger_2_link_1:
-          Value: true
-        finger_2_link_2:
-          Value: true
-        finger_2_link_3:
-          Value: true
-        finger_middle_link_0:
-          Value: true
-        finger_middle_link_1:
-          Value: true
-        finger_middle_link_2:
-          Value: true
-        finger_middle_link_3:
-          Value: true
-        glovebox:
-          Value: true
-        link_b:
-          Value: true
-        link_e:
-          Value: true
-        link_l:
-          Value: true
-        link_r:
-          Value: true
-        link_s:
-          Value: true
-        link_t:
-          Value: true
-        link_u:
-          Value: true
-        object:
-          Value: true
-        palm:
-          Value: true
-        world:
-          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        world:
-          base_link:
-            glovebox:
-              {}
-            link_s:
-              link_l:
-                link_e:
-                  link_u:
-                    link_r:
-                      link_b:
-                        link_t:
-                          palm:
-                            eef:
-                              object:
-                                {}
-                            finger_1_link_0:
-                              finger_1_link_1:
-                                finger_1_link_2:
-                                  finger_1_link_3:
-                                    {}
-                            finger_2_link_0:
-                              finger_2_link_1:
-                                finger_2_link_2:
-                                  finger_2_link_3:
-                                    {}
-                            finger_middle_link_0:
-                              finger_middle_link_1:
-                                finger_middle_link_2:
-                                  finger_middle_link_3:
-                                    {}
-          camera_link:
-            camera_depth_frame:
-              camera_depth_optical_frame:
-                {}
-            camera_rgb_frame:
-              camera_rgb_optical_frame:
-                {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Alpha: 0.25
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -430,8 +335,8 @@ Visualization Manager:
         Interactive Marker Size: 0
         Joint Violation Color: 255; 0; 255
         Planning Group: manipulator
-        Query Goal State: true
-        Query Start State: true
+        Query Goal State: false
+        Query Start State: false
         Show Workspace: false
         Start State Alpha: 1
         Start State Color: 0; 255; 0
@@ -578,6 +483,14 @@ Visualization Manager:
         Show Robot Collision: false
         Show Robot Visual: true
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /marker
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -602,22 +515,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.9706
+      Distance: 1.64435
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.273073
-        Y: 0.834971
-        Z: 0.203221
+        X: 0.490729
+        Y: 0.979427
+        Z: 0.213441
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.184797
+      Pitch: 0.359798
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.10314
+      Yaw: 5.37313
     Saved: ~
 Window Geometry:
   Displays:

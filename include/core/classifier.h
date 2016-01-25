@@ -22,7 +22,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <orp/Segmentation.h>
-#include <orp/DetectionSet.h>
+#include <orp/ClassificationResult.h>
 
 #include "world_object.h"
 #include "core/orp_utils.h"
@@ -86,16 +86,11 @@ protected:
 
   ros::Subscriber startSub;                     /// to start recognition loop
   ros::Subscriber stopSub;                      /// to stop recognition loop
-  ros::Subscriber detectionSetSub;              /// Listens for a subset of objects to detect.
   ros::Subscriber depthInfoSubscriber;          /// Collects depth camera point clouds
   ros::ServiceClient segmentationClient;        /// Calls the segmentation node
   ros::Publisher classificationPub;             /// Outputs classification results
 
   ros::NodeHandle n;
-
-  /// set the subset of items to detect. This is a costly function, avoid calling it if possible.
-  void setDetectionSet(std::vector<std::string> set);
-  void cb_detectionSet(orp::DetectionSet msg);
 
   /** 
    * Search for the closest k neighbors

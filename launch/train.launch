@@ -46,15 +46,34 @@
     respawn="true"
     output="screen"
   />
-  <include
-    file="$(find orp)/launch/pan_table.launch"
+
+  <!-- PAN TABLE -->
+  <node
+    name="arduino_interface"
+    pkg="rosserial_python"
+    type="serial_node.py"
+    args="/dev/ttyACM0" 
+    
+    output="screen"
+    required="true"
   />
-  <include
-    file="$(find orp)/launch/ptt_fiducials.launch"
-  />
+  
+  <!-- FIDUCIALS -->
+  
+  <arg name="marker_size" default="4.4" />
+  <arg name="max_new_marker_error" default="0.08" />
+  <arg name="max_track_error" default="0.0" />
 
+  <arg name="cam_image_topic" default="/camera/depth_registered/points" />
+  <arg name="cam_info_topic" default="/camera/rgb/camera_info" />	
 
+  <arg name="output_frame" default="/world" />
+  <arg name="med_filt_size" default="10" />
+  <arg name="bundle_files" default="$(find ar_track_alvar)/bundles/truthTableLeg.xml $(find orp)/cfg/ptt_fiducials.xml" />
 
+  <node name="ar_track_alvar" pkg="ar_track_alvar" type="findMarkerBundles" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg med_filt_size) $(arg bundle_files)" />
+
+  
   <node
     name    = "rqt_reconfigure"
     pkg     = "rqt_reconfigure"

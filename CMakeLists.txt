@@ -23,34 +23,30 @@ find_package(OpenCV REQUIRED)
 
 add_message_files(
     FILES
-    WorldObject.msg
-    WorldObjects.msg
     ClassificationResult.msg
-    DetectionSet.msg
+    WorldObjects.msg
 )
 
 add_service_files(
     FILES
+    DataCollect.srv
+    GetObjectPose.srv
     Recognition.srv
     RunData.srv
-    DataCollect.srv
     SaveCloud.srv
-    GetObjectPose.srv
-    ChooseShelf.srv
-    ReloadParams.srv
     Segmentation.srv
 )
 
 generate_dynamic_reconfigure_options(
+    cfg/CylinderClassifier.cfg
+    cfg/HistogramSaver.cfg
     cfg/Recognizer.cfg
     cfg/Segmentation.cfg
-    cfg/HistogramSaver.cfg
-    cfg/CylinderClassifier.cfg
 )
 
 generate_messages(
     DEPENDENCIES
-    sensor_msgs std_msgs geometry_msgs
+    sensor_msgs std_msgs geometry_msgs obj_interface
 )
 
 ###################################
@@ -72,7 +68,7 @@ add_library(orp
     src/classifier.cpp
     src/orp_utils.cpp
 )
-add_dependencies(orp ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+add_dependencies(orp ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp obj_interface_generate_messages)
 target_link_libraries(orp ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES} libvtkIO.so libvtkFiltering.so)
 
 ####################################################################################################
@@ -107,9 +103,9 @@ add_executable(cylinder_classifier src/cylinder_classifier.cpp)
 add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
-add_executable(opencv_classifier src/opencv_classifier.cpp)
-add_dependencies(opencv_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-target_link_libraries(opencv_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
+# add_executable(opencv_classifier src/opencv_classifier.cpp)
+# add_dependencies(opencv_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+# target_link_libraries(opencv_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 ####################################################################################################
 
@@ -133,6 +129,6 @@ add_executable(vision_simulator src/vision_simulator.cpp)
 add_dependencies(vision_simulator ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(vision_simulator ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
-add_executable(point_cloud_batch_processor src/point_cloud_processor.cpp)
-add_dependencies(point_cloud_batch_processor ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-target_link_libraries(point_cloud_batch_processor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+# add_executable(point_cloud_batch_processor src/point_cloud_processor.cpp)
+# add_dependencies(point_cloud_batch_processor ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+# target_link_libraries(point_cloud_batch_processor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )

@@ -42,7 +42,7 @@ Recognizer::Recognizer(bool _autostart) :
     autostart(_autostart),
     colocationDist(0.05),
     dirty(false),
-    typeManager(0),
+    typeManager("unknown"),
     recognitionFrame("world"),
 
     markerTopic("/detected_object_markers"),
@@ -70,33 +70,23 @@ Recognizer::Recognizer(bool _autostart) :
   startSub = n.subscribe("orp_start_recognition", 1, &Recognizer::cb_startRecognition, this);
   stopSub = n.subscribe("orp_stop_recognition", 1, &Recognizer::cb_stopRecognition, this);
 
-  detectionSetSub = n.subscribe(
-    "/detection_set",
-    1,
-    &Recognizer::cb_detectionSet,
-    this);
-
   objectBroadcaster = new tf::TransformBroadcaster();
   objectTransformer = new tf::Transformer();
   transformListener = new tf::TransformListener();
 
-  typeManager = new WorldObjectManager("unknown");
-
-  ROS_INFO("initializing sensor model");
-  
-  loadTypesFromParameterServer();
+  ROS_INFO("Loading object types");
+  typeManager.loadTypesFromParameterServer();
 
   if(autostart) {
     ROS_INFO("Autostarting recognition");
     startRecognition();
   }
-} //Recognizer constructor
+}
 
 Recognizer::~Recognizer()
 {
   model.clear();
-  delete typeManager;
-} //Recognizer destructor
+}
 
 void Recognizer::recognize(const ros::TimerEvent& event)
 {
@@ -105,7 +95,7 @@ void Recognizer::recognize(const ros::TimerEvent& event)
   killStale();
   
   //ROS_INFO("===========");
-} //recognize
+}
 
 //use the form
 //local_var_name = config.config_var_name;
@@ -123,72 +113,6 @@ void Recognizer::paramsChanged(orp::RecognizerConfig &config, uint32_t level)
 
   shouldDebugPrint = config.debug_print;
 
-} //paramsChanged
-
-  
-void Recognizer::loadTypesFromParameterServer() {
-  std::vector<std::string> paramMap;
-  if(!n.getParam("/items/list", paramMap)) {
-    ROS_ERROR("couldn't load items from parameter server.");
-  }
-  for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
-    WorldObjectType thisType = WorldObjectType(*it);
-    double x, y, z, roll, pitch, yaw;
-    float r, g, b;
-    ObjectShape shape;
-
-    try {
-      std::string geom;
-      ORPUtils::attemptToReloadStringParam(n, "/items/" + *it + "/geometry", geom);
-      if(geom == "BOX") {
-	shape = BOX;
-      } else if(geom == "CYLINDER") {
-	shape = CYLINDER;
-      } else if(geom == "FLAT") {
-	shape = FLAT;
-      } else if(geom == "BLOB") {
-	shape = BLOB;
-      } else {
-	ROS_ERROR("Did not understand geometry type %s while creating marker stubs", geom.c_str());
-	shape = BLOB;
-      }
-      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/depth", x);
-      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/width", y);
-      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/height", z);
-
-      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/roll", roll);
-      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/pitch", pitch);
-      ORPUtils::attemptToReloadDoubleParam(n, "/items/" + *it + "/yaw", yaw);
-      roll = ORPUtils::radFromDeg(roll);
-      pitch = ORPUtils::radFromDeg(pitch);
-      yaw = ORPUtils::radFromDeg(yaw);
-      
-      ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/red", r);
-      ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/green", g);
-      ORPUtils::attemptToReloadFloatParam(n, "/items/" + *it + "/blue", b);
-
-    } catch(std::exception e) {
-      ROS_ERROR("error while creating marker stub for world object of type '%s': %s", e.what(), (*it).c_str());
-      x = 0.1; y = 0.1; z = 0.1;
-      r = 0.0; g = 0.0; b = 0.0;
-      roll = 0.0; pitch = 0.0; yaw = 0.0;
-      shape = BLOB;
-    }
-    if(x > 1 && y > 1 && z > 1) { //detect sizes in mm instead of m
-      ROS_WARN("This object is bigger than 1meter in one direction! Since that's highly unlikely for our tasks, I'm going to scale it down by 1000 (assuming you specified it in mm).");
-      x /= 1000.0f;
-      y /= 1000.0f;
-      z /= 1000.0f;
-    }
-    thisType.setShape(shape);
-    thisType.setColor(r,g,b);
-    thisType.setSize(x,y,z);
-    thisType.setOffset(roll,pitch,yaw);
-    thisType.setFrame(recognitionFrame);
-    
-    typeManager->addType(thisType);
-  }
-//   ROS_INFO("The recognizer has created %i visualization marker stubs.", typeManager->getNumTypes());
 }
 
 bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
@@ -223,7 +147,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 
   bool merged = false;
   
-  WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,typeManager,newObject.result.label, recognitionFrame, eigPose, 1.0f));
+  WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.result.label, recognitionFrame, eigPose, 1.0f));
   for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
     if((*it)->isColocatedWith(p)) {
       merged = true;
@@ -233,14 +157,10 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   }
 
   if(!merged) { //new object
-//    if(!model.empty()) {
-//       ROS_INFO_STREAM("Adding object, it's distance from the first in the scene is %f" << ((*(model.begin()))->getPose().translation() - p->getPose().translation()).norm());
-//    }
     model.push_back(p);
-    //ROS_INFO("Added object");
   }
   dirty = true; //queue an update
-} //cb_classificationResult
+}
 
 void Recognizer::startRecognition() {
   if(recognitionSub == NULL)
@@ -286,12 +206,6 @@ void Recognizer::cb_stopRecognition(std_msgs::Empty msg) {
   stopRecognition();
 } //cb_startRecognition
 
-void Recognizer::cb_detectionSet(orp::DetectionSet msg)
-{
-  //FIXME: nothing
-  //setDetectionSet(msg.objects);
-} //cb_detectionSet
-
 void Recognizer::update()
 {
   //only update the stale objects if we have new data. No camera points->no updates (lazy)
@@ -320,13 +234,18 @@ void Recognizer::publishROS()
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
-    orp::WorldObject newObject;
-    newObject.label  = (**it).getType().getName();
+    obj_interface::WorldObject newObject;
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
+    
+    newObject.colocationDist = (**it).getColocationDistance();
+    newObject.probability = (**it).getProbability();
     newObject.pose.header.frame_id = recognitionFrame;
+    newObject.label  = (**it).getType().getName();
+    
     objectMsg.objects.insert(objectMsg.objects.end(), newObject);
+    
     
     //create the marker message
     std::vector<visualization_msgs::Marker> newMarkers = (**it).getMarkers();
@@ -378,9 +297,9 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
 
 WorldObjectPtr Recognizer::getMostLikelyObjectOfType(std::string name)
 {
-  WorldObjectType type = typeManager->getUnknownType();
+  WorldObjectType type = typeManager.getUnknownType();
   try {
-    typeManager->getTypeByName(name);
+    typeManager.getTypeByName(name);
   } catch(std::logic_error le) {
     ROS_WARN_STREAM_THROTTLE(30, "Item type " + name + " not found. Continuing with default unknown object type");
   }

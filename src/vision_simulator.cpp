@@ -3,7 +3,7 @@
 #include <sstream>
 
 #include <orp/WorldObjects.h>
-#include <orp/WorldObject.h>
+#include <obj_interface/WorldObject.h>
 
 #include "app/vision_simulator.h"
 
@@ -67,7 +67,7 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename, std::
     make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position, true, objName );
 
   
-    orp::WorldObject theObject;
+    obj_interface::WorldObject theObject;
     theObject.label = objName;
     theObject.pose.header.frame_id = outputFrame;
     theMessage.objects.push_back(theObject);

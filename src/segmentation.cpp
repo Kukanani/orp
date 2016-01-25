@@ -27,7 +27,6 @@ Segmentation::Segmentation() :
   clusterPublisher = node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
   clustersPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
   segmentationServer = node.advertiseService("/segmentation", &Segmentation::processSegmentation, this);
-  reloadParamsServer = node.advertiseService("/reload_params", &Segmentation::cb_reloadParams, this);
 
   reconfigureCallbackType = boost::bind(&Segmentation::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
@@ -63,25 +62,6 @@ void Segmentation::paramsChanged(orp::SegmentationConfig &config, uint32_t level
   clusterTolerance = config.cluster_tolerance;
   minClusterSize = config.min_cluster_size;
   maxClusterSize = config.max_cluster_size;
-} //paramsChanged
-
-bool Segmentation::reloadParams()
-{
-  bool result = true;
-  result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_min_x", minX);
-  result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_max_x", maxX);
-  result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_min_y", minY);
-  result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_max_y", maxY);
-  result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_min_z", minZ);
-  result &= ORPUtils::attemptToReloadFloatParam(node, "spatial_max_z", maxZ);
-  return result;
-} //loadParams
-
-bool Segmentation::cb_reloadParams(
-    orp::ReloadParams::Request &request,
-    orp::ReloadParams::Response &response)
-{
-  return reloadParams();
 }
 
 bool compareClusterSize(const sensor_msgs::PointCloud2& a, const sensor_msgs::PointCloud2& b)

@@ -26,7 +26,6 @@
 
 #include <orp/Segmentation.h>
 #include <orp/SegmentationConfig.h>
-#include <orp/ReloadParams.h>
 
 #include "core/orp_utils.h"
 
@@ -81,8 +80,6 @@ private:
   ///Accepts the segmentation requests
   //ros::Subscriber segmentationSubscriber;
   ros::ServiceServer segmentationServer;
-
-  ros::ServiceServer reloadParamsServer;
 
   /// Publishes planes cut from the scene
   ros::Publisher planesPublisher;
@@ -216,24 +213,8 @@ private:
    */
   std::vector<sensor_msgs::PointCloud2> cluster(PCP &input, float clusterTolerance, int minClusterSize, int maxClusterSize);
 public:
-  /**
-   * The only constructor.
-   * @param nh The already-initalized ROS node handle
-   */
   Segmentation();
-
-  /**
-   * Reload parameters from the parameter server (instead of being set by dynamic reconfigure).
-   * @return true if all parameters could be set.
-   */
-  bool reloadParams();
-  
   void run();
-
-  //Callbacks
-  bool cb_reloadParams(
-      orp::ReloadParams::Request &request,
-      orp::ReloadParams::Response &response);
 
   /**
    * Linked to incoming camera data Orchestrates the segmentation process.
