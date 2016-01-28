@@ -8,6 +8,7 @@ Classifier::Classifier(float thresh, std::string _name,
     threshold(thresh),
     autostart(_autostart)
 {
+  pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 } //Classifier
 
 Classifier::Classifier(const Classifier& other) {

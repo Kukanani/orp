@@ -9,11 +9,11 @@
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "segmentation");
+  pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
   ROS_INFO("Starting Segmentation");
   Segmentation s;
   s.run();
   return 1;
-  pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 } //main
 
 Segmentation::Segmentation() :
@@ -76,6 +76,7 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
     ROS_DEBUG("Not segmenting cloud, it's too small.");
     return false;
   }
+  //ROS_INFO("segmenting...");
   
   inputCloud = PCP(new PC());
   processCloud = PCP(new PC());
@@ -136,6 +137,7 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
       ROS_ERROR_STREAM("After filtering, the cloud contained " << inputCloud->points.size() << " points. This is more than BEFORE the voxel filter was applied, so something is wrong. No segmentation will occur.");
     }
   }
+  //ROS_INFO("done segmenting");
   return true;
 } //processSegmentation
 

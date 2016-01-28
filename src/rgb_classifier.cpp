@@ -15,6 +15,7 @@ int main(int argc, char **argv)
   srand (static_cast <unsigned> (time(0)));
 
   ros::init(argc, argv, "rgb_classifier");
+  pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 
   if(argc < 3) {
     ROS_FATAL("proper usage is 'rgb_classifier data_directory [autostart]");
