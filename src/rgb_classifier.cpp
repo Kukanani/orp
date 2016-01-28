@@ -17,14 +17,13 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "rgb_classifier");
 
   if(argc < 3) {
-    ROS_FATAL("proper usage is 'rgb_classifier data_directory object_list_file [autostart]");
+    ROS_FATAL("proper usage is 'rgb_classifier data_directory [autostart]");
     return -1;
   }
   std::string directory = argv[1];
-  std::string listFile = argv[2];
   bool autostart = false;
-  if(argc >= 4) {
-    if(std::string(argv[3])  == "true") autostart = true;
+  if(argc >= 3) {
+    if(std::string(argv[2])  == "true") autostart = true;
   }
 
   ROS_INFO("Starting RGB Classifier");

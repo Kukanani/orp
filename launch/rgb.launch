@@ -19,7 +19,8 @@
     name    = "rgb_classifier"
     pkg     = "orp"
     type    = "rgb_classifier"
-    args    = ". $(find orp)/cfg/test_1.list true"
+    args    = ". true"
+    launch-prefix="xterm -e gdb &#45;&#45;args"
 
     respawn = "true"
     output  = "screen"

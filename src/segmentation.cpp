@@ -13,6 +13,7 @@ int main(int argc, char **argv)
   Segmentation s;
   s.run();
   return 1;
+  pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
 } //main
 
 Segmentation::Segmentation() :
