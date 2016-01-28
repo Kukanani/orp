@@ -9,6 +9,7 @@
 
   <arg name="autostart"       default="true"/>
   <arg name="sim"             default="false"/>
+  <arg name="rviz"             default="false"/>
 
   <arg name="fourdof"         default="false"/>
   <arg name="fourdof_folder"  default="data/fourdof" />
@@ -17,10 +18,12 @@
   <arg name="cph"             default="false"/>
   <arg name="cph_folder"      default="data/cph" />
 
+  <arg name="throttle_nodelet" default="100" />
+
   <machine 
-    name = "nrg-807196-14" 
-    address = "nrg-807196-14" 
-    user="pioneer" 
+    name = "LittleBoy" 
+    address = "LittleBoy" 
+    user="plxvision" 
     env-loader="/opt/ros/indigo/pioneer_env.sh" 
   />
 
@@ -29,6 +32,8 @@
   <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">  </include>
   <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
+
+<node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/>
 
 
   <!-- CLASSIFICATION -->
@@ -100,7 +105,7 @@
   />
 
   <node
-    if      = "$(arg autostart)"
+    if      = "$(arg rviz)"
     name    = "rviz"
     pkg     = "rviz"
     type    = "rviz"
@@ -109,7 +114,7 @@
     output  = "screen"
   />
 
-  <rosparam command="load" file="$(arg home_dir)/cfg/pioneer.yaml" />
+  <rosparam command="load" file="$(arg home_dir)/cfg/default.yaml" />
 
 
   <node
@@ -123,11 +128,11 @@
     <param name ="spatial_max_y" type="double" value="0.38"/>
     <param name ="spatial_min_x" type="double" value="-1.5"/>
     <param name ="spatial_max_x" type="double" value="3.5"/>
-
     <param name ="max_cluster_size" type="double" value="3600"/>
     <param name ="max_plane_segmentation_iterations" type="double" value="200"/>
-    <param name ="min_cluster_size" type="double" value="700"/>
+    <param name ="min_cluster_size" type="double" value="2200"/>
     <param name ="percentage_to_analyze" type="double" value="0.26"/>
+    <param name ="segmentation_distance_threshold" type="double" value="0.26"/>
     
 
   </node>
