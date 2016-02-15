@@ -107,6 +107,7 @@
     args    = "-d $(arg rviz_file) -s $(arg home_dir)/rviz/splash.png"
 
     respawn = "false"
+    output  = "screen"
   />
 
   <rosparam command="load" file="$(arg home_dir)/cfg/default.yaml" />

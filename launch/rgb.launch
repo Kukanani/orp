@@ -20,7 +20,6 @@
     pkg     = "orp"
     type    = "rgb_classifier"
     args    = ". true"
-    launch-prefix="xterm -e gdb &#45;&#45;args"
 
     respawn = "true"
     output  = "screen"

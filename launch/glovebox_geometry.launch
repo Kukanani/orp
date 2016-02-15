@@ -3,7 +3,7 @@
     name    = "camera_position_publisher"  
     pkg     = "tf"
     type    = "static_transform_publisher"
-    args    = "0.48 0.04 0.61  1.57079632679 0.42 0  world camera_link 100"
+    args    = "0.48 0.04 0.615  1.57079632679 0.435 -0.01  world camera_link 100"
 
     respawn = "true"
     output  = "screen"
@@ -23,7 +23,7 @@
     name    = "$(anon sixdof_max_x)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_max_x 1.45"
+    args    = "set segmentation spatial_max_x 0.7"
 
     respawn = "false"
     output  = "screen"
@@ -64,7 +64,7 @@
     name    = "$(anon sixdof_max_z)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_max_z 1"
+    args    = "set segmentation spatial_max_z 0.15"
 
     respawn = "false"
     output  = "screen"

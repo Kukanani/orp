@@ -149,7 +149,7 @@ void Classifier::subscribe()
   ROS_INFO("Classifier subscribing");
   classificationPub = n.advertise<orp::ClassificationResult>("/classification", 1);
   depthInfoSubscriber = n.subscribe(
-    "/camera/depth/points", 1, &Classifier::cb_classify, this);
+    "/camera/depth_registered/points", 1, &Classifier::cb_classify, this);
 
   segmentationClient = n.serviceClient<orp::Segmentation>("/segmentation");
 } //subscribe

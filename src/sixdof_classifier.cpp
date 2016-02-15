@@ -105,7 +105,7 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
   //ROS_INFO("SixDOF classifier calling segmentation");
-  //segmentationClient.call(seg_srv);
+  segmentationClient.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
   //ROS_INFO("SixDOF classifier finished calling segmentation");
   //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);

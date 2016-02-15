@@ -102,7 +102,6 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       }
       //processColors(M);
       //cv::imshow("RGBCluster", M);
-      //cout << "M = " << endl << " " << M << endl << endl;
       //cv::waitKey(10);
     //} else {
     //  ROS_WARN_THROTTLE(10, "No color information in cloud");
