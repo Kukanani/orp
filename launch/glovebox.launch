@@ -13,7 +13,7 @@
  		<arg name="autostart"        value="true"/>
 	</include>
 
-  <include file="$(find orp)/launch/glovebox_geometry.launch">
+  <include file="$(find orp)/launch/glovebox_geometry_camera.launch">
   </include>
 
 </launch>

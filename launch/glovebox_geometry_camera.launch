@@ -1,0 +1,15 @@
+<launch>
+  <node
+    name    = "camera_position_publisher"  
+    pkg     = "tf"
+    type    = "static_transform_publisher"
+    args    = "0.48 0.04 0.615  1.57079632679 0.435 -0.01  world camera_link 100"
+
+    respawn = "true"
+    output  = "screen"
+  />
+
+  <include file="$(find orp)/launch/glovebox_geometry.launch" >
+  
+  </include>
+</launch>
