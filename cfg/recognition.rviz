@@ -13,7 +13,7 @@ Panels:
         - /SIA51/Planning Metrics1
         - /SIA51/Planned Path1
         - /Move-To Axes1
-      Splitter Ratio: 0.717472
+      Splitter Ratio: 0.718331
     Tree Height: 371
   - Class: rviz/Selection
     Name: Selection
@@ -33,7 +33,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: DepthCloud
+    SyncSource: ""
   - Class: Status
     Name: Status
     topic: /status
@@ -130,7 +130,7 @@ Visualization Manager:
       Marker Topic: /detected_object_markers
       Name: MarkerArray
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/TF
@@ -551,7 +551,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.44266
+      Distance: 2.39915
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -563,10 +563,10 @@ Visualization Manager:
         Z: 0.402284
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.699798
+      Pitch: 0.409798
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.53814
+      Yaw: 6.14815
     Saved: ~
 Window Geometry:
   Displays:
