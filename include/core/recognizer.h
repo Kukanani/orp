@@ -205,7 +205,7 @@ public:
    * @arg nh The NodeHandle to use for all ROS functionality.
    * @arg autostart whether or not to start recognition automatically. Default is false (wait for a message to be published to /orp_start_recognition)
    */
-  Recognizer(bool autostart = false);
+  Recognizer(bool autostart = false, std::string recognitionFrame = "/world");
   /**
    * Main Recognizer destructor
    */

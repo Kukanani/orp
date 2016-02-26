@@ -57,8 +57,9 @@ void Classifier::init() {
   //parse the params on the parameter server
   
   std::vector<std::string> paramMap;
-  if(!n.getParam("/items/list", paramMap)) {
-    ROS_ERROR("couldn't load items from parameter server.");
+  while(!n.getParam("/items/list", paramMap)) {
+    ROS_INFO_THROTTLE(5.0, "Waiting for object type list on parameter server...");
+    ros::Duration(1.0).sleep();
   }
   for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
     fullTypeList.push_back(*it);

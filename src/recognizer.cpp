@@ -49,14 +49,15 @@ int main(int argc, char **argv)
 
   //read arguments
   if(argc < 2) {
-    ROS_FATAL("proper usage is 'recognizer [autostart]");
+    ROS_FATAL("proper usage is 'recognizer [autostart] [recognition_frame]");
     return -1;
   }
   bool autostart = (argc >= 2 && std::string(argv[1]) == "true");
+  std::string recognitionFrame = argc >= 3 ? argv[2] : "/world";
 
   //get started
   ros::init(argc, argv, "recognizer");
-  Recognizer s(autostart);
+  Recognizer s(autostart, recognitionFrame);
 
   //Run ROS until shutdown
   ros::AsyncSpinner spinner(2);
@@ -68,12 +69,12 @@ int main(int argc, char **argv)
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-Recognizer::Recognizer(bool _autostart) :
+Recognizer::Recognizer(bool _autostart, std::string recognitionFrame) :
     autostart(_autostart),
     colocationDist(0.05),
     dirty(false),
     typeManager("unknown"),
-    recognitionFrame("/world"),
+    recognitionFrame(recognitionFrame),
 
     markerTopic("/detected_object_markers"),
     objectTopic("/detected_objects"),
@@ -175,11 +176,11 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
   std::string sourceFrame = newObject.result.pose.header.frame_id;
   if(sourceFrame != recognitionFrame) {
     std::string msg = "";
-//     if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
-//       //can't determine object's pose in real world.
-//       ROS_WARN_STREAM("can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
-//       return;
-//     }
+    if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
+      //can't determine object's pose in real world.
+      ROS_WARN_STREAM_THROTTLE(5.0f, "[recognizer] [Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
+      return;
+    }
     
     //I would like to use tf::Stamped<tf::Pose> here but it seems to create more issues than it solves. More straightforward to manually set the frames
     tf::Stamped<tf::Pose> source, dest;
