@@ -31,6 +31,7 @@ add_service_files(
     FILES
     DataCollect.srv
     GetObjectPose.srv
+    GetObjects.srv
     Recognition.srv
     RunData.srv
     SaveCloud.srv
