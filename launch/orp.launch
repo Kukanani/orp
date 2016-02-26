@@ -83,7 +83,7 @@
     name    = "recognizer"
     pkg     = "orp"
     type    = "recognizer"
-    args    = "$(arg home_dir)/$(arg list) $(arg autostart)"
+    args    = "$(arg autostart)"
     required= "true"
     output  = "screen"
   />

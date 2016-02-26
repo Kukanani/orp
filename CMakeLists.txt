@@ -55,7 +55,7 @@ generate_messages(
 
 catkin_package(
     INCLUDE_DIRS include
-    CATKIN_DEPENDS message_runtime pcl_ros roscpp sensor_msgs std_msgs
+    CATKIN_DEPENDS message_runtime pcl_ros roscpp sensor_msgs std_msgs obj_interface
 )
 
 include_directories(include
@@ -102,10 +102,6 @@ target_link_libraries(rgb_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp 
 add_executable(cylinder_classifier src/cylinder_classifier.cpp)
 add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
-
-# add_executable(opencv_classifier src/opencv_classifier.cpp)
-# add_dependencies(opencv_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-# target_link_libraries(opencv_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 ####################################################################################################
 

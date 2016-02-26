@@ -164,12 +164,12 @@ protected:
    * processing will take place. Necessary because vision is such a CPU-intensive
    * process.
    */
-  void subscribe();
+  virtual void subscribe();
 
   /**
    * Undoes whatever is done in subscribe().
    */
-  void unsubscribe();
+  virtual void unsubscribe();
 
 public:
   /**

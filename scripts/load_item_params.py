@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Copyright (c) 2016, Adam Allevato
 # All rights reserved.
 # 
@@ -18,7 +20,6 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#!/usr/bin/env python
 import sqlite3
 import rospy
 import sys

@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     ROS_FATAL("proper usage is 'recognizer [autostart]");
     return -1;
   }
-  bool autostart = (argc >= 3 && std::string(argv[2]) == "true");
+  bool autostart = (argc >= 2 && std::string(argv[1]) == "true");
 
   //get started
   ros::init(argc, argv, "recognizer");
@@ -73,7 +73,7 @@ Recognizer::Recognizer(bool _autostart) :
     colocationDist(0.05),
     dirty(false),
     typeManager("unknown"),
-    recognitionFrame("world"),
+    recognitionFrame("/world"),
 
     markerTopic("/detected_object_markers"),
     objectTopic("/detected_objects"),
@@ -101,7 +101,6 @@ Recognizer::Recognizer(bool _autostart) :
   stopSub = n.subscribe("orp_stop_recognition", 1, &Recognizer::cb_stopRecognition, this);
 
   objectBroadcaster = new tf::TransformBroadcaster();
-  objectTransformer = new tf::Transformer();
   transformListener = new tf::TransformListener();
 
   ROS_INFO("Loading object types");
@@ -172,10 +171,28 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
 
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
+  //transform into recognition frame
+  std::string sourceFrame = newObject.result.pose.header.frame_id;
+  if(sourceFrame != recognitionFrame) {
+    std::string msg = "";
+//     if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
+//       //can't determine object's pose in real world.
+//       ROS_WARN_STREAM("can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
+//       return;
+//     }
+    
+    //I would like to use tf::Stamped<tf::Pose> here but it seems to create more issues than it solves. More straightforward to manually set the frames
+    tf::Stamped<tf::Pose> source, dest;
+    newObject.result.pose.header.stamp = ros::Time(0);
+    tf::poseStampedMsgToTF(newObject.result.pose, source);
+    transformListener->transformPose(recognitionFrame, source, dest);
+    tf::poseStampedTFToMsg(dest, newObject.result.pose);
+    newObject.result.pose.header.frame_id = recognitionFrame;
+  }
+  
+  bool merged = false;
   Eigen::Affine3d eigPose;
   tf::poseMsgToEigen(newObject.result.pose.pose, eigPose);
-
-  bool merged = false;
   
   WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.result.label, recognitionFrame, eigPose, 1.0f));
   for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
