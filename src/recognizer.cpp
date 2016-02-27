@@ -321,7 +321,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     newObject.pose.header.frame_id = recognitionFrame;
     newObject.label  = (**it).getType().getName();
     
-    response.objects.push_back(newObject);
+    response.objects.objects.push_back(newObject);
   }
   
 }
