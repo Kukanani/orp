@@ -313,6 +313,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
+    ROS_INFO("For loop entered");
     obj_interface::WorldObject newObject;
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
@@ -325,7 +326,8 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     
     response.objects.objects.push_back(newObject);
   }
-  
+  ROS_INFO("Finished get objects");
+  return true;
 }
 
 void Recognizer::killStale() {
