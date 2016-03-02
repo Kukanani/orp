@@ -115,8 +115,6 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
   sensor_msgs::PointCloud2 transformedMessage;
   sensor_msgs::PointCloud2 rawMessage;
 
-  std::string transformFromFrame = req.scene.header.frame_id;
-
   if(transformToFrame == "") {
     pcl::fromROSMsg(req.scene, *inputCloud);
     rawMessage.header.frame_id = req.scene.header.frame_id;
@@ -156,7 +154,6 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
 
     response.clusters = cluster(inputCloud, clusterTolerance, minClusterSize, maxClusterSize);
     if(!response.clusters.empty()) {
-      response.clusters[0].header.frame_id = transformToFrame;
       clusterPublisher.publish(response.clusters[0]);
     }
   } else {
@@ -311,9 +308,9 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
     processCloud->is_dense = true;
   
     sensor_msgs::PointCloud2 tempROSMsg;
-    tempROSMsg.header.frame_id = transformToFrame;
     
     pcl::toROSMsg(*processCloud, tempROSMsg);
+    tempROSMsg.header.frame_id = transformToFrame;
     clusters.push_back(tempROSMsg);
   }
 
