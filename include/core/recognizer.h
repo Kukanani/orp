@@ -41,10 +41,11 @@
 #include <std_msgs/Empty.h>
 #include <dynamic_reconfigure/server.h>
 
-#include <orp/RecognizerConfig.h>
-#include <orp/GetObjectPose.h>
-#include <orp/WorldObjects.h>
-#include <orp/ClassificationResult.h>
+#include "orp/RecognizerConfig.h"
+#include "orp/GetObjectPose.h"
+#include "orp/WorldObjects.h"
+#include "orp/ClassificationResult.h"
+#include "orp/GetObjects.h"
 
 #include "world_object.h"
 #include "world_object_manager.h"
@@ -86,6 +87,7 @@ private:
   tf::TransformListener* transformListener;    /// listen for necessary transformations before publishing
   tf::Transformer* objectTransformer;          /// transform object poses from one frame to another
   ros::ServiceServer objectPoseServer;  /// Provides poses for requested objects.
+  ros::ServiceServer objectsServer;     /// Provides poses of all current objects.
 
   bool autostart;                       /// if true, begin the recognition loop automatically (auto-subscribe to classification)
   ros::Subscriber startSub;             /// to start recognition loop
@@ -199,6 +201,12 @@ private:
   /// ROS wrappers
   void cb_startRecognition(std_msgs::Empty msg); 
   void cb_stopRecognition(std_msgs::Empty msg);
+  
+  /**
+   * Get all currently known objects immediately.
+   */
+  bool cb_getObjects(orp::GetObjects::Request &req,
+    orp::GetObjects::Response &response);
 public:
   /**
    * Main Recognizer constructor.

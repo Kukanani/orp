@@ -100,6 +100,7 @@ Recognizer::Recognizer(bool _autostart, std::string recognitionFrame) :
   objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
 
   objectPoseServer = n.advertiseService("/get_object_pose", &Recognizer::getObjectPose, this);
+  objectsServer = n.advertiseService("/get_objects", &Recognizer::cb_getObjects, this);
   startSub = n.subscribe("orp_start_recognition", 1, &Recognizer::cb_startRecognition, this);
   stopSub = n.subscribe("orp_stop_recognition", 1, &Recognizer::cb_stopRecognition, this);
 
@@ -305,6 +306,26 @@ void Recognizer::publishROS()
   //ROS_INFO_STREAM("Publishing " << objectMsg.objects.size() << " objects and " << markerMsg.markers.size() << " markers.");
   markerPub.publish(markerMsg);
   objectPub.publish(objectMsg);
+}
+
+bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
+    orp::GetObjects::Response &response) {
+  for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
+  {
+    //create the object message
+    obj_interface::WorldObject newObject;
+    tf::Pose intPose;
+    tf::poseEigenToTF((**it).getPose(), intPose);
+    tf::poseTFToMsg(intPose, newObject.pose.pose);
+    
+    newObject.colocationDist = (**it).getColocationDistance();
+    newObject.probability = (**it).getProbability();
+    newObject.pose.header.frame_id = recognitionFrame;
+    newObject.label  = (**it).getType().getName();
+    
+    response.objects.objects.push_back(newObject);
+  }
+  
 }
 
 void Recognizer::killStale() {
