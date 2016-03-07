@@ -165,7 +165,9 @@ void CPHClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     else { //if nothing matches well enough, return "unknown"
       ROS_ERROR("not within threshold, distance was %f", kDistances[0][0]);
       classRes.result.label = "unknown";
+
     }
+    classRes.result.pose.header.frame_id = eachCloud->header.frame_id;
     classificationPub.publish(classRes);
   }
 } //classify

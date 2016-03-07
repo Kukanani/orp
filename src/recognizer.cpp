@@ -46,6 +46,7 @@
 int main(int argc, char **argv)
 {
   srand (static_cast <unsigned> (time(0)));
+  ros::init(argc, argv, "recognizer");
 
   //read arguments
   if(argc < 2) {
@@ -56,7 +57,6 @@ int main(int argc, char **argv)
   std::string recognitionFrame = argc >= 3 ? argv[2] : "/world";
 
   //get started
-  ros::init(argc, argv, "recognizer");
   Recognizer s(autostart, recognitionFrame);
 
   //Run ROS until shutdown
@@ -88,6 +88,8 @@ Recognizer::Recognizer(bool _autostart, std::string recognitionFrame) :
 
     refreshInterval(0.01)
 {
+
+  ROS_INFO_STREAM("Starting recognizer in recognition frame " << recognitionFrame);
 
   //dynamic reconfigure
   reconfigureCallbackType = boost::bind(&Recognizer::paramsChanged, this, _1, _2);
@@ -311,6 +313,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
+    ROS_INFO("For loop entered");
     obj_interface::WorldObject newObject;
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
@@ -321,7 +324,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     newObject.pose.header.frame_id = recognitionFrame;
     newObject.label  = (**it).getType().getName();
     
-    response.objects.push_back(newObject);
+    response.objects.objects.push_back(newObject);
   }
   return true;
 }
