@@ -85,7 +85,7 @@ private:
   ros::Publisher markerPub;             /// Publishes a WorldObjects message that contains all the recognized objects from 
   tf::TransformBroadcaster* objectBroadcaster; /// broadcast frames for each found object
   tf::TransformListener* transformListener;    /// listen for necessary transformations before publishing
-  tf::Transformer* objectTransformer;          /// transform object poses from one frame to another
+  tf::Transformer* objectTransformeqr;          /// transform object poses from one frame to another
   ros::ServiceServer objectPoseServer;  /// Provides poses for requested objects.
   ros::ServiceServer objectsServer;     /// Provides poses of all current objects.
 

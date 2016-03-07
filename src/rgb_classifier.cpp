@@ -76,22 +76,20 @@ bool RGBClassifier::loadHist(const boost::filesystem::path &path, FeatureVector 
 double testLast = 0; // used for debug testing
 
 void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
-  //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
   orp::ClassificationResult classRes;
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
-  //ROS_INFO("RGB classifier calling segmentation");
   segmentationClient.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
-  //ROS_INFO("RGB classifier finished calling segmentation");
-  //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);
 
+  if(clouds.empty()) {
+    classRes.result.label = "";
+    classificationPub.publish(classRes);
+  }
 
   for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
-    //ROS_INFO("Processing one cloud");
     if(eachCloud->width < 3) {
-      //ROS_INFO("Cloud too small!");
       continue;
     }
     //ROS_INFO("cloud acceptable size");
@@ -134,10 +132,6 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     tf::poseEigenToMsg(finalPose, classRes.result.pose.pose);
 
     classRes.method = "rgb";
-    // ROS_INFO("RGB: position is %f %f %f",
-    //   classRes.result.pose.pose.position.x,
-    //   classRes.result.pose.pose.position.y,
-    //   classRes.result.pose.pose.position.z);
     classificationPub.publish(classRes);
 
     delete[] kIndices.ptr();

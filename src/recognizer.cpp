@@ -326,7 +326,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
   //block until classification message is published
   int orig_classification_count = classification_count;
   while(classification_count == orig_classification_count) {
-    ros::Duration(0.01).sleep();
+    refreshInterval.sleep();
   }
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
