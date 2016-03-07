@@ -140,6 +140,11 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO("SixDOF classifier finished calling segmentation");
   //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);
 
+  if(clouds.empty()) {
+    classRes.result.label = "";
+    classificationPub.publish(classRes);
+  }
+  
   for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
     //ROS_INFO("Processing one cloud");
     if(eachCloud->width < 3) {

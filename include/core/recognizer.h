@@ -107,6 +107,8 @@ private:
   bool showPoseStdDev;              ///Show standared deviation of pose
   bool shouldDebugPrint;                  ///Call debugPrint() on objects in the object model
 
+  int classification_count;
+  
   /**
    * Callback for when a classification result is published by any classifier.
    * @param newObject the passed message from the classifier topic
@@ -133,6 +135,8 @@ private:
    */
   WorldObjectPtr getMostLikelyObjectOfType(std::string name);
 
+  bool isRecognitionStarted();
+  
   /**
    * loads info from the parameter server and stores basic information about each item
    * being detected.
@@ -204,6 +208,13 @@ private:
   
   /**
    * Get all currently known objects immediately.
+   * 
+   * This function makes the following assumptions:
+   *   - camera data is being published
+   *   - at least one classifier exists
+   * 
+   * If recognition is stopped when this is called, it will start it, and stop it again once the call is complete.
+   * It will wait for at least one classification result to be processed and then will return the current internal object state.
    */
   bool cb_getObjects(orp::GetObjects::Request &req,
     orp::GetObjects::Response &response);

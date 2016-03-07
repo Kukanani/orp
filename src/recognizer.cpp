@@ -85,7 +85,8 @@ Recognizer::Recognizer(bool _autostart, std::string recognitionFrame) :
     showPose(false),
     showPoseStdDev(false),
     shouldDebugPrint(false),
-
+    
+    classification_count(0),
     refreshInterval(0.01)
 {
 
@@ -175,46 +176,53 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
 
 void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
 {
-  //transform into recognition frame
-  std::string sourceFrame = newObject.result.pose.header.frame_id;
-  if(sourceFrame != recognitionFrame) {
-    std::string msg = "";
-    if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
-      //can't determine object's pose in real world.
-      ROS_WARN_STREAM_THROTTLE(5.0f, "[recognizer] [Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
-      return;
+  if(newObject.result.label != "") {
+    //transform into recognition frame
+    std::string sourceFrame = newObject.result.pose.header.frame_id;
+    if(sourceFrame != recognitionFrame) {
+      std::string msg = "";
+      if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
+        //can't determine object's pose in real world.
+        ROS_WARN_STREAM_THROTTLE(5.0f, "[recognizer] [Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
+        return;
+      }
+      
+      //I would like to use tf::Stamped<tf::Pose> here but it seems to create more issues than it solves. More straightforward to manually set the frames
+      tf::Stamped<tf::Pose> source, dest;
+      newObject.result.pose.header.stamp = ros::Time(0);
+      tf::poseStampedMsgToTF(newObject.result.pose, source);
+      transformListener->transformPose(recognitionFrame, source, dest);
+      tf::poseStampedTFToMsg(dest, newObject.result.pose);
+      newObject.result.pose.header.frame_id = recognitionFrame;
     }
     
-    //I would like to use tf::Stamped<tf::Pose> here but it seems to create more issues than it solves. More straightforward to manually set the frames
-    tf::Stamped<tf::Pose> source, dest;
-    newObject.result.pose.header.stamp = ros::Time(0);
-    tf::poseStampedMsgToTF(newObject.result.pose, source);
-    transformListener->transformPose(recognitionFrame, source, dest);
-    tf::poseStampedTFToMsg(dest, newObject.result.pose);
-    newObject.result.pose.header.frame_id = recognitionFrame;
-  }
-  
-  bool merged = false;
-  Eigen::Affine3d eigPose;
-  tf::poseMsgToEigen(newObject.result.pose.pose, eigPose);
-  
-  WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.result.label, recognitionFrame, eigPose, 1.0f));
-  for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
-    if((*it)->isColocatedWith(p)) {
-      merged = true;
-      (*it)->merge(p);
-      //ROS_INFO("Merged object");
+    bool merged = false;
+    Eigen::Affine3d eigPose;
+    tf::poseMsgToEigen(newObject.result.pose.pose, eigPose);
+    
+    WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.result.label, recognitionFrame, eigPose, 1.0f));
+    for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
+      if((*it)->isColocatedWith(p)) {
+        merged = true;
+        (*it)->merge(p);
+        //ROS_INFO("Merged object");
+      }
+    }
+
+    if(!merged) { //new object
+      model.push_back(p);
     }
   }
-
-  if(!merged) { //new object
-    model.push_back(p);
-  }
   dirty = true; //queue an update
+  classification_count++;
+}
+
+bool Recognizer::isRecognitionStarted() {
+  return (recognitionSub != NULL);
 }
 
 void Recognizer::startRecognition() {
-  if(recognitionSub == NULL)
+  if(!isRecognitionStarted())
   {
     ROS_INFO("Starting Visual Recognition");
     recognitionSub = n.subscribe(
@@ -231,7 +239,7 @@ void Recognizer::startRecognition() {
 } //startRecognition
 
 void Recognizer::stopRecognition() {
-  if(recognitionSub != NULL)
+  if(isRecognitionStarted())
   {
     ROS_INFO("Stopping Visual Recognition");
     timer.stop();
@@ -310,10 +318,19 @@ void Recognizer::publishROS()
 
 bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     orp::GetObjects::Response &response) {
+  bool wasStarted = isRecognitionStarted();
+  if(!wasStarted) {
+    ros::Publisher startPub = n.advertise<std_msgs::Empty>("orp_start_recognition", 1);
+    startPub.publish(std_msgs::Empty());
+  }
+  //block until classification message is published
+  int orig_classification_count = classification_count;
+  while(classification_count == orig_classification_count) {
+    ros::Duration(0.01).sleep();
+  }
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
-    ROS_INFO("For loop entered");
     obj_interface::WorldObject newObject;
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
@@ -325,6 +342,10 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     newObject.label  = (**it).getType().getName();
     
     response.objects.objects.push_back(newObject);
+  }
+  if(!wasStarted) {
+    ros::Publisher stopPub = n.advertise<std_msgs::Empty>("orp_stop_recognition", 1);
+    stopPub.publish(std_msgs::Empty());
   }
   return true;
 }
