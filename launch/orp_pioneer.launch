@@ -18,6 +18,7 @@
   <arg name="cph"             default="false"/>
   <arg name="corner"          default="false"/>
   <arg name="cph_folder"      default="data/cph" />
+  <arg name="frame"	      default="world" />
 
   <arg name="throttle_nodelet" default="100" />
 
@@ -98,7 +99,7 @@
     name    = "recognizer"
     pkg     = "orp"
     type    = "recognizer"
-    args    = "$(arg home_dir)/$(arg list) $(arg autostart)"
+    args    = "$(arg autostart) $(arg frame)"
 
     required= "true"
     output  = "screen"
@@ -135,12 +136,12 @@
     type    = "dynparam"
     args    = "set_from_parameters segmentation">
     <param name ="spatial_min_z" type="double" value="-0.335"/>
-    <param name ="spatial_max_z" type="double" value="10.0"/>
+    <param name ="spatial_max_z" type="double" value="1.4"/>
     <param name ="spatial_min_y" type="double" value="-0.48"/>
     <param name ="spatial_max_y" type="double" value="0.38"/>
     <param name ="spatial_min_x" type="double" value="-1.5"/>
     <param name ="spatial_max_x" type="double" value="3.5"/>
-    <param name ="max_cluster_size" type="double" value="3600"/>
+    <param name ="max_cluster_size" type="double" value="3000"/>
     <param name ="max_plane_segmentation_iterations" type="double" value="200"/>
     <param name ="min_cluster_size" type="double" value="700"/>
     <param name ="percentage_to_analyze" type="double" value="0.26"/>

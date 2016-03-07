@@ -74,6 +74,7 @@ CornerClassifier::CornerClassifier(bool autostart):
   distanceThreshold(0.05)
 {
 
+  planes_pub_ = n.advertise<sensor_msgs::PointCloud2>("/dominant_plane",1);
   //dynamic reconfigure
   reconfigureCallbackType = boost::bind(&CornerClassifier::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
@@ -113,6 +114,11 @@ void CornerClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   std::vector<Eigen::Vector4f> plane_vector;
   Eigen::Vector4f current_plane;
   pcl::PointCloud<ORPPoint>::Ptr processCloud (new pcl::PointCloud<ORPPoint>);
+
+  PCP planes(new PC());
+  pcl::PointCloud<ORPPoint>::Ptr planeCloud (new pcl::PointCloud<ORPPoint>);
+
+
   while(plane_vector.size() < targetSize) {
     seg.setInputCloud(thisCluster);
     seg.segment (*planeIndices, *coefficients);
@@ -128,6 +134,18 @@ void CornerClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     pcl::ExtractIndices<ORPPoint> extract;
     extract.setInputCloud(thisCluster);
     extract.setIndices(planeIndices);
+
+    extract.setNegative(false);
+    extract.filter (*planeCloud);
+    //store it for the planes message
+    planes->insert(planes->end(), planeCloud->begin(), planeCloud->end());
+
+
+    // Publish dominant planes
+    sensor_msgs::PointCloud2 planes_pc2;
+    pcl::toROSMsg(*planes, planes_pc2);
+    planes_pc2.header.frame_id = "/camera_depth_optical_frame";
+    planes_pub_.publish(planes_pc2);
     
     extract.setNegative(true);
     extract.filter(*processCloud);
@@ -148,8 +166,9 @@ void CornerClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   
 
   classRes.result.pose.pose = intersection_pose;
+  classRes.result.pose.header.frame_id = cloud.header.frame_id;
   classRes.method = "corner";
-  classRes.result.label = "point_red";
+  classRes.result.label = "corner";
   classificationPub.publish(classRes);
 
   delete[] kIndices.ptr();

@@ -67,6 +67,8 @@ protected:
   pcl::SACSegmentation<ORPPoint> seg; 
   
   double  maxIterations, distanceThreshold;
+
+  ros::Publisher planes_pub_;
     
   /// Enables usage of dynamic_reconfigure.
   dynamic_reconfigure::Server<orp::CornerClassifierConfig> reconfigureServer;
