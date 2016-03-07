@@ -99,6 +99,7 @@ Recognizer::Recognizer(bool _autostart, std::string recognitionFrame) :
   //ROS clients and publishers
   markerPub = n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1);
   objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
+  stopPub = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
 
   objectPoseServer = n.advertiseService("/get_object_pose", &Recognizer::getObjectPose, this);
   objectsServer = n.advertiseService("/get_objects", &Recognizer::cb_getObjects, this);
@@ -319,14 +320,16 @@ void Recognizer::publishROS()
 bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     orp::GetObjects::Response &response) {
   bool wasStarted = isRecognitionStarted();
+  ros::Publisher startPub;
   if(!wasStarted) {
-    ros::Publisher startPub = n.advertise<std_msgs::Empty>("orp_start_recognition", 1);
+    startPub = n.advertise<std_msgs::Empty>("/orp_start_recognition", 1, true);
     startPub.publish(std_msgs::Empty());
   }
   //block until classification message is published
   int orig_classification_count = classification_count;
   while(classification_count == orig_classification_count) {
     refreshInterval.sleep();
+    ros::spinOnce();
   }
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
@@ -344,7 +347,6 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     response.objects.objects.push_back(newObject);
   }
   if(!wasStarted) {
-    ros::Publisher stopPub = n.advertise<std_msgs::Empty>("orp_stop_recognition", 1);
     stopPub.publish(std_msgs::Empty());
   }
   return true;

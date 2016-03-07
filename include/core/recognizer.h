@@ -83,6 +83,7 @@ private:
   ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
   ros::Publisher objectPub;             /// Publishes a MarkerArray with information about detected objects
   ros::Publisher markerPub;             /// Publishes a WorldObjects message that contains all the recognized objects from 
+  ros::Publisher stopPub;               /// Used to self-stop recognition
   tf::TransformBroadcaster* objectBroadcaster; /// broadcast frames for each found object
   tf::TransformListener* transformListener;    /// listen for necessary transformations before publishing
   tf::Transformer* objectTransformeqr;          /// transform object poses from one frame to another

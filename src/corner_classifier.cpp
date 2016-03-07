@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 CornerClassifier::CornerClassifier(bool autostart):
   Classifier(10000, "corner", ".", ".corner", autostart),
   maxIterations(10000),
-  distanceThreshold(0.05)
+  distanceThreshold(0.02)
 {
 
   planes_pub_ = n.advertise<sensor_msgs::PointCloud2>("/dominant_plane",1);
@@ -118,7 +118,7 @@ void CornerClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   PCP planes(new PC());
   pcl::PointCloud<ORPPoint>::Ptr planeCloud (new pcl::PointCloud<ORPPoint>);
 
-
+  int dot_prod_threshold = 0.1;
   while(plane_vector.size() < targetSize) {
     seg.setInputCloud(thisCluster);
     seg.segment (*planeIndices, *coefficients);
@@ -126,7 +126,11 @@ void CornerClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     current_plane.y() = coefficients->values[1];
     current_plane.z() = coefficients->values[2];
     current_plane.w() = coefficients->values[3];
-    plane_vector.push_back(current_plane);
+    for (std::vector<Eigen::Vector4f>::iterator prev_plane = plane_vector.begin(); prev_plane != plane_vector.end(); prev_plane++) {
+      if (current_plane.dot(*prev_plane) < dot_prod_threshold) {
+        plane_vector.push_back(current_plane);
+      }
+    }
     if(planeIndices->indices.size () == 0) {
       ROS_ERROR("Could not estimate a planar model for the given dataset.");
       break;
