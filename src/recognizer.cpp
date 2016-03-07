@@ -323,7 +323,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     
     response.objects.push_back(newObject);
   }
-  
+  return true;
 }
 
 void Recognizer::killStale() {
