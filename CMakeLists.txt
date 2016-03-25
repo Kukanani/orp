@@ -40,7 +40,6 @@ add_service_files(
 
 generate_dynamic_reconfigure_options(
     cfg/CylinderClassifier.cfg
-    cfg/CornerClassifier.cfg
     cfg/HistogramSaver.cfg
     cfg/Recognizer.cfg
     cfg/Segmentation.cfg
@@ -105,9 +104,6 @@ add_executable(cylinder_classifier src/cylinder_classifier.cpp)
 add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
-add_executable(corner_classifier src/corner_classifier.cpp)
-add_dependencies(corner_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-target_link_libraries(corner_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 ####################################################################################################
 
