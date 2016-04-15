@@ -108,7 +108,8 @@ private:
   bool showPoseStdDev;              ///Show standared deviation of pose
   bool shouldDebugPrint;                  ///Call debugPrint() on objects in the object model
 
-  int classification_count;
+  int classification_count;         ///Used to ensure that at least one detection has been processed when calling service to get objects. This way we can tell the difference between "no objects in scene" and "no classification results received"
+  int object_sequence;              ///Used to set the header.seq values in the messages published to /detected_objects.
   
   /**
    * Callback for when a classification result is published by any classifier.
