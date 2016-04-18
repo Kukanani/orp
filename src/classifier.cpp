@@ -55,53 +55,58 @@ void Classifier::init() {
   ROS_INFO("%s: Reading list file", name.c_str());
 
   //parse the params on the parameter server
-  
-  std::vector<std::string> paramMap;
-  while(!n.getParam("/items/list", paramMap)) {
+  loadTypeList();
+  if(!ros::isShuttingDown()) {
+
+    loadModelsRecursive(dataFolder, fileExtension, loadedModels);
+    ROS_INFO("%s: Loaded %d models.\n", name.c_str(), (int)loadedModels.size());
+
+    if(loadedModels.size() < 1)
+    {
+      ROS_WARN ("%s: No models loaded from %s.", name.c_str(), dataFolder.c_str());
+    } else {
+      subModels = loadedModels;
+
+      // Convert data into FLANN format
+      kData = new flann::Matrix<float>(
+        new float[subModels.size() * subModels[0].second.size()],
+        subModels.size(),
+        subModels[0].second.size());
+
+      ROS_INFO_STREAM("data size: [" << kData->rows << " , " << kData->cols << "]");
+      for(size_t i = 0; i < kData->rows; ++i)
+      {
+        for(size_t j = 0; j < kData->cols; ++j)
+        {
+          *(kData->ptr()+(i*kData->cols + j)) = subModels[i].second[j];
+        }
+      }
+
+      kIndex = new flann::Index<flann::ChiSquareDistance<float> >(*kData, flann::LinearIndexParams ());
+      kIndex->buildIndex();
+    }
+    ROS_INFO("Training data loaded.");
+
+    startSub = n.subscribe("orp_start_recognition", 1, &Classifier::cb_subscribe, this);
+    stopSub = n.subscribe("orp_stop_recognition", 1, &Classifier::cb_unsubscribe, this);
+
+    if(autostart) {
+      ROS_INFO("Autostarting classification");
+      subscribe();
+    }
+  }
+} //Classifier
+
+void Classifier::loadTypeList() {
+    std::vector<std::string> paramMap;
+  while(!n.getParam("/items/list", paramMap) && !ros::isShuttingDown()) {
     ROS_INFO_THROTTLE(5.0, "Waiting for object type list on parameter server...");
     ros::Duration(1.0).sleep();
   }
   for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
     fullTypeList.push_back(*it);
   }
-
-  loadModelsRecursive(dataFolder, fileExtension, loadedModels);
-  ROS_INFO("%s: Loaded %d models.\n", name.c_str(), (int)loadedModels.size());
-
-  if(loadedModels.size() < 1)
-  {
-    ROS_WARN ("%s: No models loaded from %s.", name.c_str(), dataFolder.c_str());
-  } else {
-    subModels = loadedModels;
-
-    // Convert data into FLANN format
-    kData = new flann::Matrix<float>(
-      new float[subModels.size() * subModels[0].second.size()],
-      subModels.size(),
-      subModels[0].second.size());
-
-    ROS_INFO_STREAM("data size: [" << kData->rows << " , " << kData->cols << "]");
-    for(size_t i = 0; i < kData->rows; ++i)
-    {
-      for(size_t j = 0; j < kData->cols; ++j)
-      {
-        *(kData->ptr()+(i*kData->cols + j)) = subModels[i].second[j];
-      }
-    }
-
-    kIndex = new flann::Index<flann::ChiSquareDistance<float> >(*kData, flann::LinearIndexParams ());
-    kIndex->buildIndex();
-  }
-  ROS_INFO("Training data loaded.");
-
-  startSub = n.subscribe("orp_start_recognition", 1, &Classifier::cb_subscribe, this);
-  stopSub = n.subscribe("orp_stop_recognition", 1, &Classifier::cb_unsubscribe, this);
-
-  if(autostart) {
-    ROS_INFO("Autostarting classification");
-    subscribe();
-  }
-} //Classifier
+}
 
 Classifier::~Classifier() {
   //delete[] kData->ptr();

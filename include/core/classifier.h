@@ -170,6 +170,11 @@ protected:
    * Undoes whatever is done in subscribe().
    */
   virtual void unsubscribe();
+  
+  /**
+   * Load the list of objects and their properties from the parameter server. Blocks until the correct parameters become available.
+   */
+  virtual void loadTypeList();
 
 public:
   /**

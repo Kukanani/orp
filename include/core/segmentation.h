@@ -97,7 +97,7 @@ private:
    */
   void paramsChanged(
     orp::SegmentationConfig &config, uint32_t level);
-
+  
   /*================================================*/
   /* CLASS VARS */
   /*================================================*/
@@ -110,18 +110,20 @@ private:
   ros::ServiceServer segmentationServer;
 
   /// Publishes planes cut from the scene
-  ros::Publisher planesPublisher;
+  ros::Publisher allPlanesPublisher;
   /// Publishes clipped cloud for visualization
   ros::Publisher boundedScenePublisher;
+  /// Publishes clipped cloud after voxel gridification
+  ros::Publisher voxelPublisher;
   /**
    * Publishes the various clusters identified by the Euclidean algorithm.
    * All of these will lie within the bounded_scene point cloud.
    * NOTE: concatenated clouds from pre_clustering = bounded_scene - planes
    */
-  ros::Publisher clustersPublisher;
+  ros::Publisher allObjectsPublisher;
 
   /// Publishes the first (largest) cluster in the scene.
-  ros::Publisher clusterPublisher;
+  ros::Publisher largestObjectPublisher;
 
   tf::TransformListener listener;
   std::string transformToFrame;
@@ -135,6 +137,9 @@ private:
   float maxY; // down in world space
   float minZ; // near clipping in world space
   float maxZ; // far clipping in world space
+  
+  ///flags for publishing various intermediate point clouds
+  bool _publishAllObjects, _publishAllPlanes, _publishBoundedScene, _publishLargestObject, _publishVoxelScene;
 
   ros::AsyncSpinner spinner;
 

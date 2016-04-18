@@ -4,7 +4,7 @@
     name    = "$(anon sixdof_min_x)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_min_x 0.1"
+    args    = "set segmentation spatial_min_x 0.25"
 
     respawn = "false"
     output  = "screen"
@@ -14,7 +14,7 @@
     name    = "$(anon sixdof_max_x)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_max_x 0.7"
+    args    = "set segmentation spatial_max_x 1.2"
 
     respawn = "false"
     output  = "screen"
@@ -24,7 +24,7 @@
     name    = "$(anon sixdof_min_y)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_min_y 0.5"
+    args    = "set segmentation spatial_min_y 0"
 
     respawn = "false"
     output  = "screen"
@@ -34,7 +34,7 @@
     name    = "$(anon sixdof_max_y)"
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
-    args    = "set segmentation spatial_max_y 1.4"
+    args    = "set segmentation spatial_max_y 1.15"
 
     respawn = "false"
     output  = "screen"

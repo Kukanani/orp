@@ -53,12 +53,14 @@ Segmentation::Segmentation() :
   spinner(4),
   maxClusters(100)
 {
-  planesPublisher = node.advertise<sensor_msgs::PointCloud2>("/dominant_plane",1);
   boundedScenePublisher = node.advertise<sensor_msgs::PointCloud2>("/bounded_scene",1);
-  clusterPublisher = node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
-  clustersPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
+  voxelPublisher = node.advertise<sensor_msgs::PointCloud2>("/voxel_scene",1);
+  allPlanesPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_planes",1);
+  largestObjectPublisher = node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
+  allObjectsPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
+  
   segmentationServer = node.advertiseService("/segmentation", &Segmentation::processSegmentation, this);
-
+  
   reconfigureCallbackType = boost::bind(&Segmentation::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
 }
@@ -93,6 +95,12 @@ void Segmentation::paramsChanged(orp::SegmentationConfig &config, uint32_t level
   clusterTolerance = config.cluster_tolerance;
   minClusterSize = config.min_cluster_size;
   maxClusterSize = config.max_cluster_size;
+  
+  _publishAllObjects = config.publishAllObjects;
+  _publishAllPlanes = config.publishAllPlanes;
+  _publishBoundedScene = config.publishBoundedScene;
+  _publishLargestObject = config.publishLargestObject;
+  _publishVoxelScene = config.publishVoxelScene;
 }
 
 bool compareClusterSize(const sensor_msgs::PointCloud2& a, const sensor_msgs::PointCloud2& b)
@@ -138,23 +146,39 @@ bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
   //clip
   int preVoxel = inputCloud->points.size();
   *inputCloud = *(clipByDistance(inputCloud, minX, maxX, minY, maxY, minZ, maxZ));
-  *inputCloud = *(voxelGridify(inputCloud, voxelLeafSize));
-
-  if(!inputCloud->points.empty() && inputCloud->points.size() < preVoxel) {
+  if(_publishBoundedScene) {
     pcl::toROSMsg(*inputCloud, transformedMessage);
     transformedMessage.header.frame_id = transformToFrame;
     boundedScenePublisher.publish(transformedMessage);
+  }
+    
+  *inputCloud = *(voxelGridify(inputCloud, voxelLeafSize));
+  
+  // Publish voxelized
 
+
+  if(!inputCloud->points.empty() && inputCloud->points.size() < preVoxel) {
+    if(_publishVoxelScene) {
+      sensor_msgs::PointCloud2 voxelized_cloud;
+      pcl::toROSMsg(*inputCloud, voxelized_cloud);
+      voxelized_cloud.header.frame_id = transformToFrame;
+      voxelPublisher.publish(voxelized_cloud);
+    }
+      
     //remove planes
     inputCloud = removePrimaryPlanes(inputCloud, maxPlaneSegmentationIterations, segmentationDistanceThreshold, percentageToAnalyze);
 
-    pcl::toROSMsg(*inputCloud, transformedMessage);
-    transformedMessage.header.frame_id = transformToFrame;
-    clustersPublisher.publish(transformedMessage);
+    if(_publishAllObjects) {
+      pcl::toROSMsg(*inputCloud, transformedMessage);
+      transformedMessage.header.frame_id = transformToFrame;
+      allObjectsPublisher.publish(transformedMessage);
+    }
 
-    response.clusters = cluster(inputCloud, clusterTolerance, minClusterSize, maxClusterSize);
-    if(!response.clusters.empty()) {
-      clusterPublisher.publish(response.clusters[0]);
+    if(_publishLargestObject) {
+      response.clusters = cluster(inputCloud, clusterTolerance, minClusterSize, maxClusterSize);
+      if(!response.clusters.empty()) {
+        largestObjectPublisher.publish(response.clusters[0]);
+      }
     }
   } else {
     if(inputCloud->points.empty()) {
@@ -216,13 +240,15 @@ PCP& Segmentation::voxelGridify(PCP &loose, float gridSize) {
   vg.setInputCloud(loose);
   vg.setLeafSize(gridSize, gridSize, gridSize);
   vg.filter(*processCloud);
+  
   return processCloud;
 } //voxelGridify
 
 PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thresholdDistance,
     float percentageGood) {
   //ROS_INFO("Filtering planes...");
-  //PCP planes(new PC());
+  PCP planes(new PC());
+  PCP planeCloud(new pcl::PointCloud<ORPPoint> ());
 
   processCloud->resize(0);
   // Create the segmentation object for the planar model and set all the parameters
@@ -235,7 +261,6 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thre
 
   pcl::PointIndices::Ptr planeIndices(new pcl::PointIndices);
   pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
-  //PCP planeCloud(new pcl::PointCloud<ORPPoint> ());
   pcl::PCDWriter writer;
 
   //how many points to get leave
@@ -256,9 +281,9 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thre
     extract.setIndices(planeIndices);
 
     //extract.setNegative(false);
-    //extract.filter (*planeCloud);
+    extract.filter (*planeCloud);
     //store it for the planes message
-    //planes->insert(planes->end(), planeCloud->begin(), planeCloud->end());
+    planes->insert(planes->end(), planeCloud->begin(), planeCloud->end());
 
     //now actually take it out
     extract.setNegative(true);
@@ -268,10 +293,12 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thre
   }
 
   // Publish dominant planes
-  //sensor_msgs::PointCloud2 planes_pc2;
-  //pcl::toROSMsg(*planes, planes_pc2);
-  //planes_pc2.header.frame_id = "/camera_depth_optical_frame";
-  //planesPublisher.publish(planes_pc2);
+  if(_publishAllPlanes) {
+    sensor_msgs::PointCloud2 planes_pc2;
+    pcl::toROSMsg(*planes, planes_pc2);
+    planes_pc2.header.frame_id = "/camera_depth_optical_frame";
+    allPlanesPublisher.publish(planes_pc2);
+  }
 
   return input;
 } //removePrimaryPlanes
