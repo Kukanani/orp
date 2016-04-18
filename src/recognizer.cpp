@@ -87,6 +87,7 @@ Recognizer::Recognizer(bool _autostart, std::string recognitionFrame) :
     shouldDebugPrint(false),
     
     classification_count(0),
+    object_sequence(0),
     refreshInterval(0.01)
 {
 
@@ -97,7 +98,7 @@ Recognizer::Recognizer(bool _autostart, std::string recognitionFrame) :
   reconfigureServer.setCallback(reconfigureCallbackType);
 
   //ROS clients and publishers
-  markerPub = n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1);
+  markerPub = n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1, true);
   objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
   stopPub = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
 
@@ -302,6 +303,8 @@ void Recognizer::publishROS()
     newObject.colocationDist = (**it).getColocationDistance();
     newObject.probability = (**it).getProbability();
     newObject.pose.header.frame_id = recognitionFrame;
+    newObject.pose.header.stamp = ros::Time::now();
+    newObject.pose.header.seq = object_sequence++;
     newObject.label  = (**it).getType().getName();
     
     objectMsg.objects.insert(objectMsg.objects.end(), newObject);
