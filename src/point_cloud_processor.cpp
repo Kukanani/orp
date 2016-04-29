@@ -84,6 +84,8 @@ PointCloudProcessor::PointCloudProcessor(ros::NodeHandle nh, std::string inputPa
 
   //PROCESSING/////////////////////////////////////////////
 
+
+  //stuff for APC
   Eigen::Affine3f transform = Eigen::Affine3f::Identity();
 
   float theta = M_PI/4;

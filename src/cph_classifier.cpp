@@ -141,7 +141,6 @@ void CPHClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
     for (size_t i = 0; i < cphSize; ++i) {
       histogram.second[i] = feature[i];
     }
-    //ROS_INFO("knn searching...");
     //KNN classification find nearest neighbors based on histogram
     nearestKSearch (*kIndex, histogram, 5, kIndices, kDistances);
 
