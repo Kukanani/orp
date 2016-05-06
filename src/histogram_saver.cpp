@@ -209,7 +209,6 @@ void HistogramSaver::writeCVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   pcl::CVFHEstimation<ORPPoint, pcl::Normal, pcl::VFHSignature308> cvfh;
   cvfh.setInputCloud (cluster);
 
-  //ROS_INFO("normals");
   //Estimate normals:
   pcl::NormalEstimation<ORPPoint, pcl::Normal> ne;
   ne.setInputCloud (cluster);
@@ -220,16 +219,13 @@ void HistogramSaver::writeCVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   ne.compute (*cloud_normals);
   cvfh.setInputNormals (cloud_normals);
 
-  //ROS_INFO("prepare to cvfh");
   //Estimate cvfh:
   cvfh.setSearchMethod (tree);
   pcl::PointCloud<pcl::VFHSignature308>::Ptr cvfhs (new pcl::PointCloud<pcl::VFHSignature308> ());
 
   // Compute the feature
-  //ROS_INFO("cvfh");
   cvfh.compute (*cvfhs);
 
-  //ROS_INFO("prepare to write");
   //Write to file: (objectName_angle.cvfh)
   std::stringstream fileName_ss;
   fileName_ss << outDir.c_str() << name.c_str() << "_" << angle << ".cvfh";
@@ -257,16 +253,13 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   ne.compute (*cloud_normals);
   cvfh.setInputNormals (cloud_normals);
 
-  //ROS_INFO("prepare to cvfh");
   //Estimate cvfh:
   cvfh.setSearchMethod (tree);
   pcl::PointCloud<pcl::VFHSignature308>::Ptr cvfhs(new pcl::PointCloud<pcl::VFHSignature308> ());
 
   // Compute the feature
-  //ROS_INFO("cvfh");
   cvfh.compute (*cvfhs);
 
-  //ROS_INFO("prepare to write");
   //Write to file: (objectName_angle.cvfh)
   std::stringstream fileName_ss;
   fileName_ss << outDir << "/sixdof/" << name.c_str() << "_" << num << ".cvfh";

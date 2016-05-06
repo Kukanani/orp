@@ -91,6 +91,7 @@ public:
 	 * Get the center of the pan table, and publish that center to a ROS topic.
 	 */
 	void publishCenterPoint();
+	void publishCenterPointFromARTags();
 }; //PanDataCollector
 
 #endif // _PAN_DATA_COLLECTOR_H_

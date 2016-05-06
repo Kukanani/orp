@@ -1,24 +1,84 @@
 <launch>
   <arg name="home_dir"        default="$(find orp)" />
-  <arg name="openni"          default="false"/>
-  <arg name="openni2"         default="false"/>
-  <arg name="realsense"       default="false"/>
+  <arg name="data_folder"     default="data/train"/>
   
-  <!-- DATA -->
-  <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
-  <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">  </include>
-  <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_camera.launch"> </include>
+  <!-- GET DATA -->
+  <include file="$(find freenect_launch)/launch/freenect.launch"> </include>
 
+  <!-- SCENE SETUP -->
   <node
     name    = "static_transform_publisher"  
-    pkg     = "tf"
-    type    = "static_transform_publisher"
-    args    = "0 0 0.5 0 0.85 0 world camera_link 100"
+    pkg     = "orp"
+    type    = "camera_tf_publisher.py"
 
     respawn = "true"
     output  = "screen"
   />
 
+  <node
+    name = "$(anon train_max_x)" respawn = "false"
+    pkg  = "dynamic_reconfigure" type    = "dynparam"
+    args = "set segmentation spatial_max_x 0.3"
+  />
+
+  <node
+    name = "$(anon train_min_x)" respawn = "false"
+    pkg  = "dynamic_reconfigure" type    = "dynparam"
+    args = "set segmentation spatial_min_x -0.3"
+  />
+  <node
+    name = "$(anon train_max_y)" respawn = "false"
+    pkg  = "dynamic_reconfigure" type    = "dynparam"
+    args = "set segmentation spatial_max_y 0.2"
+  />
+
+  <node
+    name = "$(anon train_min_y)" respawn = "false"
+    pkg  = "dynamic_reconfigure" type    = "dynparam"
+    args = "set segmentation spatial_min_y -0.2"
+  />
+  <node
+    name = "$(anon train_max_z)" respawn = "false"
+    pkg  = "dynamic_reconfigure" type    = "dynparam"
+    args = "set segmentation spatial_max_z 3.0"
+  />
+
+  <node
+    name = "$(anon train_min_z)" respawn = "false"
+    pkg  = "dynamic_reconfigure" type    = "dynparam"
+    args = "set segmentation spatial_min_z 0.1"
+  />
+
+  <node
+    name = "$(anon train_percentage)" respawn = "false"
+    pkg  = "dynamic_reconfigure" type    = "dynparam"
+    args = "set segmentation percentage_to_analyze 0.75"
+  />
+
+  <!-- PAN TABLE -->
+  <node
+    name="arduino_interface"
+    pkg="rosserial_python"
+    type="serial_node.py"
+    args="/dev/ttyACM0" 
+    
+    output="screen"
+    respawn="true"
+  />
+
+  <!-- FIDUCIALS -->
+  
+  <arg name="marker_size" default="4.4" />
+  <arg name="max_new_marker_error" default="0.08" />
+  <arg name="max_track_error" default="0.2" />
+
+  <arg name="cam_image_topic" default="/camera/depth_registered/points" />
+  <arg name="cam_info_topic" default="/camera/rgb/camera_info" />    
+  <arg name="output_frame" default="/camera_link" />
+
+  <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkers" respawn="false" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />
+
+  <!-- ORP -->
   <node
     name="segmentation"
     pkg="orp"
@@ -47,33 +107,7 @@
     output="screen"
   />
 
-  <!-- PAN TABLE -->
-  <node
-    name="arduino_interface"
-    pkg="rosserial_python"
-    type="serial_node.py"
-    args="/dev/ttyACM0" 
-    
-    output="screen"
-    required="true"
-  />
-  
-  <!-- FIDUCIALS -->
-  
-  <arg name="marker_size" default="4.4" />
-  <arg name="max_new_marker_error" default="0.08" />
-  <arg name="max_track_error" default="0.0" />
-
-  <arg name="cam_image_topic" default="/camera/depth_registered/points" />
-  <arg name="cam_info_topic" default="/camera/rgb/camera_info" />	
-
-  <arg name="output_frame" default="/world" />
-  <arg name="med_filt_size" default="10" />
-  <arg name="bundle_files" default="$(find ar_track_alvar)/bundles/truthTableLeg.xml $(find orp)/cfg/ptt_fiducials.xml" />
-
-  <node name="ar_track_alvar" pkg="ar_track_alvar" type="findMarkerBundles" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame) $(arg med_filt_size) $(arg bundle_files)" />
-
-  
+  <!-- CONFIG AND VIZ -->
   <node
     name    = "rqt_reconfigure"
     pkg     = "rqt_reconfigure"
@@ -99,25 +133,6 @@
     pkg     = "dynamic_reconfigure"
     type    = "dynparam"
     args    = "set camera/driver depth_registration true"
-
-    respawn = "false"
-    output  = "screen"
-  />
-
-  <node
-    name    = "dynparam2"
-    pkg     = "dynamic_reconfigure"
-    type    = "dynparam"
-    args    = "set segmentation spatial_min_y -0.4"
-
-    respawn = "false"
-    output  = "screen"
-  />
-  <node
-    name    = "dynparam3"
-    pkg     = "dynamic_reconfigure"
-    type    = "dynparam"
-    args    = "set segmentation percentage_to_analyze 0.2"
 
     respawn = "false"
     output  = "screen"
