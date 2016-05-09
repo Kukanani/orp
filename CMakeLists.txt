@@ -88,10 +88,6 @@ add_executable(cph_classifier src/cph_classifier.cpp)
 add_dependencies(cph_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(cph_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
-#add_executable(vfh_classifier src/vfh_classifier.cpp)
-#add_dependencies(vfh_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-#target_link_libraries(vfh_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-
 add_executable(sixdof_classifier src/sixdof_classifier.cpp)
 add_dependencies(sixdof_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(sixdof_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
@@ -104,6 +100,13 @@ add_executable(cylinder_classifier src/cylinder_classifier.cpp)
 add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
+add_executable(linemod_train src/linemod_train.cpp)
+add_dependencies(linemod_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+target_link_libraries(linemod_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+
+add_executable(train_linemod_template src/train_linemod_template.cpp)
+add_dependencies(train_linemod_template ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+target_link_libraries(train_linemod_template ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
 ####################################################################################################
 
