@@ -77,41 +77,36 @@ double testLast = 0; // used for debug testing
 
 void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   orp::ClassificationResult classRes;
+  classRes.method = "rgb";
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
   segmentationClient.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
 
-  if(clouds.empty()) {
-    classRes.result.label = "";
-    classificationPub.publish(classRes);
-  }
+  if(!clouds.empty()) {
+    for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
+      if(eachCloud->width < 3) {
+        continue;
+      }
+      obj_interface::WorldObject thisObject;
+      pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
+      pcl::fromROSMsg(*eachCloud, *thisCluster);
 
-  for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
-    if(eachCloud->width < 3) {
-      continue;
-    }
-    //ROS_INFO("cloud acceptable size");
-    pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
-    pcl::fromROSMsg(*eachCloud, *thisCluster);
+      Eigen::Vector4f clusterCentroid;
+      pcl::compute3DCentroid(*thisCluster, clusterCentroid);
+    
+      Eigen::Affine3d finalPose;
+      finalPose(0,3) = clusterCentroid(0);
+      finalPose(1,3) = clusterCentroid(1);
+      finalPose(2,3) = clusterCentroid(2);
 
-    Eigen::Vector4f clusterCentroid;
-    pcl::compute3DCentroid(*thisCluster, clusterCentroid);
-   
-    Eigen::Affine3d finalPose;
-    finalPose(0,3) = clusterCentroid(0);
-    finalPose(1,3) = clusterCentroid(1);
-    finalPose(2,3) = clusterCentroid(2);
+      std::string color = "unknown";
+      M.release();
+      int DISP_HEIGHT=1;
+      M = cv::Mat(eachCloud->width, DISP_HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
+      int i = 0;
 
-
-    std::string color = "unknown";
-    M.release();
-    int DISP_HEIGHT=1;
-    M = cv::Mat(eachCloud->width, DISP_HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-    int i = 0;
-
-    //if(pcl::getFieldIndex(*thisCluster, "rgb") != -1) { //if contains rgb, fill the opencv mat
       pcl::PointCloud<ORPPoint>::iterator point;
       for(point = thisCluster->points.begin(); point < thisCluster->points.end(); ++point, ++i) {
         cv::Vec3b color = cv::Vec3b(point->b, point->g, point->r);
@@ -119,30 +114,21 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
           M.at<cv::Vec3b>(cv::Point(y, i)) = color;
         }
       }
-      //processColors(M);
-      //cv::imshow("RGBCluster", M);
-      //cv::waitKey(10);
-    //} else {
-    //  ROS_WARN_THROTTLE(10, "No color information in cloud");
-    //}
 
-    color = getColor(M);
-    classRes.result.label = "cube_" + color;
-    classRes.result.pose.header.frame_id = eachCloud->header.frame_id;
-    tf::poseEigenToMsg(finalPose, classRes.result.pose.pose);
+      color = getColor(M);
+      thisObject.label = "cube_" + color;
+      thisObject.pose.header.frame_id = eachCloud->header.frame_id;
+      tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
 
-    classRes.method = "rgb";
-    classificationPub.publish(classRes);
-
-    delete[] kIndices.ptr();
-    delete[] kDistances.ptr();
+      classRes.result.push_back(thisObject);
+      delete[] kIndices.ptr();
+      delete[] kDistances.ptr();
+    }
   }
-
-  //ROS_INFO("classification call over");
+  classificationPub.publish(classRes);
 } //classify
 
 
-///http://stackoverflow.com/questions/5906693/how-to-reduce-the-number-of-colors-in-an-image-with-opencv-in-python
 inline uchar reduceVal(const uchar val)
 {
     if (val < 64) return 0;

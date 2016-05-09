@@ -90,6 +90,7 @@ bool CylinderClassifier::loadHist(const boost::filesystem::path &path, FeatureVe
 void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
   orp::ClassificationResult classRes;
+  classRes.method = "cylinder";
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
@@ -99,75 +100,73 @@ void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO("Cylinder classifier finished calling segmentation");
   //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);
 
-  for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
-    //ROS_INFO("Processing one cloud");
-    if(eachCloud->width < 3) {
-      //ROS_INFO("Cloud too small!");
-      continue;
+  if(!clouds.empty()) {
+    for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
+      obj_interface::WorldObject thisObject;
+      if(eachCloud->width < 3) {
+        //ROS_INFO("Cloud too small!");
+        continue;
+      }
+      //ROS_INFO("cloud acceptable size");
+      pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
+      pcl::fromROSMsg(*eachCloud, *thisCluster);
+
+      Eigen::Vector4f clusterCentroid;
+      pcl::compute3DCentroid(*thisCluster, clusterCentroid);
+      
+      pcl::PointCloud<pcl::Normal>::Ptr thisClusterNormals (new pcl::PointCloud<pcl::Normal>);
+      pcl::NormalEstimation<ORPPoint, pcl::Normal> ne;
+      
+      pcl::search::KdTree<ORPPoint>::Ptr tree (new pcl::search::KdTree<ORPPoint> ());
+      ne.setSearchMethod (tree);
+      ne.setInputCloud (thisCluster);
+      ne.setKSearch (50);
+      ne.compute (*thisClusterNormals);
+      
+      seg.setOptimizeCoefficients (true);
+      seg.setModelType (pcl::SACMODEL_CYLINDER);
+      seg.setMethodType (pcl::SAC_RANSAC);
+      seg.setNormalDistanceWeight (normalDistanceWeight);
+      seg.setMaxIterations (maxIterations);
+      seg.setDistanceThreshold (distanceThreshold);
+      seg.setRadiusLimits (minRadius, maxRadius);
+      seg.setInputCloud (thisCluster);
+      seg.setInputNormals (thisClusterNormals);
+
+      pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
+      pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
+      seg.segment (*inliers_cylinder, *coefficients_cylinder);
+    // std::cerr << "Cylinder coefficients: " << *coefficients_cylinder << std::endl;
+      
+      Eigen::Affine3d finalPose;
+      
+      finalPose(0,3) = coefficients_cylinder->values[0];
+      finalPose(1,3) = coefficients_cylinder->values[1];
+      
+      //the z value is so special because the cylinder model has infinite height. So instead we take the midway point
+      // between the highest-z and lowest-z points as the center. Using a centroid-based approach wouldn't work because
+      //  sometimes we can see the top/bottom of the object, which would throw us off.
+      //TODO fix this to work for arbitrary axis orientations by finding the principal components, generating bounding box, etc.
+      ORPPoint min_pt, max_pt;
+      pcl::getMinMax3D(*thisCluster, min_pt, max_pt);
+      
+      finalPose(2,3) = (max_pt.z + min_pt.z)/2.0f;
+      
+      // http://answers.ros.org/question/31006/how-can-a-vector3-axis-be-used-to-produce-a-quaternion/
+      
+      Eigen::Vector3d start_vector(0.0, 0.0, 1.0); //cylinder default axis orientation: up
+      Eigen::Vector3d axis_vector(coefficients_cylinder->values[3], coefficients_cylinder->values[3], coefficients_cylinder->values[5]);
+      Eigen::Quaterniond rotation;
+      rotation.setFromTwoVectors(start_vector, axis_vector).normalize();
+      Eigen::Matrix3d rotMat; rotMat = rotation;
+      finalPose.linear() = rotMat;
+      
+      tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
+      thisObject.label = "cube_red";
+      classRes.result.push_back(thisObject);
+      delete[] kIndices.ptr();
+      delete[] kDistances.ptr();
     }
-    //ROS_INFO("cloud acceptable size");
-    pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
-    pcl::fromROSMsg(*eachCloud, *thisCluster);
-
-    Eigen::Vector4f clusterCentroid;
-    pcl::compute3DCentroid(*thisCluster, clusterCentroid);
-    
-    pcl::PointCloud<pcl::Normal>::Ptr thisClusterNormals (new pcl::PointCloud<pcl::Normal>);
-    pcl::NormalEstimation<ORPPoint, pcl::Normal> ne;
-    
-    pcl::search::KdTree<ORPPoint>::Ptr tree (new pcl::search::KdTree<ORPPoint> ());
-    ne.setSearchMethod (tree);
-    ne.setInputCloud (thisCluster);
-    ne.setKSearch (50);
-    ne.compute (*thisClusterNormals);
-    
-    seg.setOptimizeCoefficients (true);
-    seg.setModelType (pcl::SACMODEL_CYLINDER);
-    seg.setMethodType (pcl::SAC_RANSAC);
-    seg.setNormalDistanceWeight (normalDistanceWeight);
-    seg.setMaxIterations (maxIterations);
-    seg.setDistanceThreshold (distanceThreshold);
-    seg.setRadiusLimits (minRadius, maxRadius);
-    seg.setInputCloud (thisCluster);
-    seg.setInputNormals (thisClusterNormals);
-
-    pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
-    pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
-    seg.segment (*inliers_cylinder, *coefficients_cylinder);
-   // std::cerr << "Cylinder coefficients: " << *coefficients_cylinder << std::endl;
-    
-    Eigen::Affine3d finalPose;
-    
-    finalPose(0,3) = coefficients_cylinder->values[0];
-    finalPose(1,3) = coefficients_cylinder->values[1];
-    
-    //the z value is so special because the cylinder model has infinite height. So instead we take the midway point
-    // between the highest-z and lowest-z points as the center. Using a centroid-based approach wouldn't work because
-    //  sometimes we can see the top/bottom of the object, which would throw us off.
-    //TODO fix this to work for arbitrary axis orientations by finding the principal components, generating bounding box, etc.
-    ORPPoint min_pt, max_pt;
-    pcl::getMinMax3D(*thisCluster, min_pt, max_pt);
-    
-    finalPose(2,3) = (max_pt.z + min_pt.z)/2.0f;
-    
-    // http://answers.ros.org/question/31006/how-can-a-vector3-axis-be-used-to-produce-a-quaternion/
-    
-    Eigen::Vector3d start_vector(0.0, 0.0, 1.0); //cylinder default axis orientation: up
-    Eigen::Vector3d axis_vector(coefficients_cylinder->values[3], coefficients_cylinder->values[3], coefficients_cylinder->values[5]);
-    Eigen::Quaterniond rotation;
-    rotation.setFromTwoVectors(start_vector, axis_vector).normalize();
-    Eigen::Matrix3d rotMat; rotMat = rotation;
-    finalPose.linear() = rotMat;
-    
-
-    tf::poseEigenToMsg(finalPose, classRes.result.pose.pose);
-    classRes.method = "cylinder";
-    classRes.result.label = "cube_red";
-    classificationPub.publish(classRes);
-
-    delete[] kIndices.ptr();
-    delete[] kDistances.ptr();
   }
-
-  //ROS_INFO("classification call over");
+  classificationPub.publish(classRes);
 } //classify

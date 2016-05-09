@@ -105,6 +105,7 @@ bool CPHClassifier::loadHist(const boost::filesystem::path &path, FeatureVector 
 void CPHClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
   orp::ClassificationResult classRes;
+  classRes.method = "cph";
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
@@ -114,65 +115,56 @@ void CPHClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO("SixDOF classifier finished calling segmentation");
   //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);
 
-  if(clouds.empty()) {
-    classRes.result.label = "";
-    classificationPub.publish(classRes);
+  if(!clouds.empty()) {
+    for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
+      obj_interface::WorldObject thisObject;
+   
+      pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
+      pcl::fromROSMsg(*eachCloud, *thisCluster);
+
+      //Get the centroid
+      Eigen::Vector4f centroid;
+      pcl::compute3DCentroid(*thisCluster, centroid);
+
+      //ROS_INFO("creating cph...");
+      //Compute cph:
+      cph.setInputCloud (thisCluster);
+      std::vector<float> feature;
+      cph.compute(feature);
+
+      //Nearest neighbor algorigthm
+      FeatureVector histogram;
+      histogram.second.resize(cphSize);
+
+      for (size_t i = 0; i < cphSize; ++i) {
+        histogram.second[i] = feature[i];
+      }
+      //KNN classification find nearest neighbors based on histogram
+      nearestKSearch (*kIndex, histogram, 5, kIndices, kDistances);
+
+      thisObject.pose.pose.position.x = centroid(0);
+      thisObject.pose.pose.position.y = centroid(1);
+      thisObject.pose.pose.position.z = centroid(2);
+
+      //make sure we're within our threshold
+      if(kDistances[0][0] < threshold){
+        thisObject.label = loadedModels.at(kIndices[0][0]).first.name;
+
+        Eigen::AngleAxisd yawAngle = Eigen::AngleAxisd( ORPUtils::radFromDeg(loadedModels.at(kIndices[0][0]).first.angle), Eigen::Vector3d::UnitY());
+        Eigen::Quaternion<double> q(yawAngle);
+
+        tf::quaternionEigenToMsg(q, thisObject.pose.pose.orientation);
+      }
+      else { //if nothing matches well enough, return "unknown"
+        ROS_ERROR("not within threshold, distance was %f", kDistances[0][0]);
+        thisObject.label = "unknown";
+
+      }
+      thisObject.pose.header.frame_id = eachCloud->header.frame_id;
+      classRes.result.push_back(thisObject);
+      delete[] kIndices.ptr();
+      delete[] kDistances.ptr();
+    }
   }
-  
-  for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
-
-    pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
-    pcl::fromROSMsg(*eachCloud, *thisCluster);
-
-    //Get the centroid
-    Eigen::Vector4f centroid;
-    pcl::compute3DCentroid(*thisCluster, centroid);
-
-    //ROS_INFO("creating cph...");
-    //Compute cph:
-    cph.setInputCloud (thisCluster);
-    std::vector<float> feature;
-    cph.compute(feature);
-
-    //Nearest neighbor algorigthm
-    FeatureVector histogram;
-    histogram.second.resize(cphSize);
-
-    for (size_t i = 0; i < cphSize; ++i) {
-      histogram.second[i] = feature[i];
-    }
-    //ROS_INFO("knn searching...");
-    //KNN classification find nearest neighbors based on histogram
-    nearestKSearch (*kIndex, histogram, 5, kIndices, kDistances);
-
-    //ROS_INFO("CPH: %i rows, %i columns returned from nearest K search.", kIndices.rows, kIndices.cols);
-      //ROS_INFO("CPH: Dist(%s@%.2f): %f", loadedModels.at(kIndices[0][0]).first.name.c_str(),
-    //  loadedModels.at(kIndices[0][0]).first.angle, kDistances[0][0]);
-    // for(int j=0; j<kIndices.cols; j++) {
-    //   ROS_INFO("CPH: Dist(%s@%.2f): %f", loadedModels.at(kIndices[0][j]).first.name.c_str(),
-    //     loadedModels.at(kIndices[0][j]).first.angle, kDistances[0][j]);
-    // }
-
-    classRes.result.pose.pose.position.x = centroid(0);
-    classRes.result.pose.pose.position.y = centroid(1);
-    classRes.result.pose.pose.position.z = centroid(2);
-    classRes.method = "cph";
-
-    //make sure we're within our threshold
-    if(kDistances[0][0] < threshold){
-      classRes.result.label = loadedModels.at(kIndices[0][0]).first.name;
-
-      Eigen::AngleAxisd yawAngle = Eigen::AngleAxisd( ORPUtils::radFromDeg(loadedModels.at(kIndices[0][0]).first.angle), Eigen::Vector3d::UnitY());
-      Eigen::Quaternion<double> q(yawAngle);
-
-      tf::quaternionEigenToMsg(q, classRes.result.pose.pose.orientation);
-    }
-    else { //if nothing matches well enough, return "unknown"
-      ROS_ERROR("not within threshold, distance was %f", kDistances[0][0]);
-      classRes.result.label = "unknown";
-
-    }
-    classRes.result.pose.header.frame_id = eachCloud->header.frame_id;
-    classificationPub.publish(classRes);
-  }
+  classificationPub.publish(classRes);
 } //classify

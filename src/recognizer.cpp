@@ -176,47 +176,52 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
   return true;
 } //getObjectPose
 
-void Recognizer::cb_classificationResult(orp::ClassificationResult newObject)
+void Recognizer::cb_classificationResult(orp::ClassificationResult objects)
 {
-  if(newObject.result.label != "") {
-    //transform into recognition frame
-    std::string sourceFrame = newObject.result.pose.header.frame_id;
-    if(sourceFrame != recognitionFrame) {
-      std::string msg = "";
-      if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
-        //can't determine object's pose in real world.
-        ROS_WARN_STREAM_THROTTLE(5.0f, "[recognizer] [Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
-        return;
+  for(int i=0; i < objects.result.size(); ++i) {
+    obj_interface::WorldObject newObject = objects.result[i];
+    if(newObject.label != "") {
+      //transform into recognition frame
+      std::string sourceFrame = newObject.pose.header.frame_id;
+      if(sourceFrame != recognitionFrame) {
+        std::string msg = "";
+        if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
+          //can't determine object's pose in real world.
+          ROS_WARN_STREAM_THROTTLE(5.0f, "[recognizer] [Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
+          return;
+        }
+        
+        //I would like to use tf::Stamped<tf::Pose> here but it seems to create more issues than it solves. More straightforward to manually set the frames
+        tf::Stamped<tf::Pose> source, dest;
+        newObject.pose.header.stamp = ros::Time(0);
+        tf::poseStampedMsgToTF(newObject.pose, source);
+        transformListener->transformPose(recognitionFrame, source, dest);
+        tf::poseStampedTFToMsg(dest, newObject.pose);
+        newObject.pose.header.frame_id = recognitionFrame;
       }
       
-      //I would like to use tf::Stamped<tf::Pose> here but it seems to create more issues than it solves. More straightforward to manually set the frames
-      tf::Stamped<tf::Pose> source, dest;
-      newObject.result.pose.header.stamp = ros::Time(0);
-      tf::poseStampedMsgToTF(newObject.result.pose, source);
-      transformListener->transformPose(recognitionFrame, source, dest);
-      tf::poseStampedTFToMsg(dest, newObject.result.pose);
-      newObject.result.pose.header.frame_id = recognitionFrame;
-    }
-    
-    bool merged = false;
-    Eigen::Affine3d eigPose;
-    tf::poseMsgToEigen(newObject.result.pose.pose, eigPose);
-    
-    WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.result.label, recognitionFrame, eigPose, 1.0f));
-    for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
-      if((*it)->isColocatedWith(p)) {
-        merged = true;
-        (*it)->merge(p);
-        //ROS_INFO("Merged object");
+      bool merged = false;
+      Eigen::Affine3d eigPose;
+      tf::poseMsgToEigen(newObject.pose.pose, eigPose);
+      
+      WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.label, recognitionFrame, eigPose, 1.0f));
+      for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
+        if((*it)->isColocatedWith(p)) {
+          merged = true;
+          (*it)->merge(p);
+          //ROS_INFO("Merged object");
+        }
+      }
+
+      if(!merged) { //new object
+        model.push_back(p);
       }
     }
-
-    if(!merged) { //new object
-      model.push_back(p);
-    }
   }
-  dirty = true; //queue an update
-  classification_count++;
+  if(objects.result.size() > 0) {
+    dirty = true; //queue an update
+    classification_count += objects.result.size();
+  }
 }
 
 bool Recognizer::isRecognitionStarted() {
