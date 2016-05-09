@@ -85,37 +85,54 @@ void PanDataCollector::cb_cloud(sensor_msgs::PointCloud2 cloud)
 
 bool PanDataCollector::rotate_cb(orp::DataCollect::Request& req,
 	orp::DataCollect::Response& res) {
-	std_msgs::Int32 panPosition;
-	orp::SaveCloud srv;
-	srv.request.objectName = req.objectName;
+
+	int pan_pos = 0;
+	int delta = req.delta;
+
+	std_msgs::Int32 panMessage;
+	orp::SaveCloud saveRequest;
+	saveRequest.request.objectName = req.objectName;
 	ros::Rate loop_rate(.2);
 
-	panPosition.data = 0;
-	ROS_INFO("moving pan table to home position");
-	panPub.publish(panPosition);
-	ros::Duration(5.0f).sleep();
-
+	panMessage.data = req.delta;
 	publishCenterPoint();
 
-	while(panPosition.data < 360)
+	while(pan_pos + delta <= 360)
 	{
 		ros::spinOnce();
 
-		srv.request.in_cloud = currentCloud;
-		srv.request.angle = panPosition.data;
-		saveClient.call(srv);
+		saveRequest.request.in_cloud = currentCloud;
+		saveRequest.request.angle = pan_pos;
+		saveClient.call(saveRequest);
 
-		panPub.publish(panPosition);
-		ROS_INFO("Angle: %lfdeg", srv.request.angle);
+		panPub.publish(panMessage);
+		ROS_INFO_STREAM("Current angle: " << pan_pos << " degrees");
 		loop_rate.sleep();
-		panPosition.data += req.delta;
+		pan_pos += delta;
 	}
 	return true;
 }
 
 void PanDataCollector::publishCenterPoint() {
+	//This function used to use AR tags attached directly to the table surface. But these can easily be occluded
+	// by objects on the table, so we built a new table that has the tags on the ground next to the table base.
+	// see publishCenterPointFromARTags()
+
+	// The function assumes that the pan table is centered in the world frame. This just accounts for the physical
+	// height of the pan table, as measured from the top of the ar tags (which are used to determine the calibration)
+	geometry_msgs::Vector3 centerPoint;
+	centerPoint.x = 0;
+	centerPoint.y = 0.1317625; // height of table in m
+	centerPoint.z = 0;
+	centerPointPub.publish(centerPoint);
+
+	ROS_INFO_STREAM("Published center point: " << centerPoint.x << ", " << centerPoint.y << ", " << centerPoint.z);
+}
+
+//UNUSED
+void PanDataCollector::publishCenterPointFromARTags() {
 	//use TF to get the center position
-	//TODO: fix the frame names to be meaningful/allow the user to set them.
+	//TODO: fix the AR tags to not be hard coded.
 	tf::StampedTransform centerTransform;
 	try {
 		tfListener.lookupTransform("/world", "/ar_marker_16", ros::Time(0), centerTransform);
