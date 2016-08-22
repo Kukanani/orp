@@ -1,0 +1,13 @@
+ball:
+  blue: 0.5
+  depth: 102
+  geometry: BLOB
+  green: 0
+  height: 102
+  mass: 56
+  nickname: Ball
+  pitch: 0
+  red: 0.5
+  roll: 0
+  width: 102
+  yaw: 0

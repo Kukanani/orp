@@ -52,8 +52,6 @@ Classifier::Classifier(const Classifier& other) {
 }
 
 void Classifier::init() {
-  ROS_INFO("%s: Reading list file", name.c_str());
-
   //parse the params on the parameter server
   loadTypeList();
   if(!ros::isShuttingDown()) {
@@ -98,13 +96,14 @@ void Classifier::init() {
 } //Classifier
 
 void Classifier::loadTypeList() {
-    std::vector<std::string> paramMap;
-  while(!n.getParam("/items/list", paramMap) && !ros::isShuttingDown()) {
+  XmlRpc::XmlRpcValue paramMap;
+  std::vector<WorldObjectType> objects;
+  while(!n.getParam("/items", paramMap)) {
     ROS_INFO_THROTTLE(5.0, "Waiting for object type list on parameter server...");
     ros::Duration(1.0).sleep();
   }
-  for(std::vector<std::string>::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
-    fullTypeList.push_back(*it);
+  for(XmlRpc::XmlRpcValue::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
+    fullTypeList.push_back(it->first);
   }
 }
 
