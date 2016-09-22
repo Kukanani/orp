@@ -127,6 +127,8 @@ private:
 
   tf::TransformListener listener;
   std::string transformToFrame;
+  //updated after each message received
+  std::string originalCloudFrame;
   /*================================================*/
   /* PARAMS */
   /*================================================*/

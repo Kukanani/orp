@@ -138,7 +138,6 @@ protected:
     flann::Matrix<int> &indices,
     flann::Matrix<float> &distances);
 
-
   /**
    * Load multiple files wherever they're found in a specified directory.
    * @param base_dir  the directory to load files from

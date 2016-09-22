@@ -108,8 +108,8 @@ void Classifier::loadTypeList() {
 }
 
 Classifier::~Classifier() {
-  //delete[] kData->ptr();
-  //delete kIndex;
+  delete[] kData->ptr();
+  delete kIndex;
 } //~Classifier
 
 int Classifier::nearestKSearch(flann::Index<flann::ChiSquareDistance<float> > &index,
@@ -127,7 +127,6 @@ int Classifier::nearestKSearch(flann::Index<flann::ChiSquareDistance<float> > &i
   indices = flann::Matrix<int>(new int[home.rows*k], home.rows, k);
   distances = flann::Matrix<float>(new float[home.rows*k], home.rows, k);
   int foundCount = index.knnSearch (home, indices, distances, k, flann::SearchParams (128));
-  //delete[] home.ptr();
 
   return foundCount;
 } //nearestKSearch
@@ -168,13 +167,7 @@ void Classifier::loadModelsRecursive(
             ROS_INFO_STREAM("histogram loader rejected file " << it->path().filename().string().c_str());
           }
         }
-        else {
-          //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
-        }
       }
-    }
-    else {
-      //ROS_INFO("Skipping file %s", it->path().filename().string().c_str());
     }
   }
 } //loadModelsRecursive
@@ -200,7 +193,6 @@ void Classifier::unsubscribe()
     segmentationClient.shutdown();
   }
 } //unsubscribe
-
 
 void Classifier::cb_subscribe(std_msgs::Empty msg) {
   subscribe();

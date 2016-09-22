@@ -79,7 +79,9 @@ private:
   std::string objectTopic;              /// Where to publish the WorldObjects
   std::string markerTopic;              /// Where to publish the RViz markers for visualization
   bool dirty;                           /// If true, udpate our model of the world (and remove old objects). Used for lazy updates
+  bool autostart;                       /// if true, begin the recognition loop automatically (auto-subscribe to classification)
 
+  //ROS
   ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
   ros::Publisher objectPub;             /// Publishes a MarkerArray with information about detected objects
   ros::Publisher markerPub;             /// Publishes a WorldObjects message that contains all the recognized objects from 
@@ -90,10 +92,10 @@ private:
   ros::ServiceServer objectPoseServer;  /// Provides poses for requested objects.
   ros::ServiceServer objectsServer;     /// Provides poses of all current objects.
 
-  bool autostart;                       /// if true, begin the recognition loop automatically (auto-subscribe to classification)
   ros::Subscriber startSub;             /// to start recognition loop
   ros::Subscriber stopSub;              /// to stop recognition loop
 
+  //starting and stopping
   WorldObjectPtr best;                  /// used to store best result when looping through model in a search
 
 // DYNAMICALLY-SET CONFIG VARIABLES
@@ -125,7 +127,6 @@ private:
    *                    have any probability of being the desired type.
    */
   WorldObjectPtr getMostLikelyObjectOfType(WorldObjectType wot);
-
 
   /**
    * Convenience method. See also getMostLikelyObjectOfType(WorldObjectType* wot)
@@ -223,14 +224,10 @@ private:
 public:
   /**
    * Main Recognizer constructor.
-   * @arg nh The NodeHandle to use for all ROS functionality.
-   * @arg autostart whether or not to start recognition automatically. Default is false (wait for a message to be published to /orp_start_recognition)
+   * Sets up internal configuration, creates ROS variables, and starts recognition (if autostart is enabled).
+   * Autostart enabled by default, can be overriden with ROS parameter at command line or launch file
    */
-  Recognizer(bool autostart = false, std::string recognitionFrame = "/world");
-  /**
-   * Main Recognizer destructor
-   */
-  ~Recognizer();
+  Recognizer();
 
   /// Dynamic Reconfigure callback.
   void paramsChanged(

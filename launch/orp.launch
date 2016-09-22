@@ -42,7 +42,9 @@
 
     respawn = "true"
     output  = "screen"
-  />
+  >
+    <param name="clippingFrame" value="world"/>
+  </node>
 
   <node
     if      = "$(arg cph)"
@@ -86,7 +88,9 @@
     args    = "$(arg autostart)"
     required= "true"
     output  = "screen"
-  />
+  >
+    <param name="recognitionFrame" value="world"/>
+  </node>
 
   <!-- VISUALIZATION AND CONFIGURATION -->
   <node
