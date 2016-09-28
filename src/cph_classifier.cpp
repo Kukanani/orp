@@ -139,8 +139,10 @@ void CPHClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       for (size_t i = 0; i < cphSize; ++i) {
         histogram.second[i] = feature[i];
       }
-      //KNN classification find nearest neighbors based on histogram
-      nearestKSearch (*kIndex, histogram, 5, kIndices, kDistances);
+      //KNN classification find nearest neighbors based on histogram. We only use the first one
+      //  (no voting, since there is only one exemplar per pose/object pair), so only ask for one neighbor
+      //  This is really "1NN" search
+      nearestKSearch (*kIndex, histogram, 1, kIndices, kDistances);
 
       thisObject.pose.pose.position.x = centroid(0);
       thisObject.pose.pose.position.y = centroid(1);
@@ -158,7 +160,6 @@ void CPHClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       else { //if nothing matches well enough, return "unknown"
         ROS_ERROR("not within threshold, distance was %f", kDistances[0][0]);
         thisObject.label = "unknown";
-
       }
       thisObject.pose.header.frame_id = eachCloud->header.frame_id;
       classRes.result.push_back(thisObject);

@@ -44,7 +44,8 @@
 #include "core/orp_utils.h"
 
 /**
- * @brief   Simulates vision objects using interactive RViz markers.
+ * @brief   Simulates ORP vision objects using interactive RViz markers. Position the objects using RViz, then they act
+ * like normally-detected ORP objects when looking at ORP recognizer output.
  *
  * @version 1.0
  * @ingroup apc
@@ -58,18 +59,18 @@ private:
   /// Standard ROS node handle
   ros::NodeHandle n;
 
-  std::string frame;         /// What frame the objects are being detected in
+  std::string frame;                                                                /// What frame the objects are being detected in
 
-  ros::ServiceServer objectPoseServer;  /// Provides poses for requested objects.
+  ros::ServiceServer objectPoseServer;                                              /// Provides poses for requested objects.
 
-  boost::shared_ptr<interactive_markers::InteractiveMarkerServer> markerServer;
-  interactive_markers::InteractiveMarkerServer::FeedbackCallback updateCallback;
-  std::map<std::string, visualization_msgs::InteractiveMarker> int_markers;
+  boost::shared_ptr<interactive_markers::InteractiveMarkerServer> markerServer;     /// Serves the interactive markers which control simulated obj positions
+  interactive_markers::InteractiveMarkerServer::FeedbackCallback updateCallback;    /// Called when the interactive marker is updated
+  std::map<std::string, visualization_msgs::InteractiveMarker> int_markers;         /// One marker per object
 
-  tf::TransformListener* listener;
+  tf::TransformListener* listener;                                                  /// Used to transform sim objects into the correct frame
 
-  //used to generate unique names for simulation markers
-  unsigned short int simCount;
+  
+  unsigned short int simCount;                                                      /// Used to generate unique names for simulation markers
 
   /**
    * ROS service call handler. Searches the known world model for objects that match
@@ -83,13 +84,8 @@ private:
     orp::GetObjectPose::Response &response);
 
   /**
-   * Perform recognition.
-   *
-   * A single function that will
-   * do everything required for object recognition.
+   * Create a single marker
    */
-  void recognize(const ros::TimerEvent& event);
-
   void make6DofMarker( unsigned int interaction_mode,
     const tf::Vector3& position, bool show_6dof, std::string name );
 
@@ -101,12 +97,8 @@ public:
    */
   VisionSimulator(ros::NodeHandle nh, std::string filename, std::string outputFrame);
 
-  /**
-   * Main VisionSimulator destructor
-   */
-  ~VisionSimulator();
-
-  void cb_setStoredPose( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback ); 
+  /// Called when a marker is updated
+  void cb_markerFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback ); 
 }; //VisionSimulator
 
 #endif //_VISION_SIMULATOR_H_

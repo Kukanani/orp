@@ -54,9 +54,7 @@ int main(int argc, char **argv)
   //cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
   ros::AsyncSpinner spinner(2);
   spinner.start();
-  
-  //ros::Duration(10.0).sleep();
-  //ros::shutdown();
+
   ros::waitForShutdown();
   //cv::destroyAllWindows();
   return 1;
@@ -155,30 +153,6 @@ void RGBClassifier::processColors(cv::Mat& img)
 }
 
 std::string RGBClassifier::getColor(cv::Mat& img) {
-  /*int channels[] = {0,1,2}; //histogram of R,G,B
-
-  cv::MatND hist;
-
-  int histSize[] = {3,3,3};
-  float rranges[] = {0,256}; float granges[] = {0,256}; float branges[] = {0,256}; 
-  const float* ranges[] = {rranges, granges, branges};
-  cv::calcHist(&img, 1, channels, cv::Mat(), hist, 2, histSize, ranges, true, false);
-
-  float max_value = 0.0f;
-  int best_index = 0;
-  float hist_value = 0.0f;
-  for (int i=0; i<27; i++)
-  {
-    hist_value = hist.at<float>(i);
-    if(hist_value > max_value) {
-      max_value = hist_value;
-      best_index = i;
-    }
-  }
-
-  std::stringstream stream;
-  stream << max_value;
-  return stream.str();*/
 
   //sum the red channel (BGR pixel representation)
   double r = cv::sum(img)[2];

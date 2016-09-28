@@ -41,8 +41,8 @@
 #include "core/orp_utils.h"
 
 /**
- * @brief A pipeline for doing arbitrary transformations (batch processing) on pcd files.
- *
+ * @brief A pipeline for doing arbitrary transformations (batch processing) on pcd files. This is mostly a "scratch" class, used for
+ * whatever transformations are required at the moment for data munging and processing.
  *
  * @version 1.0
  * @ingroup objectrecognition

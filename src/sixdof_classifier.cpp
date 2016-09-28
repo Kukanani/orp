@@ -96,7 +96,6 @@ bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVect
   std::string cloudName;
   cloudName.assign(cloud_name.begin(), cloud_name.begin()+cloud_name.rfind("."));
   cloudName += ".pcd";
-  //ROS_INFO("loading cloud from file %s", cloudName.c_str());
   if (pcl::io::loadPCDFile<ORPPoint> (cloudName, *(kp.cloud)) == -1) //* load the file
   {
     ROS_ERROR ("Couldn't read file %s", cloudName.c_str());
@@ -106,17 +105,13 @@ bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVect
   std::string matName;
   matName.assign(cloud_name.begin(), cloud_name.begin()+cloud_name.rfind("."));
   matName += ".mat4";
-  //ROS_INFO("loading mat from file %s", matName.c_str());
   kp.pose = ORPUtils::loadEigenMatrix4f(matName.c_str()).cast<double>();
 
-  //ROS_INFO("loading centroid");
   kp.centroid = Eigen::Vector4f(kp.pose(0,3), kp.pose(1,3), kp.pose(2,3), kp.pose(3,3));
-  //pcl::compute3DCentroid(*(kp.cloud), kp.centroid);
 
   std::string crhName;
   crhName.assign(cloud_name.begin(), cloud_name.begin()+cloud_name.rfind("."));
   crhName += ".crh";
-  //ROS_INFO("loading CRH from file %s", cloudName.c_str());
   if(pcl::io::loadPCDFile(crhName, *(kp.crh)) == -1) {
     ROS_ERROR("Couldn't read file %s", crhName.c_str());
     return false;
@@ -129,7 +124,6 @@ bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVect
 double testLast = 0; // used for debug testing
 
 void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
-  //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
   orp::ClassificationResult classRes;
   classRes.method = "sixdof";
 
@@ -174,13 +168,12 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
         //TODO: does the fact that we only look at index 0 here matter? I think it might.
       }
 
-      int numNeighbors = 2;
-      //KNN classification find nearest neighbors based on histogram
+      int numNeighbors = 1;
+      //KNN classification find nearest neighbors based on histogram. Only concerned with the first one,
+      // Since our dataset only includes one data point for each classification/pose pair
       int numFound = 0;
 
-      //ROS_INFO("Nearest K search start");
       numFound = nearestKSearch (*kIndex, histogram, numNeighbors, kIndices, kDistances);
-      //ROS_INFO("Nearest K search end");
 
       if(numFound == 0) {
         ROS_ERROR("KNN search found 0 nearby feature vectors");
@@ -235,7 +228,6 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
         rotVec.normalize();
         
         double radRotationAmount = 2*M_PI - angles.at(0) * M_PI/180;
-        //ROS_INFO_STREAM("rotation amount = " << radRotationAmount);
         
         // create a quaternion that represents rotation around an axis
         Eigen::Quaterniond quat;

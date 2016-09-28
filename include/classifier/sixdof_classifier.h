@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : sia5-nrg
+//      Title     : sixdof_classifier
 //      Project   : NRG ORP
 //      Created   : 4/26/2015
 //      Author    : Adam Allevato
@@ -51,12 +51,7 @@
  * @author    Adam Allevato <adam.d.allevato@gmail.com>
  */
 class SixDOFClassifier : public Classifier {
-protected:
-  tf::TransformListener listener;
 public:
-  /**
-   * Constructor
-   */
   SixDOFClassifier(std::string directory, bool autostart = false);
   
   /**

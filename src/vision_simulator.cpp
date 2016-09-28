@@ -105,11 +105,6 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename, std::
   }
 } //VisionSimulator constructor
 
-VisionSimulator::~VisionSimulator()
-{
-
-} //VisionSimulator destructor
-
 bool VisionSimulator::getObjectPose(
   orp::GetObjectPose::Request &request,
   orp::GetObjectPose::Response &response)
@@ -210,7 +205,7 @@ void VisionSimulator::make6DofMarker( unsigned int interaction_mode, const tf::V
     int_marker.controls.push_back(control);
   }
 
-  updateCallback = boost::bind(&VisionSimulator::cb_setStoredPose, this, _1);
+  updateCallback = boost::bind(&VisionSimulator::cb_markerFeedback, this, _1);
 
   ROS_INFO("inserting marker into marker server");
   markerServer->insert(int_marker);
@@ -221,7 +216,7 @@ void VisionSimulator::make6DofMarker( unsigned int interaction_mode, const tf::V
   ++simCount;
 }
 
-void VisionSimulator::cb_setStoredPose( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback ) {
-  //ROS_INFO_STREAM("setting pose of " << feedback->marker_name.substr(0, feedback->marker_name.length()-11));
+void VisionSimulator::cb_markerFeedback( const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback ) {
+  ROS_INFO_STREAM("setting pose of " << feedback->marker_name.substr(0, feedback->marker_name.length()-11));
   int_markers.at(feedback->marker_name.substr(0, feedback->marker_name.length()-11)).pose = feedback->pose;
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : sia5-nrg
+//      Title     : pan data collector
 //      Project   : NRG ORP
 //      Created   : 1/21/2015
 //      Author    : Adam Allevato
@@ -54,24 +54,21 @@
  */
 class PanDataCollector {
 public:
-	ros::NodeHandle n;  /// Standard ROS node handle.
+	ros::NodeHandle n;  					/// Standard ROS node handle.
 
-	ros::Publisher panPub; ///Send pan messages to be read by the pan table
-	ros::Subscriber /*Thunder*/cloudSub; ///Waits for point cloud data
-	ros::Publisher centerPointPub; ///Spits out the center point
-	ros::ServiceClient saveClient; ///calls the service to save data to file
-	ros::ServiceServer dataCollectSrv; ///listens for service calls to kic things off
+	ros::Publisher panPub; 					/// Send pan messages to be read by the pan table
+	ros::Subscriber /*Thunder*/cloudSub; 	/// Waits for point cloud data
+	ros::Publisher centerPointPub; 			/// Spits out the center point
+	ros::ServiceClient saveClient; 			/// Calls the service to save data to file
+	ros::ServiceServer dataCollectSrv; 		/// Listens for service calls to kic things off
 	
-	tf::TransformListener tfListener; ///Used to get the center point
+	tf::TransformListener tfListener; 		/// Used to get the center point
 
 	/**
 	 * The stored depth points, which are passed on to the point cloud processor by the main worker.
 	 */
 	sensor_msgs::PointCloud2 currentCloud;
 
-	/**
-	 * Constructor
-	 */
 	PanDataCollector(ros::NodeHandle nh);
 
 	/**
@@ -91,7 +88,12 @@ public:
 	 * Get the center of the pan table, and publish that center to a ROS topic.
 	 */
 	void publishCenterPoint();
-	void publishCenterPointFromARTags();
-}; //PanDataCollector
 
-#endif // _PAN_DATA_COLLECTOR_H_
+	/**
+	 * Determine the pan table center just from a set of AR tags, and publish to ROS topic
+	 */
+	void publishCenterPointFromARTags();
+
+};
+
+#endif

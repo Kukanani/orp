@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : sia5-nrg
+//      Title     : cph
 //      Project   : NRG ORP
 //      Created   : 1/21/2015
 //      Author    : Adam Allevato
@@ -64,6 +64,9 @@ private:
   /** The number of angular bins on the cylindrical projection mesh */
   int num_cbins;
 
+  /// Spatial extents of the point cloud
+  float x_max, x_min, y_max, y_min, z_max, z_min;
+
   /** The size of the point cloud bounding box in the x-direction. */
   float x_size;
   /** The size of the point cloud bounding box in the y-direction. */
@@ -73,19 +76,6 @@ private:
 
   /** Maximum spatial extent */
   float max_size;
-
-  /** X maximum spatial extent */
-  float x_max;
-  /** X minimum spatial extent */
-  float x_min;
-  /** Y maximum spatial extent */
-  float y_max;
-  /** Y minimum spatial extent */
-  float y_min;
-  /** Z maximum spatial extent */
-  float z_max;
-  /** Z minimum spatial extent */
-  float z_min;
 
   /** The 3D cartesian point representing the centroid of the point cloud data. */
   std::vector<float> centroid;
@@ -223,7 +213,8 @@ public:
       }
     }
 
-    //Stick size onto the end and BAM! scale variance.
+    // Stick size onto the end and BAM! scale variance.
+    // Adam Allevato, note: this is Brian's great epiphany, the magic that made his thesis work, if you will. Cool stuff
     hist.push_back(x_size*100);
     hist.push_back(y_size*100); 
     hist.push_back(z_size*100);
@@ -235,6 +226,6 @@ public:
     //return data size
     return result.size();
   }; //compute
-}; //CPH
+};
 
-#endif //_CPH_H_
+#endif

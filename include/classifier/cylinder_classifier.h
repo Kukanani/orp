@@ -35,7 +35,12 @@
 #include "core/classifier.h"
 
 /**
- * @brief   Cylinder-only classification - posterizing colors into main color groups
+ * @brief   Cylinder-only classification - fits a cylinder to the dataset and returns the cylinder's position and orientation
+ *
+ * TODO: THIS IMPLEMENTATION IS INCOMPLETE.
+ * The cylinder is infinitely long, so although the axis of the object will probably be correct, you would need to adjust the 
+ * position along the cylinder's Z-axis based on the maximum and minimum spatial extents of the classified point cloud,
+ * after projecting on to the object's Z-axis
  *
  * @version 1.0
  * @ingroup objectrecognition
@@ -56,10 +61,11 @@ protected:
   dynamic_reconfigure::Server<orp::CylinderClassifierConfig> reconfigureServer;
   dynamic_reconfigure::Server<orp::CylinderClassifierConfig>::CallbackType reconfigureCallbackType;
 public:
-  /**
-   * Constructor
-   */
   CylinderClassifier(bool autostart = false);
+
+  /**
+   * Dynamic reconfigure
+   */
   void paramsChanged(orp::CylinderClassifierConfig &config, uint32_t level);
   
   /**

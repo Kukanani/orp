@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : sia5-nrg
+//      Title     : Recognizer
 //      Project   : NRG ORP
 //      Created   : 1/29/2015
 //      Author    : Adam Allevato
@@ -72,31 +72,29 @@ private:
 
 // ADDITIONAL VARIABLES GO HERE
 
-  ros::Timer timer;                     /// Used to schedule the recognition calls
-  std::string recognitionFrame;         /// What frame the objects are being detected in
-  WorldObjectList model;                /// A list of currently-accepted objects in the world.
-  WorldObjectManager typeManager;       /// Manages the list of world object types.
-  std::string objectTopic;              /// Where to publish the WorldObjects
-  std::string markerTopic;              /// Where to publish the RViz markers for visualization
-  bool dirty;                           /// If true, udpate our model of the world (and remove old objects). Used for lazy updates
-  bool autostart;                       /// if true, begin the recognition loop automatically (auto-subscribe to classification)
-
-  //ROS
-  ros::Subscriber recognitionSub;       /// Listens for new recognized objects and adds them to the model.
-  ros::Publisher objectPub;             /// Publishes a MarkerArray with information about detected objects
-  ros::Publisher markerPub;             /// Publishes a WorldObjects message that contains all the recognized objects from 
-  ros::Publisher stopPub;               /// Used to self-stop recognition
-  tf::TransformBroadcaster* objectBroadcaster; /// broadcast frames for each found object
-  tf::TransformListener* transformListener;    /// listen for necessary transformations before publishing
+  ros::Timer timer;                             /// Used to schedule the recognition calls
+  std::string recognitionFrame;                 /// What frame the objects are being detected in
+  WorldObjectList model;                        /// A list of currently-accepted objects in the world.
+  WorldObjectManager typeManager;               /// Manages the list of world object types.
+  std::string objectTopic;                      /// Where to publish the WorldObjects
+  std::string markerTopic;                      /// Where to publish the RViz markers for visualization
+  bool dirty;                                   /// If true, udpate our model of the world (and remove old objects). Used for lazy updates
+  bool autostart;                               /// if true, begin the recognition loop automatically (auto-subscribe to classification)
+        
+  //ROS       
+  ros::Subscriber recognitionSub;               /// Listens for new recognized objects and adds them to the model.
+  ros::Publisher objectPub;                     /// Publishes a MarkerArray with information about detected objects
+  ros::Publisher markerPub;                     /// Publishes a WorldObjects message that contains all the recognized objects from 
+  ros::Publisher stopPub;                       /// Used to self-stop recognition
+  tf::TransformListener* transformListener;     /// listen for necessary transformations before publishing
   tf::Transformer* objectTransformeqr;          /// transform object poses from one frame to another
-  ros::ServiceServer objectPoseServer;  /// Provides poses for requested objects.
-  ros::ServiceServer objectsServer;     /// Provides poses of all current objects.
-
-  ros::Subscriber startSub;             /// to start recognition loop
-  ros::Subscriber stopSub;              /// to stop recognition loop
-
-  //starting and stopping
-  WorldObjectPtr best;                  /// used to store best result when looping through model in a search
+  ros::ServiceServer objectPoseServer;          /// Provides poses for requested objects.
+  ros::ServiceServer objectsServer;             /// Provides poses of all current objects.
+        
+  ros::Subscriber startSub;                     /// to start recognition loop
+  ros::Subscriber stopSub;                      /// to stop recognition loop
+        
+  WorldObjectPtr best;                          /// used to store best result when looping through model in a search
 
 // DYNAMICALLY-SET CONFIG VARIABLES
   ros::Duration staleTime;          /// Number of seconds that an object will persist in the world model after being updated
@@ -108,16 +106,10 @@ private:
   bool showPosition;                ///Show objects' (X,Y,Z) positions
   bool showPose;                    ///Show objects' poses (rotation about Y-axis)
   bool showPoseStdDev;              ///Show standared deviation of pose
-  bool shouldDebugPrint;                  ///Call debugPrint() on objects in the object model
+  bool shouldDebugPrint;            ///Call debugPrint() on objects in the object model
 
   int classification_count;         ///Used to ensure that at least one detection has been processed when calling service to get objects. This way we can tell the difference between "no objects in scene" and "no classification results received"
   int object_sequence;              ///Used to set the header.seq values in the messages published to /detected_objects.
-  
-  /**
-   * Callback for when a classification result is published by any classifier.
-   * @param newObject the passed message from the classifier topic
-   */
-  void cb_classificationResult(orp::ClassificationResult newObject);
 
   /**
    * Get the object in the world that has the best shot at being the given object type.
@@ -146,16 +138,6 @@ private:
    */
   void loadTypesFromParameterServer();
 
-  /**
-   * ROS service call handler. Searches the known world model for objects that match
-   * the given request, and then provides a list of poses for objects that meet the given
-   * criteria.
-   * @param  req      the request providing the object to search for
-   * @param  response the response to fill with the poses found.
-   * @return          true
-   */
-  bool getObjectPose(orp::GetObjectPose::Request &req,
-    orp::GetObjectPose::Response &response);
 
   /// sets the refresh interval and updates the timer
   void setRefreshInterval(float interval);
@@ -221,6 +203,23 @@ private:
    */
   bool cb_getObjects(orp::GetObjects::Request &req,
     orp::GetObjects::Response &response);
+
+  /**
+   * Callback for when a classification result is published by any classifier.
+   * @param newObject the passed message from the classifier topic
+   */
+  void cb_processNewClassification(orp::ClassificationResult newObject);
+  
+  /**
+   * ROS service call handler. Searches the known world model for objects that match
+   * the given request, and then provides a list of poses for objects that meet the given
+   * criteria.
+   * @param  req      the request providing the object to search for
+   * @param  response the response to fill with the poses found.
+   * @return          true
+   */
+  bool getObjectPose(orp::GetObjectPose::Request &req,
+    orp::GetObjectPose::Response &response);
 public:
   /**
    * Main Recognizer constructor.
@@ -230,8 +229,7 @@ public:
   Recognizer();
 
   /// Dynamic Reconfigure callback.
-  void paramsChanged(
-    orp::RecognizerConfig &config, uint32_t level);
+  void paramsChanged(orp::RecognizerConfig &config, uint32_t level);
 }; //Recognizer
 
 #endif //_RECOGNIZER_H_

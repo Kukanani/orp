@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : sia5-nrg
+//      Title     : histogram saver
 //      Project   : NRG ORP
 //      Created   : 1/21/2015
 //      Author    : Adam Allevato
@@ -76,15 +76,10 @@ private:
    */
   ros::NodeHandle n;
 
-  ros::ServiceClient segClient;
-  ros::ServiceServer saveCloudSrv;
+  ros::ServiceClient segClient;         /// Calls segmentation
+  ros::ServiceServer saveCloudSrv;      /// Handles requests to save files
 
-  ros::Subscriber tableCenterPointSub;
-
-  /// Required for using dynamic reconfigure.
-  dynamic_reconfigure::Server<orp::HistogramSaverConfig> reconfigureServer;
-  /// Required for using dynamic reconfigure.
-  dynamic_reconfigure::Server<orp::HistogramSaverConfig>::CallbackType reconfigureCallbackType;
+  ros::Subscriber tableCenterPointSub;  /// Listens for the centerpoint of the training table, used to set object origins
 
   //where to save histogram-based files
   std::string outDir;
@@ -101,23 +96,32 @@ private:
 
   //CVFH options
   float cvfhRadiusSearch;
-  Eigen::Vector4f tableCenterPoint; ///Used to calculate distance between point cloud center and object center.
+  Eigen::Vector4f tableCenterPoint;   ///Used to calculate distance between point cloud center and object center.
 
-  std::vector<float> feature;  ///Gets filled with classifier data
+  std::vector<float> feature;         ///Gets filled with classifier data
 
-  /**
-   * Called when dynamic_reconfigure is used to change parameters for the recognition algorithm.
-   * @param config the configuration listing the parameter changes
-   * @param level  mask for changed parameters.
-   */
+  /// Dynamic reconfigure
+  dynamic_reconfigure::Server<orp::HistogramSaverConfig> reconfigureServer;
+  dynamic_reconfigure::Server<orp::HistogramSaverConfig>::CallbackType reconfigureCallbackType;
   void paramsChanged(orp::HistogramSaverConfig &config, uint32_t level);
 
+
+  /// Write the cloud as a PCD file
   void writeRawCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+
+  /// VFH global descriptor
   void writeVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+
+  /// CVFH (improved VFH) global descriptor
   void writeCVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+
+  /// CPH (Brian O'Neil's) global descriptor
   void writeCPH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+
+  /// CVFH descriptor, plus CRH (roll histogram) and object centroid to allow inference of 6DOF pose
   void write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int num);
 
+  /// Used to calc object origins
   void setTableCenterPoint(float x, float y, float z);
 
 public:
@@ -154,6 +158,6 @@ public:
   ///ROS shadow for setCenterPoint().
   void cb_setTableCenterPoint(geometry_msgs::Vector3 _centerPoint);
 
-}; // HistogramSaver
+};
 
 #endif

@@ -47,14 +47,10 @@ int main(int argc, char **argv)
   CylinderClassifier v(autostart);
   v.init();
 
-  //cv::namedWindow( "CylinderCluster", cv::WINDOW_NORMAL );
   ros::AsyncSpinner spinner(2);
   spinner.start();
   
-  //ros::Duration(10.0).sleep();
-  //ros::shutdown();
   ros::waitForShutdown();
-  //cv::destroyAllWindows();
   return 1;
 } //main
 

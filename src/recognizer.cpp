@@ -84,31 +84,30 @@ Recognizer::Recognizer() :
     autostart = true;
   }
 
-  ROS_INFO_STREAM("[ORP Recognizer] Recognition frame: " << recognitionFrame);
+  ROS_INFO_STREAM_NAMED("ORP Recognizer", "Recognition frame: " << recognitionFrame);
 
   //dynamic reconfigure
   reconfigureCallbackType = boost::bind(&Recognizer::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
 
   //ROS clients and publishers
-  markerPub = n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1, true);
-  objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
-  stopPub = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
+  markerPub         = n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1, true);
+  objectPub         = n.advertise<orp::WorldObjects>(objectTopic, 1);
+  stopPub           = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
 
-  objectPoseServer = n.advertiseService("/get_object_pose", &Recognizer::getObjectPose, this);
-  objectsServer = n.advertiseService("/get_objects", &Recognizer::cb_getObjects, this);
-  startSub = n.subscribe("orp_start_recognition", 1, &Recognizer::cb_startRecognition, this);
-  stopSub = n.subscribe("orp_stop_recognition", 1, &Recognizer::cb_stopRecognition, this);
+  objectPoseServer  = n.advertiseService("/get_object_pose", &Recognizer::getObjectPose, this);
+  objectsServer     = n.advertiseService("/get_objects", &Recognizer::cb_getObjects, this);
+  startSub          = n.subscribe("orp_start_recognition", 1, &Recognizer::cb_startRecognition, this);
+  stopSub           = n.subscribe("orp_stop_recognition", 1, &Recognizer::cb_stopRecognition, this);
 
-  objectBroadcaster = new tf::TransformBroadcaster();
   transformListener = new tf::TransformListener();
 
   //this will wait until types have been added to the parameter server
-  ROS_INFO("[ORP Recognizer] Loading object types");
+  ROS_INFO_NAMED("ORP Recognizer", "Loading object types");
   typeManager.loadTypesFromParameterServer();
 
   if(autostart) {
-    ROS_INFO("[ORP Recognizer] Autostarting recognition");
+    ROS_INFO_NAMED("ORP Recognizer", "Autostarting recognition");
     startRecognition();
   }
 }
@@ -155,7 +154,7 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
   return true;
 }
 
-void Recognizer::cb_classificationResult(orp::ClassificationResult objects)
+void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
 {
   for(int i=0; i < objects.result.size(); ++i) {
     obj_interface::WorldObject newObject = objects.result[i];
@@ -166,11 +165,10 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult objects)
         std::string msg = "";
         if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
           //can't determine object's pose in real world.
-          ROS_WARN_STREAM_THROTTLE(5.0f, "[recognizer] [Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
+          ROS_WARN_STREAM_THROTTLE_NAMED(5.0f, "ORP Recognizer", "[Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
           return;
         }
         
-        //I would like to use tf::Stamped<tf::Pose> here but it seems to create more issues than it solves. More straightforward to manually set the frames
         tf::Stamped<tf::Pose> source, dest;
         newObject.pose.header.stamp = ros::Time(0);
         tf::poseStampedMsgToTF(newObject.pose, source);
@@ -192,7 +190,7 @@ void Recognizer::cb_classificationResult(orp::ClassificationResult objects)
         }
       }
 
-      if(!merged) { //new object
+      if(!merged) { // Since it wasn't merged with any old objects, create a new object
         model.push_back(p);
       }
     }
@@ -214,13 +212,13 @@ void Recognizer::startRecognition() {
     recognitionSub = n.subscribe(
       "/classification",
       10,
-      &Recognizer::cb_classificationResult,
+      &Recognizer::cb_processNewClassification,
       this);
 
     timer = n.createTimer(ros::Duration(refreshInterval), boost::bind(&Recognizer::recognize, this, _1));
     timer.start();
   } else {
-    ROS_ERROR("[ORP Recognizer] Attempted to start recognition, but already started");
+    ROS_ERROR_NAMED("ORP Recognizer", "Attempted to start recognition, but already started");
   }
 }
 
@@ -239,7 +237,7 @@ void Recognizer::stopRecognition() {
     //clear all markers
     model.clear();
   } else {
-    ROS_WARN("[ORP Recognizer] Attempted to stop recognition, but it hasn't started.");
+    ROS_WARN_NAMED("ORP Recognizer", "Attempted to stop recognition, but it hasn't started.");
   }
 }
 
@@ -348,7 +346,7 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
   best = WorldObjectPtr();
   if(model.size() < 1)
   {
-    ROS_ERROR_STREAM("[ORP Recognizer] No vision objects while trying to get most likely object of type " << wot.getName());
+    ROS_ERROR_STREAM_NAMED("ORP Recognizer", "No vision objects while trying to get most likely object of type " << wot.getName());
   }
   
   int i = 0;

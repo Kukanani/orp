@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : sia5-nrg
+//      Title     : cph_classifier
 //      Project   : NRG ORP
 //      Created   : 2/3/2015
 //      Author    : Adam Allevato
@@ -60,9 +60,6 @@ private:
   int cphSize;
 
 public:
-  /**
-   * Constructor
-   */
   CPHClassifier(std::string directory, bool _autostart);
 
   /**
@@ -79,6 +76,6 @@ public:
    * @param cloud the incoming cloud supplied from the topic publisher
    */
   void cb_classify(sensor_msgs::PointCloud2 cloud);
-}; //CPHClassifier
+};
 
-#endif //_CPH_CLASSIFIER_H_
+#endif

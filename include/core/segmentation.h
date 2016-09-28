@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-//      Title     : sia5-nrg
+//      Title     : Segmentation Server
 //      Project   : NRG ORP
 //      Created   : 1/21/2015
 //      Author    : Adam Allevato
@@ -39,6 +39,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/conditional_removal.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/common/transforms.h>
@@ -46,13 +47,12 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/conditional_removal.h>
 
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
 #include <tf/transform_listener.h>
 #include <pcl_ros/transforms.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <orp/Segmentation.h>
 #include <orp/SegmentationConfig.h>
@@ -101,12 +101,11 @@ private:
   /*================================================*/
   /* CLASS VARS */
   /*================================================*/
-  /**
-   * Standard ROS node handle
-   */
+  /// Standard ROS node handle
   ros::NodeHandle node;
-  ///Accepts the segmentation requests
-  //ros::Subscriber segmentationSubscriber;
+  ros::AsyncSpinner spinner;
+
+  /// Accepts the segmentation requests
   ros::ServiceServer segmentationServer;
 
   /// Publishes planes cut from the scene
@@ -125,12 +124,18 @@ private:
   /// Publishes the first (largest) cluster in the scene.
   ros::Publisher largestObjectPublisher;
 
+  /// Used to transform into the correct processing/recognition frames
   tf::TransformListener listener;
+
+  /// The frame to transform the recognition results into. This is useful if you need to use recognition results for 
+  ///   motion planning in a specific frame, or pose x/y/z values, etc.
   std::string transformToFrame;
-  //updated after each message received
+
+  /// updated after each message received
   std::string originalCloudFrame;
+
   /*================================================*/
-  /* PARAMS */
+  /* SEGMENTATION PARAMS */
   /*================================================*/
   //The minimum camera-space X for the working area bounding box
   float minX; // left in world space
@@ -142,8 +147,6 @@ private:
   
   ///flags for publishing various intermediate point clouds
   bool _publishAllObjects, _publishAllPlanes, _publishBoundedScene, _publishLargestObject, _publishVoxelScene;
-
-  ros::AsyncSpinner spinner;
 
   int maxClusters;
   /**
@@ -193,7 +196,6 @@ private:
   PCP processCloud;
 
   std::vector<sensor_msgs::PointCloud2> clusters;
-
 
   /*================================================*/
   /* FILTERING STEPS (FUNCTIONS) */
@@ -249,14 +251,12 @@ private:
   std::vector<sensor_msgs::PointCloud2> cluster(PCP &input, float clusterTolerance, int minClusterSize, int maxClusterSize);
 public:
   Segmentation();
+
+  /// Start!
   void run();
 
-  /**
-   * Linked to incoming camera data Orchestrates the segmentation process.
-   * @param  cloud the cloud to segment
-   */
-  //void cb_segment(sensor_msgs::PointCloud2 incoming);
-  bool processSegmentation(orp::Segmentation::Request &req, orp::Segmentation::Response &response);
+  /// Do the segmentation steps enabled by parameter flags and return the result.
+  bool cb_segment(orp::Segmentation::Request &req, orp::Segmentation::Response &response);
 }; //Segmentation
 
 #endif //_SEGMENTATION_H_

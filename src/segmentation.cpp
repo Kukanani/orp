@@ -64,7 +64,7 @@ Segmentation::Segmentation() :
   largestObjectPublisher = node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
   allObjectsPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
   
-  segmentationServer = node.advertiseService("/segmentation", &Segmentation::processSegmentation, this);
+  segmentationServer = node.advertiseService("/segmentation", &Segmentation::cb_segment, this);
   
   reconfigureCallbackType = boost::bind(&Segmentation::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
@@ -110,7 +110,7 @@ void Segmentation::paramsChanged(orp::SegmentationConfig &config, uint32_t level
 
 bool compareClusterSize(const sensor_msgs::PointCloud2& a, const sensor_msgs::PointCloud2& b) { return a.width > b.width; }
 
-bool Segmentation::processSegmentation(orp::Segmentation::Request &req,
+bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     orp::Segmentation::Response &response) {
   if(req.scene.height * req.scene.width < 3) {
     ROS_DEBUG("Not segmenting cloud, it's too small.");

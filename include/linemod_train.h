@@ -32,6 +32,11 @@
 
 /**
  * Testing out the Linemod implementation in PCL.
+ *
+ *  ******* UNDER CONSTRUCTION ******
+ *  ******* UNDER CONSTRUCTION ******
+ *  ******* UNDER CONSTRUCTION ******
+ * 
  */
 class LinemodTrain
 {
