@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "recognizer");
 
   //get started
-  Recognizer s();
+  Recognizer s;
 
   //Run ROS until shutdown
   ros::AsyncSpinner spinner(2);
