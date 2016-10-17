@@ -264,7 +264,7 @@ void Recognizer::publishROS()
   //add all world objects to message
   orp::WorldObjects objectMsg;
   visualization_msgs::MarkerArray markerMsg, labelMsg;
-  
+
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
