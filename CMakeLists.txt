@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8.3)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 project(orp)
 
 set(GCC_COVERAGE_COMPILE_FLAGS "-Wno-enum-compare -ggdb")
@@ -13,7 +12,21 @@ set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAG
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS pcl_ros roscpp sensor_msgs std_msgs geometry_msgs message_generation tf tf_conversions eigen_conversions interactive_markers cv_bridge obj_interface)
+find_package(catkin REQUIRED COMPONENTS
+    pcl_ros
+    roscpp
+    sensor_msgs
+    std_msgs
+    geometry_msgs
+    message_generation
+    tf
+    tf_conversions
+    eigen_conversions
+    pcl_conversions
+    interactive_markers
+    cv_bridge
+    obj_interface
+)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 
@@ -56,10 +69,13 @@ generate_messages(
 
 catkin_package(
     INCLUDE_DIRS include
+    LIBRARIES orp
     CATKIN_DEPENDS message_runtime pcl_ros roscpp sensor_msgs std_msgs obj_interface
+    DEPENDS pcl
 )
 
-include_directories(include
+include_directories(
+    include
     ${catkin_INCLUDE_DIRS}
 )
 
