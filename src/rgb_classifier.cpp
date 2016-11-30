@@ -114,7 +114,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       }
 
       color = getColor(M);
-      thisObject.label = "cube_" + color;
+      thisObject.label = "obj_" + color;
       thisObject.pose.header.frame_id = eachCloud->header.frame_id;
       tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
 

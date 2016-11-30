@@ -158,7 +158,7 @@ void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       finalPose.linear() = rotMat;
       
       tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
-      thisObject.label = "cube_red";
+      thisObject.label = "obj_red";
       classRes.result.push_back(thisObject);
       delete[] kIndices.ptr();
       delete[] kDistances.ptr();
