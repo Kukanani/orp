@@ -85,11 +85,11 @@
     name    = "recognizer"
     pkg     = "orp"
     type    = "recognizer"
-    args    = "$(arg autostart)"
-    required= "true"
     output  = "screen"
+    respawn = "true"
   >
     <param name="recognitionFrame" value="world"/>
+    <param name="autostart" type="bool" value="$(arg autostart)"/>
   </node>
 
   <!-- VISUALIZATION AND CONFIGURATION -->

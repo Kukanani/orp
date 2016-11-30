@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "recognizer");
 
   //get started
-  Recognizer s();
+  Recognizer s;
 
   //Run ROS until shutdown
   ros::AsyncSpinner spinner(2);
@@ -264,7 +264,7 @@ void Recognizer::publishROS()
   //add all world objects to message
   orp::WorldObjects objectMsg;
   visualization_msgs::MarkerArray markerMsg, labelMsg;
-  
+
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
