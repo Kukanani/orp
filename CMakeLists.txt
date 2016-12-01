@@ -38,6 +38,7 @@ add_message_files(
     FILES
     ClassificationResult.msg
     WorldObjects.msg
+    Region.msg
 )
 
 add_service_files(
@@ -49,6 +50,7 @@ add_service_files(
     RunData.srv
     SaveCloud.srv
     Segmentation.srv
+    Monitor.srv
 )
 
 generate_dynamic_reconfigure_options(
@@ -97,6 +99,10 @@ target_link_libraries(recognizer ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp)
 add_executable(segmentation src/segmentation.cpp)
 add_dependencies(segmentation ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(segmentation ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+
+add_executable(region_monitor src/region_monitor.cpp)
+add_dependencies(region_monitor ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+target_link_libraries(region_monitor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
 
 ####################################################################################################
 

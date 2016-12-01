@@ -55,7 +55,7 @@ Segmentation::Segmentation() :
 {
   ros::NodeHandle privateNode("~");
   if(!privateNode.getParam("clippingFrame", transformToFrame)) {
-    transformToFrame = "world";
+    transformToFrame = "odom";
   }
 
   boundedScenePublisher = node.advertise<sensor_msgs::PointCloud2>("/bounded_scene",1);
