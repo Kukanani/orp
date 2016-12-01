@@ -1,4 +1,4 @@
-cube_blue:
+obj_blue:
   blue: 1
   depth: 25.4
   geometry: BOX
@@ -10,7 +10,7 @@ cube_blue:
   roll: 0.0
   width: 25.4
   yaw: 0.0
-cube_green:
+obj_green:
   blue: 0
   depth: 25.4
   geometry: BOX
@@ -22,7 +22,7 @@ cube_green:
   roll: 0.0
   width: 25.4
   yaw: 0.0
-cube_orange:
+obj_orange:
   blue: 0
   depth: 25.4
   geometry: BOX
@@ -34,7 +34,7 @@ cube_orange:
   roll: 0.0
   width: 25.4
   yaw: 0.0
-cube_purple:
+obj_purple:
   blue: 1
   depth: 25.4
   geometry: BOX
@@ -46,7 +46,7 @@ cube_purple:
   roll: 0.0
   width: 25.4
   yaw: 0.0
-cube_red:
+obj_red:
   blue: 0
   depth: 25.4
   geometry: BOX
@@ -58,7 +58,7 @@ cube_red:
   roll: 0.0
   width: 25.4
   yaw: 0.0
-cube_yellow:
+obj_yellow:
   blue: 0
   depth: 25.4
   geometry: BOX

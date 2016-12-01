@@ -2,7 +2,7 @@
   <arg name="data_folder" default="data" />
   <arg name="list" default="cfg/test_1.list" />
   
-  <rosparam command="load" param="items/" file="$(find orp)/data/colored_cubes.yaml" />
+  <rosparam command="load" param="items/" file="$(find orp)/data/colored_objs.yaml" />
 
   <include file="$(find orp)/launch/orp.launch">
     <arg name="openni2"          value="true"/>
