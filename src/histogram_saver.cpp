@@ -1,32 +1,22 @@
-///////////////////////////////////////////////////////////////////////////////
-//      Title     : Histogram Saver
-//      Project   : NRG ORP
-//      Created   : 1/21/2015
-//      Author    : Adam Allevato
-//      Platforms : Ubuntu 64-bit
-//      Copyright : Copyright© The University of Texas at Austin, 2014-2017. All rights reserved.
-//                 
-//          All files within this directory are subject to the following, unless an alternative
-//          license is explicitly included within the text of each file.
-//
-//          This software and documentation constitute an unpublished work
-//          and contain valuable trade secrets and proprietary information
-//          belonging to the University. None of the foregoing material may be
-//          copied or duplicated or disclosed without the express, written
-//          permission of the University. THE UNIVERSITY EXPRESSLY DISCLAIMS ANY
-//          AND ALL WARRANTIES CONCERNING THIS SOFTWARE AND DOCUMENTATION,
-//          INCLUDING ANY WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-//          PARTICULAR PURPOSE, AND WARRANTIES OF PERFORMANCE, AND ANY WARRANTY
-//          THAT MIGHT OTHERWISE ARISE FROM COURSE OF DEALING OR USAGE OF TRADE.
-//          NO WARRANTY IS EITHER EXPRESS OR IMPLIED WITH RESPECT TO THE USE OF
-//          THE SOFTWARE OR DOCUMENTATION. Under no circumstances shall the
-//          University be liable for incidental, special, indirect, direct or
-//          consequential damages or loss of profits, interruption of business,
-//          or related expenses which may arise from use of software or documentation,
-//          including but not limited to those resulting from defects in software
-//          and/or documentation, or loss or inaccuracy of data of any kind.
-//
-///////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2015, Adam Allevato
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+// 
+// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution.
+// 
+// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this
+// software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "collector/histogram_saver.h"
 
@@ -44,7 +34,7 @@ int main(int argc, char **argv)
 }; //main
 
 HistogramSaver::HistogramSaver(ros::NodeHandle nh, std::string location) : n(nh), feature(),
-  savePCD(false), saveCPH(false), saveVFH(false), saveCVFH(false), outDir(location), tableCenterPoint()
+  savePCD(false), saveCVFH(false), outDir(location), tableCenterPoint()
 {
   //Set up ROS
   saveCloudSrv = n.advertiseService("save_cloud", &HistogramSaver::cb_saveCloud, this );
@@ -60,15 +50,10 @@ void HistogramSaver::paramsChanged(
 {
 
   savePCD = config.save_pcd;
-  saveCPH = config.save_cph;
-  saveVFH = config.save_vfh;
   saveCVFH = config.save_cvfh;
   save6DOF = config.save_sixdof;
 
   cvfhRadiusSearch = config.cvfh_radius_search;
-  vfhRadiusSearch = config.vfh_radius_search;
-  cphVerticalBins = config.cph_vertical_bins;
-  cphRadialBins = config.cph_radial_bins;
 } //paramsChanaged
 
 void HistogramSaver::setTableCenterPoint(float x, float y, float z) {
@@ -102,19 +87,13 @@ void HistogramSaver::cb_setTableCenterPoint(geometry_msgs::Vector3 _tableCenterP
 
 bool HistogramSaver::saveCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle) {
   ROS_INFO_STREAM(name << " cluster has " << cluster->height*cluster->width << " points.");
-  if(!savePCD && !saveCPH && !saveVFH && !saveCVFH && !save6DOF) {
+  if(!savePCD && !saveCVFH && !save6DOF) {
     ROS_WARN("Not saving any types of output files. Use rqt_reconfigure to turn on output.");
     return false;
   }
 
   if(savePCD) {
     writeRawCloud(cluster, name, angle);
-  }
-  if(saveCPH) {
-    writeCPH(cluster, name, angle);
-  }
-  if(saveVFH) {
-    writeVFH(cluster, name, angle);
   }
   if(saveCVFH) {
     writeCVFH(cluster, name, angle);
@@ -125,83 +104,6 @@ bool HistogramSaver::saveCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   return true;
 } //saveCloud
 
-void HistogramSaver::writeRawCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
-  int angle)
-{
-  std::stringstream fileName_ss;
-  fileName_ss << outDir << "/" << name.c_str() << "_" << angle << ".pcd";
-
-  char thepath3[200];
-  realpath(fileName_ss.str().c_str(), thepath3);
-
-  //Write raw pcd file (objecName_angle.pcd)
-  ROS_INFO_STREAM("writing raw cloud to file '" << thepath3 << "'");
-  pcl::io::savePCDFile(thepath3, *cluster);
-  ROS_DEBUG("done");
-}
-
-void HistogramSaver::writeVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
-  int angle)
-{
-  pcl::VFHEstimation<ORPPoint, pcl::Normal, pcl::VFHSignature308> vfh;
-  vfh.setInputCloud (cluster);
-
-  //Estimate normals:
-  pcl::NormalEstimation<ORPPoint, pcl::Normal> ne;
-  ne.setInputCloud (cluster);
-  pcl::search::KdTree<ORPPoint>::Ptr tree (new pcl::search::KdTree<ORPPoint> ());
-  ne.setSearchMethod (tree);
-  pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
-  ne.setRadiusSearch (vfhRadiusSearch);
-  ne.compute (*cloud_normals);
-  vfh.setInputNormals (cloud_normals);
-
-  //Estimate vfh:
-  vfh.setSearchMethod (tree);
-  pcl::PointCloud<pcl::VFHSignature308>::Ptr vfhs (new pcl::PointCloud<pcl::VFHSignature308> ());
-
-  // Compute the feature
-  vfh.compute (*vfhs);
-
-  //Write to file: (objectName_angle_vfh.pcd)
-  std::stringstream fileName_ss;
-  fileName_ss << outDir << "/" << name.c_str() << "_" << angle << ".vfh";
-
-  char thepath[200];
-  realpath(fileName_ss.str().c_str(), thepath);
-
-  ROS_INFO_STREAM("Writing VFH to file '" << thepath << "'...");
-  pcl::io::savePCDFile(thepath, *vfhs);
-  ROS_DEBUG("done");
-} //writeVFH
-
-void HistogramSaver::writeCPH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
-  int angle)
-{
-  //Extract cph
-  feature.clear();
-
-  CPH cph(cphVerticalBins, cphRadialBins);
-  cph.setInputCloud(cluster);
-  cph.compute(feature);
-  std::stringstream fileName_ss;
-  fileName_ss << outDir << "/" << name.c_str() << "_" << angle << ".cph";
-
-  char thepath2[200];
-  realpath(fileName_ss.str().c_str(), thepath2);
-
-  //Write cph to file. (objectName_angle.csv)
-  ROS_INFO_STREAM("Writing CPH to file '" << thepath2 << "'");
-  std::ofstream outFile;
-  outFile.open(thepath2);
-
-  for(unsigned int j=0; j<feature.size(); j++){
-    outFile << feature.at(j) << " "; 
-  }
-  outFile.close();
-  fileName_ss.str("");
-  ROS_DEBUG("done");
-} //writeCPH
 
 void HistogramSaver::writeCVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
   int angle)
@@ -233,6 +135,21 @@ void HistogramSaver::writeCVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   ROS_INFO_STREAM("Writing CVFH to file '" << fileName_ss.str().c_str() << "'...");
   pcl::io::savePCDFile(fileName_ss.str(), *cvfhs);
 } //writeCVFH
+
+void HistogramSaver::writeRawCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
+  int angle)
+{
+  std::stringstream fileName_ss;
+  fileName_ss << outDir << "/" << name.c_str() << "_" << angle << ".pcd";
+
+  char thepath3[200];
+  realpath(fileName_ss.str().c_str(), thepath3);
+
+  //Write raw pcd file (objecName_angle.pcd)
+  ROS_INFO_STREAM("writing raw cloud to file '" << thepath3 << "'");
+  pcl::io::savePCDFile(thepath3, *cluster);
+  ROS_DEBUG("done");
+}
 
 //http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_5:_3D_object_recognition_(pipeline)
 typedef pcl::Histogram<90> CRH90;

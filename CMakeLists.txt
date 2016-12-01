@@ -106,10 +106,6 @@ target_link_libraries(region_monitor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp 
 
 ####################################################################################################
 
-add_executable(cph_classifier src/cph_classifier.cpp)
-add_dependencies(cph_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-target_link_libraries(cph_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-
 add_executable(sixdof_classifier src/sixdof_classifier.cpp)
 add_dependencies(sixdof_classifier ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
 target_link_libraries(sixdof_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
