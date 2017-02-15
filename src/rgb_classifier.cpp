@@ -60,20 +60,21 @@ int main(int argc, char **argv)
   return 1;
 } //main
 
+
 RGBClassifier::RGBClassifier(std::string dataFolder, bool autostart):
   Classifier(10000, "rgb", dataFolder, ".rgb", autostart)
 {
 
-} //RGBClassifier
+}
 
-bool RGBClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &RGB) {
+bool RGBClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &RGB)
+{
   //no histogram loading
   return true;
-} //loadHist
+}
 
-double testLast = 0; // used for debug testing
-
-void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
+void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
+{
   orp::ClassificationResult classRes;
   classRes.method = "rgb";
 
@@ -87,9 +88,31 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       if(eachCloud->width < 3) {
         continue;
       }
-      obj_interface::WorldObject thisObject;
       pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
       pcl::fromROSMsg(*eachCloud, *thisCluster);
+
+      std::string color = "unknown";
+      M.release();
+      M = cv::Mat(thisCluster->points.size(), 1, CV_8UC3, cv::Scalar(0,0,0));
+      int i = 0;
+
+      pcl::PointCloud<ORPPoint>::iterator point;
+      float r=0, g=0, b=0;
+
+      for(point = thisCluster->points.begin(); point < thisCluster->points.end(); ++point, ++i) {
+        r += point->r;
+        g += point->g;
+        b += point->b;
+      }
+
+      std::cout << "M has " << eachCloud->width << " elements." << std::endl;
+
+      color = getColor(r, g, b);
+
+      obj_interface::WorldObject thisObject;
+      thisObject.label = "obj_" + color;
+      thisObject.pose.header.frame_id = eachCloud->header.frame_id;
+
 
       Eigen::Vector4f clusterCentroid;
       pcl::compute3DCentroid(*thisCluster, clusterCentroid);
@@ -98,71 +121,47 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       finalPose(0,3) = clusterCentroid(0);
       finalPose(1,3) = clusterCentroid(1);
       finalPose(2,3) = clusterCentroid(2);
-
-      std::string color = "unknown";
-      M.release();
-      int DISP_HEIGHT=1;
-      M = cv::Mat(eachCloud->width, DISP_HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-      int i = 0;
-
-      pcl::PointCloud<ORPPoint>::iterator point;
-      for(point = thisCluster->points.begin(); point < thisCluster->points.end(); ++point, ++i) {
-        cv::Vec3b color = cv::Vec3b(point->b, point->g, point->r);
-        for(int y = 0; y < DISP_HEIGHT; ++y) {
-          M.at<cv::Vec3b>(cv::Point(y, i)) = color;
-        }
-      }
-
-      color = getColor(M);
-      thisObject.label = "obj_" + color;
-      thisObject.pose.header.frame_id = eachCloud->header.frame_id;
       tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
 
       classRes.result.push_back(thisObject);
-      delete[] kIndices.ptr();
-      delete[] kDistances.ptr();
     }
   }
   classificationPub.publish(classRes);
-} //classify
+}
 
 
 inline uchar reduceVal(const uchar val)
 {
-    if (val < 64) return 0;
-    if (val < 128) return 64;
-    return 255;
+  if (val < 64) return 0;
+  if (val < 128) return 64;
+  return 255;
 }
 
 void RGBClassifier::processColors(cv::Mat& img)
 {
-    uchar* pixelPtr = img.data;
-    for (int i = 0; i < img.rows; i++)
+  uchar* pixelPtr = img.data;
+  for (int i = 0; i < img.rows; i++)
+  {
+    for (int j = 0; j < img.cols; j++)
     {
-        for (int j = 0; j < img.cols; j++)
-        {
-            const int pi = i*img.cols*3 + j*3;
-            pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
-            pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
-            pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
-            if(pixelPtr[pi+0] == 64) pixelPtr[pi+0] = 127;
-            if(pixelPtr[pi+1] == 64) pixelPtr[pi+1] = 127;
-            if(pixelPtr[pi+2] == 64) pixelPtr[pi+2] = 127;
-        }
+      const int pi = i*img.cols*3 + j*3;
+      pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
+      pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
+      pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
+      if(pixelPtr[pi+0] == 64) pixelPtr[pi+0] = 127;
+      if(pixelPtr[pi+1] == 64) pixelPtr[pi+1] = 127;
+      if(pixelPtr[pi+2] == 64) pixelPtr[pi+2] = 127;
     }
+  }
 }
 
-std::string RGBClassifier::getColor(cv::Mat& img) {
-
-  //sum the red channel (BGR pixel representation)
-  double r = cv::sum(img)[2];
-
-  //sum the green channel
-  double g = cv::sum(img)[1];
-
-  //sum the blue channel
-  double b = cv::sum(img)[0];
-
+std::string RGBClassifier::getColor(float r, float g, float b)
+{
+  // This function used to take a cv::Mat and use the cv::sum function to calculate the r, g, and b
+  // values in one line each. However, this began giving me segfaults after migrating to a new machine.
+  // I don't know the exact issue, but I suspect a conflict with OpenCV versions 2 and 3. Whatever
+  // the reason, you now have the pass the r/g/b values directly to this function.
+  
   //which is greater?
   if(r > g && r > b) return "red";
   else if(g > r && g > b) return "green";
