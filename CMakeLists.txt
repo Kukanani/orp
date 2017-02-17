@@ -67,7 +67,7 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES orp
     CATKIN_DEPENDS message_runtime pcl_ros roscpp sensor_msgs std_msgs obj_interface
-    DEPENDS pcl
+    # DEPENDS PCL
 )
 
 include_directories(
