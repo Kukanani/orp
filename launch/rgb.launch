@@ -1,6 +1,7 @@
 <launch>
   <arg name="data_folder" default="data" />
-  <arg name="list" default="cfg/test_1.list" />
+  <arg name="list" default="$(find orp)/cfg/test_1.list" />
+  <arg name="rviz" default="true" />
   
   <rosparam command="load" param="items/" file="$(find orp)/data/colored_objs.yaml" />
 
@@ -8,7 +9,7 @@
     <arg name="openni2"          value="true"/>
     <arg name="list"             value="$(arg list)"/>
     <arg name="autostart"        value="true" />
-    <arg name="rviz"             value="true" />
+    <arg name="rviz"             value="$(arg rviz)" />
     <arg name="rviz_file"        value="$(find orp)/cfg/recognition.rviz" />
   </include>
 
@@ -17,8 +18,26 @@
     pkg     = "orp"
     type    = "rgb_classifier"
     args    = ". true"
-
     respawn = "true"
+  />
+
+  <node
+    name    = "$(anon sixdof3)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation min_cluster_size 35"
+
+    respawn = "false"
+    output  = "screen"
+  />
+  
+  <node
+    name    = "$(anon sixdof4)"
+    pkg     = "dynamic_reconfigure"
+    type    = "dynparam"
+    args    = "set segmentation max_cluster_size 150"
+
+    respawn = "false"
     output  = "screen"
   />
 

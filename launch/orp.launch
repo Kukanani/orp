@@ -27,7 +27,10 @@
   
   <!-- DATA -->
   <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
-  <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">  </include>
+  <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">
+    <arg name="rgb_camera_info_url" value="file://$(find orp)/camera_calib/rgb_PS1080_PrimeSense.yaml" />
+    <arg name="depth_camera_info_url" value="file://$(find orp)/camera_calib/depth_PS1080_PrimeSense.yaml" />
+  </include>
   <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_rviz.launch"> </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
 
