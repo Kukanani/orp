@@ -1,1 +1,1 @@
-obj_interface/WorldObject[] objects
+orp/WorldObject[] objects

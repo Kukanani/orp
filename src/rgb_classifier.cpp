@@ -87,7 +87,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       if(eachCloud->width < 3) {
         continue;
       }
-      obj_interface::WorldObject thisObject;
+      orp::WorldObject thisObject;
       pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
       pcl::fromROSMsg(*eachCloud, *thisCluster);
 

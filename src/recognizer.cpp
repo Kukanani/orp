@@ -25,7 +25,7 @@
 #include <eigen_conversions/eigen_msg.h>
 #include <tf/transform_datatypes.h>
 
-#include "grasp_generator.h"
+#include "core/grasp_generator.h"
 
 // program entry point
 int main(int argc, char **argv)
@@ -147,7 +147,7 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
 void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
 {
   for(int i=0; i < objects.result.size(); ++i) {
-    obj_interface::WorldObject newObject = objects.result[i];
+    orp::WorldObject newObject = objects.result[i];
     if(newObject.label != "") {
       //transform into recognition frame
       std::string sourceFrame = newObject.pose.header.frame_id;
@@ -258,7 +258,7 @@ void Recognizer::publishROS()
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
-    obj_interface::WorldObject newObject;
+    orp::WorldObject newObject;
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
@@ -298,7 +298,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
-    obj_interface::WorldObject newObject;
+    orp::WorldObject newObject;
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);

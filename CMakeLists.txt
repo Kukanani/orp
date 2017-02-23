@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
     pcl_conversions
     interactive_markers
     cv_bridge
-    obj_interface
 )
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
@@ -31,6 +30,7 @@ find_package(OpenCV REQUIRED)
 add_message_files(
     FILES
     ClassificationResult.msg
+    WorldObject.msg
     WorldObjects.msg
     Region.msg
 )
@@ -56,7 +56,7 @@ generate_dynamic_reconfigure_options(
 
 generate_messages(
     DEPENDENCIES
-    sensor_msgs std_msgs geometry_msgs obj_interface
+    sensor_msgs std_msgs geometry_msgs
 )
 
 ###################################
@@ -66,8 +66,8 @@ generate_messages(
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES orp
-    CATKIN_DEPENDS message_runtime pcl_ros roscpp sensor_msgs std_msgs obj_interface
-    # DEPENDS PCL
+    CATKIN_DEPENDS pcl_ros sensor_msgs std_msgs
+    # DEPENDS 
 )
 
 include_directories(
@@ -80,6 +80,9 @@ include_directories(
 add_library(orp
     src/classifier.cpp
     src/orp_utils.cpp
+    src/world_object.cpp
+    src/world_object_manager.cpp
+    src/grasp_generator.cpp
 )
 add_dependencies(orp ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(orp ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES})

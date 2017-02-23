@@ -98,7 +98,7 @@ void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
 
   if(!clouds.empty()) {
     for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
-      obj_interface::WorldObject thisObject;
+      orp::WorldObject thisObject;
       if(eachCloud->width < 3) {
         //ROS_INFO("Cloud too small!");
         continue;

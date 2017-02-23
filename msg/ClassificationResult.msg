@@ -1,2 +1,2 @@
-obj_interface/WorldObject[] result
+orp/WorldObject[] result
 string method
