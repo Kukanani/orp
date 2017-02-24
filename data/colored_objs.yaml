@@ -1,72 +1,72 @@
 obj_blue:
   blue: 1
-  depth: 25.4
+  depth: 0.0254
   geometry: BOX
   green: 0
-  height: 25.4
+  height: 0.0254
   mass: 8
   pitch: 0.0
   red: 0
   roll: 0.0
-  width: 25.4
+  width: 0.0254
   yaw: 0.0
 obj_green:
   blue: 0
-  depth: 25.4
+  depth: 0.0254
   geometry: BOX
   green: 1
-  height: 25.4
+  height: 0.0254
   mass: 8
   pitch: 0.0
   red: 0
   roll: 0.0
-  width: 25.4
+  width: 0.0254
   yaw: 0.0
 obj_orange:
   blue: 0
-  depth: 25.4
+  depth: 0.0254
   geometry: BOX
   green: 0.5
-  height: 25.4
+  height: 0.0254
   mass: 8
   pitch: 0.0
   red: 1
   roll: 0.0
-  width: 25.4
+  width: 0.0254
   yaw: 0.0
 obj_purple:
   blue: 1
-  depth: 25.4
+  depth: 0.0254
   geometry: BOX
   green: 0
-  height: 25.4
+  height: 0.0254
   mass: 8
   pitch: 0.0
   red: 1
   roll: 0.0
-  width: 25.4
+  width: 0.0254
   yaw: 0.0
 obj_red:
   blue: 0
-  depth: 25.4
+  depth: 0.0254
   geometry: BOX
   green: 0
-  height: 25.4
+  height: 0.0254
   mass: 8
   pitch: 0.0
   red: 1
   roll: 0.0
-  width: 25.4
+  width: 0.0254
   yaw: 0.0
 obj_yellow:
   blue: 0
-  depth: 25.4
+  depth: 0.0254
   geometry: BOX
   green: 1
-  height: 25.4
+  height: 0.0254
   mass: 8
   pitch: 0.0
   red: 1
   roll: 0.0
-  width: 25.4
+  width: 0.0254
   yaw: 0.0

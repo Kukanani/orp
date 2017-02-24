@@ -58,7 +58,7 @@ public:
   /**
    * Get a string name that represents the most common color in this image.
    */
-  std::string getColor(cv::Mat& img);
+  std::string getColor(float r, float g, float b);
 };
 
 #endif

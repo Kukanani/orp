@@ -88,7 +88,8 @@ add_library(orp
     src/world_object_manager.cpp
     src/grasp_generator.cpp
 )
-add_dependencies(orp ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(orp ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp obj_interface_generate_messages)
+
 target_link_libraries(orp ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 ####################################################################################################
@@ -99,7 +100,7 @@ target_link_libraries(recognizer ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp)
 
 add_executable(segmentation src/segmentation.cpp)
 add_dependencies(segmentation ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(segmentation ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+target_link_libraries(segmentation ${catkin_LIBRARIES} orp )
 
 # add_executable(region_monitor src/region_monitor.cpp)
 # add_dependencies(region_monitor ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
@@ -113,11 +114,11 @@ target_link_libraries(sixdof_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} o
 
 add_executable(rgb_classifier src/rgb_classifier.cpp)
 add_dependencies(rgb_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(rgb_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
+target_link_libraries(rgb_classifier ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
-add_executable(cylinder_classifier src/cylinder_classifier.cpp)
-add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
+# add_executable(cylinder_classifier src/cylinder_classifier.cpp)
+# add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+# target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 # add_executable(linemod_train src/linemod_train.cpp)
 # add_dependencies(linemod_train ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)

@@ -50,7 +50,7 @@ std::vector<Grasp> GraspGenerator::generateAxisGrabs(WorldObject target, float a
   //approach from positive z
   grasp = Grasp();
   
-  orientation.setEuler(0,-M_PI/2.0,0);
+  orientation.setEuler(0,M_PI,0);
   grasp.approachPose.getOrigin().setZ(approachDist);
   
   grasp.graspPose.setRotation(orientation);
