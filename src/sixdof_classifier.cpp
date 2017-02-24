@@ -18,7 +18,9 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "classifier/sixdof_classifier.h"
+#include "orp/classifier/sixdof_classifier.h"
+
+#include <boost/filesystem.hpp>
 
 /**
  * Starts up the name and handles command-line arguments.
@@ -28,35 +30,21 @@
  */
 int main(int argc, char **argv)
 {
-  srand (static_cast <unsigned> (time(0)));
-
   ros::init(argc, argv, "sixdof_classifier");
-  pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
-
-  if(argc < 3) {
-    ROS_FATAL("proper usage is 'sixdof_classifier data_directory object_list_file [autostart]");
-    return -1;
-  }
-  std::string directory = argv[1];
-  std::string listFile = argv[2];
-  bool autostart = false;
-  if(argc >= 4) {
-    if(std::string(argv[3])  == "true") autostart = true;
-  }
 
   ROS_INFO("Starting SixDOF Classifier");
-  SixDOFClassifier v(directory, autostart);
+  SixDOFClassifier v;
   v.init();
 
   ros::spin();
   return 1;
 } //main
 
-SixDOFClassifier::SixDOFClassifier(std::string dataFolder, bool autostart):
-  Classifier(10000, "sixdof", dataFolder, ".cvfh", autostart)
+SixDOFClassifier::SixDOFClassifier():
+  NNClassifier()
 {
-
-} //SixDOFClassifier
+  NNClassifier::init();
+}
 
 bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &sixdof) {
   //ROS_INFO("Loading histogram %s", path.string().c_str());
@@ -109,7 +97,7 @@ bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVect
 
   sixdof.first = kp;
   return true;
-} //loadHist
+}
 
 double testLast = 0; // used for debug testing
 
@@ -119,7 +107,7 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
-  segmentationClient.call(seg_srv);
+  segmentation_client_.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
 
   if(!clouds.empty()) {
@@ -240,5 +228,5 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       delete[] kDistances.ptr();
     }
   }
-  classificationPub.publish(classRes);
+  classification_pub_.publish(classRes);
 } //classify

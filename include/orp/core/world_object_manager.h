@@ -24,17 +24,9 @@
 #include <map>
 #include <stdexcept>
 
-#include "core/world_object.h"
+#include "orp/core/world_object.h"
 /**
  * @brief Keeps track of world object types so that their properties remain constant.
- *
- * @version 2.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author    Adam Allevato <allevato@utexas.edu>
- * @copyright BSD 3-paragraph
- * @date      1/29/2015
  */
 class WorldObjectManager {
 private:

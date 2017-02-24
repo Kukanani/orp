@@ -77,14 +77,6 @@ enum ObjectShape {
  *
  * If objects need to be distinguished from each other, they need to be
  * of different WorldObjectType.
- *
- * @version 1.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author    Adam Allevato <allevato@utexas.edu>
- * @copyright BSD 3-paragraph
- * @date      1/29/2015
  */
 struct WorldObjectType {
 protected:
@@ -169,7 +161,6 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 }; //WorldObjectType
 
-
 /**
  * @brief Represents an object in the world as a probabilistic model.
  * 
@@ -178,14 +169,6 @@ public:
  *
  * A WorldObject does not have to have a probability for each type. If no probability
  * exists, it is assumed to be 0.
- *
- * @version 1.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author    Adam Allevato <allevato@utexas.edu>
- * @copyright BSD 3-paragraph
- * @date      1/29/2015
  */
 
 const float APPROACH_DIST = 0.04f;

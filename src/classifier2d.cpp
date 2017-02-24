@@ -18,55 +18,28 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "orp/core/classifier.h"
+#include "orp/core/classifier2d.h"
+#include "orp/core/world_object.h"
+#include "orp/core/orp_utils.h"
 
-Classifier::Classifier():
-  node_private_("~"),
-  node_("")
+Classifier2D::Classifier2D():
+  Classifier(),
+  image_transport_(node_)
 {
-  //load configuration parameters and defaults
-  node_private_.param<std::string>("classification_topic", classification_topic_, "/classification");
-  node_private_.param<std::string>("start_topic", start_topic_, "/orp_start_recognition");
-  node_private_.param<std::string>("stop_topic", stop_topic_, "/orp_stop_recognition");
-
-  start_sub_ = node_.subscribe(start_topic_, 1, &Classifier::cb_start, this);
-  stop_sub_ = node_.subscribe(stop_topic_, 1, &Classifier::cb_stop, this);
+  node_private_.param<std::string>("image_topic", image_topic_, "/camera/rgb/image_raw");
 }
 
-void Classifier::init()
+void Classifier2D::start()
 {
-  //autostart
-  bool autostart = true;
-  node_.param<bool>("autostart", autostart, true);
-  if(autostart) {
-    ROS_INFO("Classifier is autostarting");
-    start();
-  }
-  else {
-  }
+  Classifier::start();
+  image_sub_ = image_transport_.subscribe(image_topic_, 1, &Classifier2D::cb_classify, this);
 }
 
-void Classifier::start()
+void Classifier2D::stop()
 {
-    ROS_INFO("Classifier is starting");
-  classification_pub_ = node_.advertise<orp::ClassificationResult>(classification_topic_, 10);
-}
-
-void Classifier::stop()
-{
-  if(classification_pub_ != NULL)
+  Classifier::stop();
+  if(image_sub_ != NULL)
   {
-    ROS_INFO("Classifier is shutting down");
-    classification_pub_.shutdown();
+    image_sub_.shutdown();
   }
-}
-
-void Classifier::cb_start(std_msgs::Empty msg)
-{
-  start();
-}
-
-void Classifier::cb_stop(std_msgs::Empty msg)
-{
-  stop();
 }

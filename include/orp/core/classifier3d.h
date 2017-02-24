@@ -18,55 +18,44 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef _CLASSIFIER_3D_H_
+#define _CLASSIFIER_3D_H_
+
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
+
+#include <orp/Segmentation.h>
+
 #include "orp/core/classifier.h"
 
-Classifier::Classifier():
-  node_private_("~"),
-  node_("")
-{
-  //load configuration parameters and defaults
-  node_private_.param<std::string>("classification_topic", classification_topic_, "/classification");
-  node_private_.param<std::string>("start_topic", start_topic_, "/orp_start_recognition");
-  node_private_.param<std::string>("stop_topic", stop_topic_, "/orp_stop_recognition");
+/**
+ * @brief   A 3D classifier
+ *
+ * Extension of the basic classifier, but includes a segmentation client and depth subscriber.
+ */
+class Classifier3D : public Classifier {
+protected:
+  /// Name of topic on which to listen for depth data.
+  std::string depth_topic_;
+  /// Collects depth camera point clouds
+  ros::Subscriber depth_sub_; 
 
-  start_sub_ = node_.subscribe(start_topic_, 1, &Classifier::cb_start, this);
-  stop_sub_ = node_.subscribe(stop_topic_, 1, &Classifier::cb_stop, this);
-}
+  /// Name of the service for segmentation
+  std::string segmentation_service_;
+  /// Makes calls to the segmentation server
+  ros::ServiceClient segmentation_client_;
 
-void Classifier::init()
-{
-  //autostart
-  bool autostart = true;
-  node_.param<bool>("autostart", autostart, true);
-  if(autostart) {
-    ROS_INFO("Classifier is autostarting");
-    start();
-  }
-  else {
-  }
-}
+public:
+  /**
+   * Constructor. Don't forget to call init() afterwards.
+   */
+  Classifier3D();
 
-void Classifier::start()
-{
-    ROS_INFO("Classifier is starting");
-  classification_pub_ = node_.advertise<orp::ClassificationResult>(classification_topic_, 10);
-}
+  virtual void cb_classify(sensor_msgs::PointCloud2 cloud) = 0;
 
-void Classifier::stop()
-{
-  if(classification_pub_ != NULL)
-  {
-    ROS_INFO("Classifier is shutting down");
-    classification_pub_.shutdown();
-  }
-}
+  virtual void start();
+  
+  virtual void stop();
+};
 
-void Classifier::cb_start(std_msgs::Empty msg)
-{
-  start();
-}
-
-void Classifier::cb_stop(std_msgs::Empty msg)
-{
-  stop();
-}
+#endif

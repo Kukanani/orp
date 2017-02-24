@@ -18,7 +18,7 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "classifier/cylinder_classifier.h"
+#include "orp/classifier/cylinder_classifier.h"
 
 #include <sstream>
 
@@ -30,21 +30,10 @@
  */
 int main(int argc, char **argv)
 {
-  srand (static_cast <unsigned> (time(0)));
-
   ros::init(argc, argv, "cylinder_classifier");
 
-  if(argc < 2) {
-    ROS_FATAL("proper usage is 'cylinder_classifier [autostart]");
-    return -1;
-  }
-  bool autostart = false;
-  if(argc >= 2) {
-    if(std::string(argv[1])  == "true") autostart = true;
-  }
-
   ROS_INFO("Starting Cylinder Classifier");
-  CylinderClassifier v(autostart);
+  CylinderClassifier v;
   v.init();
 
   ros::AsyncSpinner spinner(2);
@@ -54,19 +43,18 @@ int main(int argc, char **argv)
   return 1;
 } //main
 
-CylinderClassifier::CylinderClassifier(bool autostart):
-  Classifier(10000, "cylinder", ".", ".cylinder", autostart),
+CylinderClassifier::CylinderClassifier():
+  Classifier3D(),
   normalDistanceWeight(0.1),
   maxIterations(10000),
   distanceThreshold(0.05),
   minRadius(0.0005),
   maxRadius(0.1)
 {
-
   //dynamic reconfigure
   reconfigureCallbackType = boost::bind(&CylinderClassifier::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
-} //CylinderClassifier
+}
 
 void CylinderClassifier::paramsChanged(orp::CylinderClassifierConfig &config, uint32_t level)
 {
@@ -76,12 +64,7 @@ void CylinderClassifier::paramsChanged(orp::CylinderClassifierConfig &config, ui
   minRadius = config.min_radius;
   maxRadius = config.max_radius;
 
-} //paramsChanged
-
-bool CylinderClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &Cylinder) {
-  //no histogram loading
-  return true;
-} //loadHist
+}
 
 void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
@@ -91,7 +74,7 @@ void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
   //ROS_INFO("Cylinder classifier calling segmentation");
-  segmentationClient.call(seg_srv);
+  segmentation_client_.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
   //ROS_INFO("Cylinder classifier finished calling segmentation");
   //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);
@@ -160,9 +143,7 @@ void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
       thisObject.label = "obj_red";
       classRes.result.push_back(thisObject);
-      delete[] kIndices.ptr();
-      delete[] kDistances.ptr();
     }
   }
-  classificationPub.publish(classRes);
-} //classify
+  classification_pub_.publish(classRes);
+}

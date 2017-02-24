@@ -1,4 +1,4 @@
-// Copyright (c) 2017, Adam Allevato
+// Copyright (c) 2015, Adam Allevato
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -18,55 +18,45 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "orp/core/classifier.h"
+#ifndef _SIXDOF_CLASSIFIER_H_
+#define _SIXDOF_CLASSIFIER_H_
 
-Classifier::Classifier():
-  node_private_("~"),
-  node_("")
-{
-  //load configuration parameters and defaults
-  node_private_.param<std::string>("classification_topic", classification_topic_, "/classification");
-  node_private_.param<std::string>("start_topic", start_topic_, "/orp_start_recognition");
-  node_private_.param<std::string>("stop_topic", stop_topic_, "/orp_stop_recognition");
+#include <pcl/features/cvfh.h>
+#include <pcl/features/crh.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/recognition/crh_alignment.h>
 
-  start_sub_ = node_.subscribe(start_topic_, 1, &Classifier::cb_start, this);
-  stop_sub_ = node_.subscribe(stop_topic_, 1, &Classifier::cb_stop, this);
-}
+#include <pcl_ros/transforms.h>
+#include <tf/transform_listener.h>
+//NRG internal files
+#include "orp/core/nn_classifier.h"
 
-void Classifier::init()
-{
-  //autostart
-  bool autostart = true;
-  node_.param<bool>("autostart", autostart, true);
-  if(autostart) {
-    ROS_INFO("Classifier is autostarting");
-    start();
-  }
-  else {
-  }
-}
+/**
+ * @brief   Uses the CVFH classifier to identify a 6-DOF pose for an object.
+ *
+ * @version 1.0
+ * @ingroup objectrecognition
+ * 
+ * @author    Adam Allevato <adam.d.allevato@gmail.com>
+ */
+class SixDOFClassifier : public NNClassifier {
+public:
+  SixDOFClassifier();
+  
+  /**
+   * Load one histogram from a file, as long as it matches the known list of objects.
+   * @param  path path to the histogram
+   * @param  vec  the model to fill with the data
+   * @return      true, unless there was an error reading the file
+   */
+  virtual bool loadHist(const boost::filesystem::path &path, FeatureVector &vec);
 
-void Classifier::start()
-{
-    ROS_INFO("Classifier is starting");
-  classification_pub_ = node_.advertise<orp::ClassificationResult>(classification_topic_, 10);
-}
+  /**
+   * Takes the incoming point cloud and runs classification on it, passing
+   * the result into the output topic.
+   * @param cloud the incoming cloud supplied from the topic publisher
+   */
+  void cb_classify(sensor_msgs::PointCloud2 cloud);
+};
 
-void Classifier::stop()
-{
-  if(classification_pub_ != NULL)
-  {
-    ROS_INFO("Classifier is shutting down");
-    classification_pub_.shutdown();
-  }
-}
-
-void Classifier::cb_start(std_msgs::Empty msg)
-{
-  start();
-}
-
-void Classifier::cb_stop(std_msgs::Empty msg)
-{
-  stop();
-}
+#endif

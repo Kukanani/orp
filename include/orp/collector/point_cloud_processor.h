@@ -38,7 +38,7 @@
 #include <orp/DataCollect.h>
 #include <orp/SaveCloud.h>
 
-#include "core/orp_utils.h"
+#include "orp/core/orp_utils.h"
 
 /**
  * @brief A pipeline for doing arbitrary transformations (batch processing) on pcd files. This is mostly a "scratch" class, used for

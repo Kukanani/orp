@@ -39,20 +39,13 @@
 #include <orp/WorldObjects.h>
 #include <orp/GetObjectPose.h>
 
-#include "core/world_object.h"
-#include "core/world_object_manager.h"
-#include "core/orp_utils.h"
+#include "orp/core/world_object.h"
+#include "orp/core/world_object_manager.h"
+#include "orp/core/orp_utils.h"
 
 /**
  * @brief   Simulates ORP vision objects using interactive RViz markers. Position the objects using RViz, then they act
  * like normally-detected ORP objects when looking at ORP recognizer output.
- *
- * @version 1.0
- * @ingroup apc
- * @ingroup objectrecognition
- * 
- * @author    Adam Allevato <allevato@utexas.edu>
- * @copyright Copyright© The University of Texas at Austin, 2014-2017. All rights reserved.
  */
 class VisionSimulator {
 private:

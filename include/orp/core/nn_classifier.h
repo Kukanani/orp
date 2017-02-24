@@ -18,19 +18,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _CLASSIFIER_H_
-#define _CLASSIFIER_H_
+#ifndef _NN_CLASSIFIER_H_
+#define _NN_CLASSIFIER_H_
 
 #include <iostream>
 #include <fstream>
 #include <memory>
-
-#include <boost/filesystem.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/regex.hpp>
-#include <boost/bind.hpp>
 
 #include <flann/flann.h>
 
@@ -44,13 +37,13 @@
 #include <orp/Segmentation.h>
 #include <orp/ClassificationResult.h>
 
-#include "core/world_object.h"
-#include "core/orp_utils.h"
+#include "orp/core/classifier3d.h"
+#include "orp/core/world_object.h"
+#include "orp/core/orp_utils.h"
 
 //http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_5:_3D_object_recognition_(pipeline)
 typedef pcl::Histogram<90> CRH90;
 POINT_CLOUD_REGISTER_POINT_STRUCT (CRH90, (float[90], histogram, histogram) )
-
 struct KnownPose {
   std::string name;                /// The object name (types/classification)
   std::string dataName;            /// the original source of the data (filename)
@@ -62,27 +55,19 @@ struct KnownPose {
 
   KnownPose() : cloud(new pcl::PointCloud<ORPPoint>), crh(new pcl::PointCloud<CRH90>) {};
 };
-
-//save the fingers
 typedef std::pair<KnownPose, std::vector<float> > FeatureVector;
 typedef std::vector<FeatureVector, Eigen::aligned_allocator<FeatureVector> > FeatureVectorVector;
 
 /**
- * @brief   A generic classifier object.
+ * @brief   A generic nearest-neighbor classifier object.
  *
  * Given incoming point clouds, a classifier will generate a best guess
- * as to the result and publish that result to a topic. It is designed
+ * as to the result by matching to a nearest neighbor via FLANN.
+ * It will then publish that result to a topic. It is designed
  * to compare against feature vectors that have been previously saved
  * in a file, with a different feature vector for each object pose.
- *
- * @version 1.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author  Adam Allevato <adam.d.allevato@gmail.com>
- * @author  Brian O'Neil <brian.oneil@lanl.gov>
  */
-class Classifier {
+class NNClassifier : public Classifier3D {
 protected:
   std::vector<std::string> fullTypeList;        /// All known objects that can be detected.
   std::vector<std::string> subTypeList;        /// Subset currently detectable.
@@ -94,21 +79,9 @@ protected:
   flann::Matrix<float> kDistances;              /// The resulting distances for the knn search.
   flann::Matrix<float>* kData;                  /// The data for the knn search.
 
-  bool autostart;                               /// If true, then classifier will automatically subscribe to depth data and begin producing classifications.
   float threshold;                              /// knn distance threshold
-  std::string name;                             /// classifier type (cph, vfh, etc.)
   std::string dataFolder;                       /// folder to load feature vectors from
   std::string fileExtension;                    /// file extension to load feature vectors from.
-
-  boost::mutex rosMutex;                        /// Protects ROS node interfaces
-
-  ros::Subscriber startSub;                     /// to start recognition loop
-  ros::Subscriber stopSub;                      /// to stop recognition loop
-  ros::Subscriber depthInfoSubscriber;          /// Collects depth camera point clouds
-  ros::ServiceClient segmentationClient;        /// Calls the segmentation node
-  ros::Publisher classificationPub;             /// Outputs classification results
-
-  ros::NodeHandle n;
 
   /** 
    * Search for the closest k neighbors
@@ -146,19 +119,6 @@ protected:
    * @return      true, unless there was an error reading the file
    */
   virtual bool loadHist(const boost::filesystem::path &path, FeatureVector &vec) = 0;
-
-  /**
-   * Connect to all the appropriate topics for this classifier.
-   * This is in its own method so that if no nodes are subscribed to this one, no
-   * processing will take place. Necessary because vision is such a CPU-intensive
-   * process.
-   */
-  virtual void subscribe();
-
-  /**
-   * Undoes whatever is done in subscribe().
-   */
-  virtual void unsubscribe();
   
   /**
    * Load the list of objects and their properties from the parameter server. Blocks until the correct parameters become available.
@@ -169,32 +129,16 @@ public:
   /**
    * Constructor. Don't forget to call init() afterwards.
    */
-  Classifier(
-    float thresh,
-    std::string _name,
-    std::string dataFolder,
-    std::string fileExt,
-    bool autostart = false);
+  NNClassifier();
+  virtual ~NNClassifier();
 
-  Classifier(const Classifier& other);
-
-  ~Classifier();
-
-  /**
-   * Call this to set up the classifier. This has to be its own method because otherwise
-   * Classifier would call virtual methods in the constructor. See this page for more info:
-   * http://www.parashift.com/c++-faq-lite/calling-virtuals-from-ctors.html
-   */
-  void init();
+  virtual void init();
 
   /**
    * Takes the incoming point cloud and stores it.
    * @param cloud the incoming cloud supplied from the topic publisher
    */
   virtual void cb_classify(sensor_msgs::PointCloud2 cloud) = 0;
-  virtual void cb_subscribe(std_msgs::Empty msg); 
-  virtual void cb_unsubscribe(std_msgs::Empty msg);
+};
 
-}; //Classifier
-
-#endif //_CLASSIFIER_H_
+#endif

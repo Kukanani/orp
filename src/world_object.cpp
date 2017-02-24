@@ -18,14 +18,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "core/world_object.h"
+#include "orp/core/world_object.h"
 
 #include <tf/tf.h>
 
 #include <eigen_conversions/eigen_msg.h>
 
-#include "core/world_object_manager.h"
-#include "core/grasp_generator.h"
+#include "orp/core/world_object_manager.h"
+#include "orp/core/grasp_generator.h"
 
 int WorldObject::nextValidID = 0;
 

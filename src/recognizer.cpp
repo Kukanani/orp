@@ -18,14 +18,14 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "core/recognizer.h"
+#include "orp/core/recognizer.h"
 
 #include <algorithm>
 
 #include <eigen_conversions/eigen_msg.h>
 #include <tf/transform_datatypes.h>
 
-#include "core/grasp_generator.h"
+#include "orp/core/grasp_generator.h"
 
 // program entry point
 int main(int argc, char **argv)

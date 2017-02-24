@@ -24,7 +24,7 @@
 #include <vector>
 
 #include <tf/tf.h>
-#include "core/world_object.h"
+#include "orp/core/world_object.h"
 #include "grasp.h"
 
 /**

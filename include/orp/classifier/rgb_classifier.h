@@ -29,39 +29,18 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include <pcl_ros/transforms.h>
-#include <tf/transform_listener.h>
+
 //NRG internal files
-#include "core/classifier.h"
+#include "orp/core/classifier3d.h"
 
 /**
  * @brief   RGB-only classification - posterizing colors into main color groups
- *
- * @version 1.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author    Adam Allevato <adam.d.allevato@gmail.com>
- * @copyright BSD 3-paragraph
- * @date      Oct 9, 2015
  */
-class RGBClassifier : public Classifier {
+class RGBClassifier : public Classifier3D {
 protected:
-  tf::TransformListener listener;
-
   cv::Mat M; ///For RGB cluster visualization
 public:
-  /**
-   * Constructor
-   */
-  RGBClassifier(std::string directory, bool autostart = false);
-  
-  /**
-   * Load one histogram from a file, as long as it matches the known list of objects.
-   * @param  path path to the histogram
-   * @param  vec  the model to fill with the data
-   * @return      true, unless there was an error reading the file
-   */
-  virtual bool loadHist(const boost::filesystem::path &path, FeatureVector &vec);
+  RGBClassifier();
 
   /**
    * Takes the incoming point cloud and runs classification on it, passing

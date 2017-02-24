@@ -37,20 +37,14 @@
 #include "orp/ClassificationResult.h"
 #include "orp/GetObjects.h"
 
-#include "core/world_object.h"
-#include "core/world_object_manager.h"
-#include "core/orp_utils.h"
+#include "orp/core/world_object.h"
+#include "orp/core/world_object_manager.h"
+#include "orp/core/orp_utils.h"
 
 /**
  * @brief   Base recognizer class.
  *
  * Stores a list of objects that it thinks are currently in the world.
- *
- * @version 1.0
- * @ingroup apc
- * @ingroup objectrecognition
- * 
- * @author    Adam Allevato <allevato@utexas.edu>
  */
 class Recognizer {
 private:

@@ -1,4 +1,4 @@
-// Copyright (c) 2015, Adam Allevato
+// Copyright (c) 2017, Adam Allevato
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -18,46 +18,55 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _SIXDOF_CLASSIFIER_H_
-#define _SIXDOF_CLASSIFIER_H_
+#ifndef _CLASSIFIER_H_
+#define _CLASSIFIER_H_
 
-#include <pcl/features/cvfh.h>
-#include <pcl/features/crh.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/recognition/crh_alignment.h>
+#include <ros/ros.h>
 
-#include <pcl_ros/transforms.h>
-#include <tf/transform_listener.h>
-//NRG internal files
-#include "core/classifier.h"
+#include <std_msgs/Empty.h>
 
-/**
- * @brief   Uses the CVFH classifier to identify a 6-DOF pose for an object.
- *
- * @version 1.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author    Adam Allevato <adam.d.allevato@gmail.com>
- */
-class SixDOFClassifier : public Classifier {
+#include <orp/ClassificationResult.h>
+
+class Classifier {
+protected:
+  /// Interface to ROS
+  ros::NodeHandle node_;
+  ros::NodeHandle node_private_;
+
+  /// Publishes completed classifications
+  std::string classification_topic_;
+  ros::Publisher classification_pub_;
+
+  /// Listens for requests to start recognition
+  std::string start_topic_;
+  ros::Subscriber start_sub_;
+
+  /// Listens for requests to stop recognition
+  std::string stop_topic_;
+  ros::Subscriber stop_sub_;
+
+
+  /// subscribe to image messages and start publishing classifications
+  virtual void start();
+  /// unsubscribe from image messages and stop publishing classifications
+  virtual void stop();
+
+  /// ROS shadow for start()
+  void cb_start(std_msgs::Empty msg);
+
+  /// ROS shadow for stop()
+  void cb_stop(std_msgs::Empty msg);
+
 public:
-  SixDOFClassifier(std::string directory, bool autostart = false);
-  
-  /**
-   * Load one histogram from a file, as long as it matches the known list of objects.
-   * @param  path path to the histogram
-   * @param  vec  the model to fill with the data
-   * @return      true, unless there was an error reading the file
-   */
-  virtual bool loadHist(const boost::filesystem::path &path, FeatureVector &vec);
+  Classifier();
 
   /**
-   * Takes the incoming point cloud and runs classification on it, passing
-   * the result into the output topic.
-   * @param cloud the incoming cloud supplied from the topic publisher
+   * If the autostart argument is true, then start. Call at the end of the constructor.
+   * This has to be its own method because otherwise
+   * Classifier would call virtual methods in the constructor. See this page for more info:
+   * http://www.parashift.com/c++-faq-lite/calling-virtuals-from-ctors.html
    */
-  void cb_classify(sensor_msgs::PointCloud2 cloud);
+  virtual void init();
 };
 
 #endif

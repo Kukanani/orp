@@ -33,7 +33,7 @@
 
 #include <pcl_ros/transforms.h>
 
-#include "core/orp_utils.h"
+#include "orp/core/orp_utils.h"
 
 int
 main(int argc, char** argv)

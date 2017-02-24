@@ -47,7 +47,7 @@
 #include <orp/Segmentation.h>
 #include <orp/SegmentationConfig.h>
 
-#include "core/orp_utils.h"
+#include "orp/core/orp_utils.h"
 
 //usefule PCL typedefs
 typedef pcl::PointCloud<ORPPoint> PC;

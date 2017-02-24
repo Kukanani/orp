@@ -30,7 +30,7 @@
 #include <orp/Monitor.h>
 #include <orp/Region.h>
 
-#include "core/orp_utils.h"
+#include "orp/core/orp_utils.h"
 
 //usefule PCL typedefs
 typedef pcl::PointCloud<ORPPoint> PC;

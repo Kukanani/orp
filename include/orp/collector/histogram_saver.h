@@ -42,7 +42,7 @@
 #include <orp/Segmentation.h>
 #include <orp/HistogramSaverConfig.h>
 
-#include "core/orp_utils.h"
+#include "orp/core/orp_utils.h"
 
 /**
  * @brief Extracts features from point clouds and saves to file.

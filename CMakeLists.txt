@@ -19,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
     pcl_conversions
     interactive_markers
     cv_bridge
+    image_transport
 )
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
@@ -79,6 +80,9 @@ include_directories(
 
 add_library(orp
     src/classifier.cpp
+    src/nn_classifier.cpp
+    src/classifier2d.cpp
+    src/classifier3d.cpp
     src/orp_utils.cpp
     src/world_object.cpp
     src/world_object_manager.cpp

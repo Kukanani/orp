@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>orp</name>
-  <version>1.1.0</version>
+  <version>2.0.0</version>
   <description>Object Recognition and Perception</description>
 
   <maintainer email="allevato@utexas.edu">Adam Allevato</maintainer>
@@ -23,6 +23,7 @@
   
   <depend>interactive_markers</depend>
   <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
 
   <export>
   </export>

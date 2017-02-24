@@ -28,11 +28,14 @@
 #include <pcl_ros/transforms.h>
 #include <tf/transform_listener.h>
 #include <dynamic_reconfigure/server.h>
+#include <eigen_conversions/eigen_msg.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #include <orp/CylinderClassifierConfig.h>
 
 //NRG internal files
-#include "core/classifier.h"
+#include "orp/core/classifier3d.h"
+#include "orp/core/orp_utils.h"
 
 /**
  * @brief   Cylinder-only classification - fits a cylinder to the dataset and returns the cylinder's position and orientation
@@ -41,16 +44,8 @@
  * The cylinder is infinitely long, so although the axis of the object will probably be correct, you would need to adjust the 
  * position along the cylinder's Z-axis based on the maximum and minimum spatial extents of the classified point cloud,
  * after projecting on to the object's Z-axis
- *
- * @version 1.0
- * @ingroup objectrecognition
- * @ingroup apc
- * 
- * @author    Adam Allevato <adam.d.allevato@gmail.com>
- * @copyright BSD 3-paragraph
- * @date      Oct 9, 2015
  */
-class CylinderClassifier : public Classifier {
+class CylinderClassifier : public Classifier3D {
 protected:
   pcl::SACSegmentationFromNormals<ORPPoint, pcl::Normal> seg; 
   
@@ -61,20 +56,12 @@ protected:
   dynamic_reconfigure::Server<orp::CylinderClassifierConfig> reconfigureServer;
   dynamic_reconfigure::Server<orp::CylinderClassifierConfig>::CallbackType reconfigureCallbackType;
 public:
-  CylinderClassifier(bool autostart = false);
+  CylinderClassifier();
 
   /**
    * Dynamic reconfigure
    */
   void paramsChanged(orp::CylinderClassifierConfig &config, uint32_t level);
-  
-  /**
-   * Load one histogram from a file, as long as it matches the known list of objects.
-   * @param  path path to the histogram
-   * @param  vec  the model to fill with the data
-   * @return      true, unless there was an error reading the file
-   */
-  virtual bool loadHist(const boost::filesystem::path &path, FeatureVector &vec);
 
   /**
    * Takes the incoming point cloud and runs classification on it, passing

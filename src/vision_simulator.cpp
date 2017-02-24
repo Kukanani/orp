@@ -25,7 +25,7 @@
 #include <orp/WorldObject.h>
 #include <orp/WorldObjects.h>
 
-#include "app/vision_simulator.h"
+#include "orp/app/vision_simulator.h"
 
 std::vector<std::string> labelsi;
 /**

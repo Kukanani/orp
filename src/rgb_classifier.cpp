@@ -18,9 +18,12 @@
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "classifier/rgb_classifier.h"
-
+#include <eigen_conversions/eigen_msg.h>
+#include <pcl_conversions/pcl_conversions.h>
 #include <opencv2/highgui/highgui.hpp>
+
+#include "orp/core/orp_utils.h"
+#include "orp/classifier/rgb_classifier.h"
 
 #include <sstream>
 
@@ -35,20 +38,9 @@ int main(int argc, char **argv)
   srand (static_cast <unsigned> (time(0)));
 
   ros::init(argc, argv, "rgb_classifier");
-  pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
-
-  if(argc < 3) {
-    ROS_FATAL("proper usage is 'rgb_classifier data_directory [autostart]");
-    return -1;
-  }
-  std::string directory = argv[1];
-  bool autostart = false;
-  if(argc >= 3) {
-    if(std::string(argv[2])  == "true") autostart = true;
-  }
 
   ROS_INFO("Starting RGB Classifier");
-  RGBClassifier v(directory, autostart);
+  RGBClassifier v;
   v.init();
 
   //cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
@@ -60,18 +52,10 @@ int main(int argc, char **argv)
   return 1;
 } //main
 
-RGBClassifier::RGBClassifier(std::string dataFolder, bool autostart):
-  Classifier(10000, "rgb", dataFolder, ".rgb", autostart)
+RGBClassifier::RGBClassifier():
+  Classifier3D()
 {
-
-} //RGBClassifier
-
-bool RGBClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &RGB) {
-  //no histogram loading
-  return true;
-} //loadHist
-
-double testLast = 0; // used for debug testing
+}
 
 void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   orp::ClassificationResult classRes;
@@ -79,7 +63,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
-  segmentationClient.call(seg_srv);
+  segmentation_client_.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
 
   if(!clouds.empty()) {
@@ -119,11 +103,9 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
 
       classRes.result.push_back(thisObject);
-      delete[] kIndices.ptr();
-      delete[] kDistances.ptr();
     }
   }
-  classificationPub.publish(classRes);
+  classification_pub_.publish(classRes);
 } //classify
 
 
@@ -168,7 +150,6 @@ std::string RGBClassifier::getColor(cv::Mat& img) {
   else if(g > r && g > b) return "green";
   return "blue";
 }
-
 
 ///////////////////////////////
 // Example of OpenCV-based point cloud filtering
