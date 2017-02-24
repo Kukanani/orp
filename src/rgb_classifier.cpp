@@ -72,7 +72,6 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
       if(eachCloud->width < 3) {
         continue;
       }
-      orp::WorldObject thisObject;
       pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
       pcl::fromROSMsg(*eachCloud, *thisCluster);
 
@@ -94,7 +93,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
 
       color = getColor(r, g, b);
 
-      obj_interface::WorldObject thisObject;
+      orp::WorldObject thisObject;
       thisObject.label = "obj_" + color;
       thisObject.pose.header.frame_id = eachCloud->header.frame_id;
 
