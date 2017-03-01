@@ -117,21 +117,21 @@ public:
     shape = _shape;
     switch(shape) {
       case BOX:
-	stub.type = visualization_msgs::Marker::CUBE;
-	break;
+        stub.type = visualization_msgs::Marker::CUBE;
+        break;
       case CYLINDER:
-	stub.type = visualization_msgs::Marker::CYLINDER;
-	break;
+        stub.type = visualization_msgs::Marker::CYLINDER;
+        break;
       case BLOB:
-	stub.type = visualization_msgs::Marker::SPHERE;
-	break;
+        stub.type = visualization_msgs::Marker::SPHERE;
+        break;
       case FLAT:
-	stub.type = visualization_msgs::Marker::CUBE;
-	break;
+        stub.type = visualization_msgs::Marker::CUBE;
+        break;
       case OTHER:
       default:
-	stub.type = visualization_msgs::Marker::SPHERE;
-	break;
+        stub.type = visualization_msgs::Marker::SPHERE;
+        break;
     }
   };
   

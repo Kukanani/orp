@@ -58,28 +58,29 @@ void WorldObjectManager::loadTypesFromParameterServer() {
   for(XmlRpc::XmlRpcValue::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
     std::string objName = (*it).first;
     WorldObjectType thisType = WorldObjectType(objName);
-    double x, y, z, roll, pitch, yaw;
-    float r, g, b;
+    double x, y, z, roll = 0.0, pitch = 0.0, yaw = 0.0;
+    double x_off = 0.0, y_off = 0.0, z_off = 0.0;
+    float r = 0.5, g = 0.5, b = 0.5;
     ObjectShape shape;
 
     try {
       std::string geom;
       WorldObjectManager::attemptToReloadStringParam(n, "/items/" + objName + "/geometry", geom);
       if(geom == "BOX") {
-	shape = BOX;
+        shape = BOX;
       } else if(geom == "CYLINDER") {
-	shape = CYLINDER;
+        shape = CYLINDER;
       } else if(geom == "FLAT") {
-	shape = FLAT;
+        shape = FLAT;
       } else if(geom == "BLOB") {
-	shape = BLOB;
+        shape = BLOB;
       } else {
-	ROS_ERROR("Did not understand geometry type %s while creating marker stubs", geom.c_str());
-	shape = BLOB;
+        ROS_ERROR("Did not understand geometry type %s while creating marker stubs", geom.c_str());
+        shape = BLOB;
       }
-      WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/depth", x);
-      WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/width", y);
-      WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/height", z);
+      WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/depth", x, true);
+      WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/width", y, true);
+      WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/height", z, true);
 
       WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/roll", roll);
       WorldObjectManager::attemptToReloadDoubleParam(n, "/items/" + objName + "/pitch", pitch);
@@ -95,8 +96,6 @@ void WorldObjectManager::loadTypesFromParameterServer() {
     } catch(std::exception e) {
       ROS_ERROR("error while creating marker stub for world object of type '%s': %s", e.what(), (objName).c_str());
       x = 0.1; y = 0.1; z = 0.1;
-      r = 0.0; g = 0.0; b = 0.0;
-      roll = 0.0; pitch = 0.0; yaw = 0.0;
       shape = BLOB;
     }
     if(x > 1 && y > 1 && z > 1) { //detect sizes in mm instead of m
@@ -149,12 +148,14 @@ bool WorldObjectManager::attemptToSetFloatParam(const ros::NodeHandle &node, flo
   return true;
 }
 
-bool WorldObjectManager::attemptToReloadFloatParam(const ros::NodeHandle &node, std::string paramName, float &toFill)
+bool WorldObjectManager::attemptToReloadFloatParam(const ros::NodeHandle &node, std::string paramName, float &toFill, bool strict)
 {
   double temp;
   if(!node.hasParam(paramName)) {
-    ROS_ERROR("can't find parameter %s", paramName.c_str());
-    throw std::runtime_error("Source param does not exist");
+    if(strict) {
+      ROS_ERROR("can't find parameter %s", paramName.c_str());
+      throw std::runtime_error("Source param does not exist");
+    }
     return false;
   }
   node.getParam(paramName, temp);
@@ -162,22 +163,26 @@ bool WorldObjectManager::attemptToReloadFloatParam(const ros::NodeHandle &node, 
   return true;
 }
 
-bool WorldObjectManager::attemptToReloadDoubleParam(const ros::NodeHandle &node, std::string paramName, double &toFill)
+bool WorldObjectManager::attemptToReloadDoubleParam(const ros::NodeHandle &node, std::string paramName, double &toFill, bool strict)
 {
   if(!node.hasParam(paramName)) {
-    ROS_ERROR("can't find parameter %s", paramName.c_str());
-    throw std::runtime_error("Source param does not exist");
+    if(strict) {
+      ROS_ERROR("can't find parameter %s", paramName.c_str());
+      throw std::runtime_error("Source param does not exist");
+    }
     return false;
   }
   node.getParam(paramName, toFill);
   return true;
 }
 
-bool WorldObjectManager::attemptToReloadStringParam(const ros::NodeHandle &node, std::string paramName, std::string &toFill)
+bool WorldObjectManager::attemptToReloadStringParam(const ros::NodeHandle &node, std::string paramName, std::string &toFill, bool strict)
 {
   if(!node.hasParam(paramName)) {
-    ROS_ERROR("can't find parameter %s", paramName.c_str());
-    throw std::runtime_error("Source param does not exist");
+    if(strict) {
+      ROS_ERROR("can't find parameter %s", paramName.c_str());
+      throw std::runtime_error("Source param does not exist");
+    }
     return false;
   }
   node.getParam(paramName, toFill);

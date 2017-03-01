@@ -62,11 +62,11 @@ public:
   /// Attempt to put a float into the parameter server.
   static bool attemptToSetFloatParam(const ros::NodeHandle &node, float val, std::string to);
   /// Attempt to put a load a float from the parameter server.
-  static bool attemptToReloadFloatParam(const ros::NodeHandle &node, std::string paramName, float &toFill);
+  static bool attemptToReloadFloatParam(const ros::NodeHandle &node, std::string paramName, float &toFill, bool strict = false);
   /// Attempt to put a load a double from the parameter server.
-  static bool attemptToReloadDoubleParam(const ros::NodeHandle &node, std::string paramName, double &toFill);
+  static bool attemptToReloadDoubleParam(const ros::NodeHandle &node, std::string paramName, double &toFill, bool strict = false);
   /// Attempt to put a load a string from the parameter server.
-  static bool attemptToReloadStringParam(const ros::NodeHandle &node, std::string paramName, std::string &toFill);
+  static bool attemptToReloadStringParam(const ros::NodeHandle &node, std::string paramName, std::string &toFill, bool strict = false);
   
   /// Convert degrees to radians.
   static double radFromDeg(double deg);
