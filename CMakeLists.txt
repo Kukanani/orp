@@ -88,7 +88,7 @@ add_library(orp
     src/world_object_manager.cpp
     src/grasp_generator.cpp
 )
-add_dependencies(orp ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp obj_interface_generate_messages)
+add_dependencies(orp ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 
 target_link_libraries(orp ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
