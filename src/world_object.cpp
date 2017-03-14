@@ -35,6 +35,7 @@ WorldObject WorldObject::createFromMessage(WorldObjectManager* manager_, orp::Wo
   Eigen::Affine3d eigenPose;
   tf::poseMsgToEigen(message.pose.pose, eigenPose);
   WorldObject obj(message.colocationDist, manager_, message.label, message.pose.header.frame_id, eigenPose, message.probability);
+  obj.setCloud(message.cloud);
   return obj;
 }
 
@@ -79,6 +80,7 @@ bool WorldObject::merge(WorldObjectPtr other)
   setPose(other->getPose()); //perform Kalman Filtering
   probability = other->getProbability(); //this is where we would perform Bayesian filtering on type probabilities
   setLastUpdated(ros::Time::now());
+  setCloud(other->getCloud());
   
   return true;
 } //merge

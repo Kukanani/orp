@@ -2,3 +2,4 @@ string label
 geometry_msgs/PoseStamped pose
 float32 probability
 float32 colocationDist
+sensor_msgs/PointCloud2 cloud

@@ -172,6 +172,7 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
       tf::poseMsgToEigen(newObject.pose.pose, eigPose);
       
       WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.label, recognitionFrame, eigPose, 1.0f));
+      p->setCloud(newObject.cloud);
       for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
         if((*it)->isColocatedWith(p)) {
           merged = true;
@@ -269,6 +270,7 @@ void Recognizer::publishROS()
     newObject.pose.header.stamp = ros::Time::now();
     newObject.pose.header.seq = object_sequence++;
     newObject.label  = (**it).getType().getName();
+    newObject.cloud = (**it).getCloud();
     
     objectMsg.objects.insert(objectMsg.objects.end(), newObject);
 
@@ -307,6 +309,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     newObject.probability = (**it).getProbability();
     newObject.pose.header.frame_id = recognitionFrame;
     newObject.label  = (**it).getType().getName();
+    newObject.cloud = (**it).getCloud();
     
     response.objects.objects.push_back(newObject);
   }

@@ -38,6 +38,7 @@
 
 //ROS Messages
 #include <visualization_msgs/Marker.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include <orp/WorldObject.h>
 
@@ -84,7 +85,7 @@ protected:
   visualization_msgs::Marker stub;
   RPY offset;
   ObjectShape shape;
-  
+
   void setupStub() {
     stub.action = visualization_msgs::Marker::ADD;
     stub.color.a = 0.5; //make it visible
@@ -103,6 +104,7 @@ public:
       offset.yaw = 0.0;
     }
   };
+
   
   void setSize(float x, float y, float z) {
     stub.scale.x = x; stub.scale.y = y; stub.scale.z = z;
@@ -201,6 +203,8 @@ protected:
   
   bool showGrasps;            /// If true, return grasp markers in getMarkers()
   std::vector<Grasp> grasps;  /// Possible grasps for this object.
+  sensor_msgs::PointCloud2 cloud;
+  
 
   std::vector<std::string> fullSensorModel; //list of all detectable items
   std::vector<std::string> subSensorModel;  //list of items to be detected
@@ -248,6 +252,11 @@ public:
   void setStale(bool s); ///set this object as stale to kill it on the next update
   void setLastUpdated(ros::Time time); ///Set the object's last updated time
   void setShowGrasps(bool show) { showGrasps = show; };
+
+  void setCloud(sensor_msgs::PointCloud2 clou) {
+    cloud = clou;
+  }
+  sensor_msgs::PointCloud2 getCloud() { return cloud; };
 
   std::vector<visualization_msgs::Marker> getMarkers(); /// Get whatever markers are appropriate for the object in it's current state.
   float getProbability(); ///Get the classification certainty.
