@@ -190,22 +190,23 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
   // We must build a condition.
   // And "And" condition requires all tests to check true. "Or" conditions also available.
   // Checks available: GT, GE, LT, LE, EQ.
-  pcl::ConditionAnd<ORPPoint>::Ptr condition(new pcl::ConditionAnd<ORPPoint>);
-  condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
+  pcl::ConditionAnd<ORPPoint>::Ptr clip_condition(new pcl::ConditionAnd<ORPPoint>);
+  clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("x", pcl::ComparisonOps::GT, minX)));
-  condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
+  clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("x", pcl::ComparisonOps::LT, maxX)));
-  condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
+  clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("y", pcl::ComparisonOps::GT, minY)));
-  condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
+  clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("y", pcl::ComparisonOps::LT, maxY)));
-  condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
+  clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("z", pcl::ComparisonOps::GT, minZ)));
-  condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
+  clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("z", pcl::ComparisonOps::LT, maxZ)));
  
   // Filter object.
-  pcl::ConditionalRemoval<ORPPoint> filter(condition);
+  pcl::ConditionalRemoval<ORPPoint> filter;
+  filter.setCondition(clip_condition);
   filter.setInputCloud(unclipped);
   // If true, points that do not pass the filter will be set to a certain value (default NaN).
   // If false, they will be just removed, but that could break the structure of the cloud
