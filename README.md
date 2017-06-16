@@ -1,7 +1,7 @@
 # Table of Contents
-1. [Installation](#Installation)
-2. [Training Objects](#Training-Objects)
-3. [How to Use](#How-to-Use)
+1. [Installation](#installation)
+2. [Training Objects](#training-objects)
+3. [How to Use](#how-to-use)
 
 ***
 
@@ -37,7 +37,7 @@ Maintainer: [Adam Allevato](allevato@utexas.edu "Bill Nye the Science Guy")
 
 	TODO: PLACE IMAGE HERE.
 
-## Training Objects
+## Training Objects<a name="training-objects" />
 *This setup assumes you have a training table capable of spinning 360 degrees.*
 
 1. Set up the camera to view the table and two AR tags
@@ -56,6 +56,6 @@ Maintainer: [Adam Allevato](allevato@utexas.edu "Bill Nye the Science Guy")
 
 5. The spin table will spin 360 degrees to allow point cloud data taken for every side of the object. 
 
-## How to Use
+## How to Use<a name="how-to-use" />
 
 ~Coming Soon to Documentation Near You~
