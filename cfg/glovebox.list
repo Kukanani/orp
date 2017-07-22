@@ -1,7 +1,0 @@
-tiny_can medium_bowl small_bowl small_slug small_can ball
-tiny_can 0.1 1 0 0 0 0 0
-medium_bowl 0.1 0 1 0 0 0 0
-small_bowl 0.1 0 0 1 0 0 0 0
-small_slug 0.1 0 0 0 1 0 0
-small_can 0.1 0 0 0 0 1 0
-ball 0.1 0 0 0 0 0 1
