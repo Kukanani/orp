@@ -1,5 +1,4 @@
 <!--
-
 A set of 4 markers in a square. These are designed to be detected in a bundle,
 such that the center of the training table can be determined even if only some
 of the markers are visible to the camera. As the object on the training table
@@ -9,7 +8,6 @@ Adapted from ar_track_alvar's bundle markers, and designed to be used with
 that system. See
 http://wiki.ros.org/ar_track_alvar#ar_track_alvar.2BAC8-fuerte.Detecting_multi-tag_bundles
 for more information.
-
 -->
 
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
