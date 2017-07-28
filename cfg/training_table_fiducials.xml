@@ -1,3 +1,17 @@
+<!--
+
+A set of 4 markers in a square. These are designed to be detected in a bundle,
+such that the center of the training table can be determined even if only some
+of the markers are visible to the camera. As the object on the training table
+spins, different markers will become visible or be occluded.
+
+Adapted from ar_track_alvar's bundle markers, and designed to be used with
+that system. See
+http://wiki.ros.org/ar_track_alvar#ar_track_alvar.2BAC8-fuerte.Detecting_multi-tag_bundles
+for more information.
+
+-->
+
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <multimarker markers="4">
     <marker index="16" status="1">
@@ -6,7 +20,6 @@
         <corner x="19" y="-6" z="0" />
         <corner x="18" y="-6" z="0" />
     </marker>
-
     <marker index="8" status="1">
         <corner x="-2.2" y="-2.2" z="0" />
         <corner x="2.2" y="-2.2" z="0" />
