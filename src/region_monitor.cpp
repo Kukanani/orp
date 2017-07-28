@@ -1,21 +1,21 @@
 // Copyright (c) 2016, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -61,7 +61,7 @@ RegionMonitor::RegionMonitor() :
   processCloud = PCP(new PC());
 
   boundedScenePublisher = privateNode.advertise<sensor_msgs::PointCloud2>("bounded_scene",1);
-  
+
   regionSub = privateNode.subscribe("set_region", 1000, &RegionMonitor::cb_params, this);
   pointCloudSub = node.subscribe("/rosarnl_node/S3Series_1_pointcloud", 1000, &RegionMonitor::cb_pointCloud, this);
 
@@ -111,7 +111,7 @@ void RegionMonitor::cb_pointCloud(const sensor_msgs::PointCloud::ConstPtr& cloud
   sensor_msgs::convertPointCloudToPointCloud2 (*cloud, interimPC2);
   // ROS_INFO("transforming into other frame");
   pcl_ros::transformPointCloud (transformToFrame, interimPC2, transformedPC2, listener);
-  
+
   // ROS_INFO("converting from ros message to PCL point cloud");
   inputCloud->points.clear();
   pcl::fromROSMsg(transformedPC2, *inputCloud);
@@ -139,7 +139,7 @@ PCP& RegionMonitor::clipByDistance(PCP &unclipped) {
     new pcl::FieldComparison<ORPPoint>("z", pcl::ComparisonOps::GT, minZ)));
   condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("z", pcl::ComparisonOps::LT, maxZ)));
- 
+
   // Filter object.
   pcl::ConditionalRemoval<ORPPoint> filter(condition);
   filter.setInputCloud(unclipped);
@@ -149,7 +149,7 @@ PCP& RegionMonitor::clipByDistance(PCP &unclipped) {
   filter.setKeepOrganized(false);
   // If keep organized was set true, points that failed the test will have their Z value set to this.
   filter.setUserFilterValue(0.0);
- 
+
   filter.filter(*processCloud);
   return processCloud;
 }

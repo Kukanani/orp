@@ -34,7 +34,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="data_folder" default="data" />
   <arg name="list" default="$(find orp)/cfg/test_1.list" />
   <arg name="rviz" default="true" />
-  
+
   <rosparam command="load" param="items/" file="$(find orp)/data/colored_objs.yaml" />
 
   <include file="$(find orp)/launch/orp.launch">
@@ -62,7 +62,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     respawn = "false"
     output  = "screen"
   />
-  
+
   <node
     name    = "$(anon sixdof4)"
     pkg     = "dynamic_reconfigure"

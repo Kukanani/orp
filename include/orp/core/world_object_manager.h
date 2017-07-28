@@ -1,21 +1,21 @@
 // Copyright (c) 2016, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -43,7 +43,7 @@ private:
   WorldObjectType unknownType; ///Default object type
 public:
   std::map<std::string, WorldObjectType> types; //The possible world object types
-  
+
   /**
     * Create a new world object manager with the specified default type.
     * @arg unknown the world object to fall back on when nothing can be found.
@@ -63,7 +63,7 @@ public:
   /// Retrieve a type by name, or the "unknown" object type if not found.
   WorldObjectType& getTypeByName(std::string name);
 
-  /// Load a full set of world object types from the parameter server. 
+  /// Load a full set of world object types from the parameter server.
   /// This can be called after loading a yaml file (or sqlite database) of object properties onto the parameter server.
   /// Throws no exceptions, but if all type parameters can't be found it will assume some default values.
   void loadTypesFromParameterServer();
@@ -77,7 +77,7 @@ public:
   static bool attemptToReloadDoubleParam(const ros::NodeHandle &node, std::string paramName, double &toFill, bool strict = false);
   /// Attempt to put a load a string from the parameter server.
   static bool attemptToReloadStringParam(const ros::NodeHandle &node, std::string paramName, std::string &toFill, bool strict = false);
-  
+
   /// Convert degrees to radians.
   static double radFromDeg(double deg);
   /// Convert radians to degrees.

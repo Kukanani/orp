@@ -1,21 +1,21 @@
 // Copyright (c) 2016, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -110,7 +110,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
 
       Eigen::Vector4f clusterCentroid;
       pcl::compute3DCentroid(*thisCluster, clusterCentroid);
-    
+
       Eigen::Affine3d finalPose;
       finalPose(0,3) = clusterCentroid(0);
       finalPose(1,3) = clusterCentroid(1);
@@ -154,7 +154,7 @@ std::string RGBClassifier::getColor(float r, float g, float b)
   // values in one line each. However, this began giving me segfaults after migrating to a new machine.
   // I don't know the exact issue, but I suspect a conflict with OpenCV versions 2 and 3. Whatever
   // the reason, you now have the pass the r/g/b values directly to this function.
-  
+
   //which is greater?
   if(r > g && r > b) return "red";
   else if(g > r && g > b) return "green";
@@ -165,7 +165,7 @@ std::string RGBClassifier::getColor(float r, float g, float b)
 // Example of OpenCV-based point cloud filtering
 //   pcl::PointCloud<ORPPoint>::Ptr pclCloud = pcl::PointCloud<ORPPoint>::Ptr(new pcl::PointCloud<ORPPoint>());
 //   pcl::fromROSMsg(cloud, *pclCloud);
-//   
+//
 //   uint8_t* pixelPtr = (uint8_t*)cv_ptr->image.data;
 //   int cn = cv_ptr->image.channels();
 //   cv::Scalar_<uint8_t> bgrPixel;
@@ -183,10 +183,10 @@ std::string RGBClassifier::getColor(float r, float g, float b)
 //   }
 //   pcl::toROSMsg(*pclCloud, cloud);
 //   filterPub.publish(cloud);
-//   
+//
 // } //classify
-// 
-// 
+//
+//
 // ///http://stackoverflow.com/questions/5906693/how-to-reduce-the-number-of-colors-in-an-image-with-opencv-in-python
 // inline uchar reduceVal(const uchar val)
 // {
@@ -194,7 +194,7 @@ std::string RGBClassifier::getColor(float r, float g, float b)
 //     if (val < 128) return 64;
 //     return 255;
 // }
-// 
+//
 // void OpenCVClassifier::process(cv::Mat& img)
 // {
 //     uchar* pixelPtr = img.data;
@@ -206,8 +206,8 @@ std::string RGBClassifier::getColor(float r, float g, float b)
 //             pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
 //             pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
 //             pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
-//             
-//             
+//
+//
 //             if(pixelPtr[pi+0] == 64) pixelPtr[pi+0] = 127;
 //             if(pixelPtr[pi+1] == 64) pixelPtr[pi+1] = 127;
 //             if(pixelPtr[pi+2] == 64) pixelPtr[pi+2] = 127;

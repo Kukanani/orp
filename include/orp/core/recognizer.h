@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -74,20 +74,20 @@ private:
   std::string markerTopic;                      /// Where to publish the RViz markers for visualization
   bool dirty;                                   /// If true, udpate our model of the world (and remove old objects). Used for lazy updates
   bool autostart;                               /// if true, begin the recognition loop automatically (auto-subscribe to classification)
-        
-  //ROS       
+
+  //ROS
   ros::Subscriber recognitionSub;               /// Listens for new recognized objects and adds them to the model.
   ros::Publisher objectPub;                     /// Publishes a MarkerArray with information about detected objects
-  ros::Publisher markerPub;                     /// Publishes a WorldObjects message that contains all the recognized objects from 
+  ros::Publisher markerPub;                     /// Publishes a WorldObjects message that contains all the recognized objects from
   ros::Publisher stopPub;                       /// Used to self-stop recognition
   tf::TransformListener* transformListener;     /// listen for necessary transformations before publishing
   tf::Transformer* objectTransformeqr;          /// transform object poses from one frame to another
   ros::ServiceServer objectPoseServer;          /// Provides poses for requested objects.
   ros::ServiceServer objectsServer;             /// Provides poses of all current objects.
-        
+
   ros::Subscriber startSub;                     /// to start recognition loop
   ros::Subscriber stopSub;                      /// to stop recognition loop
-        
+
   WorldObjectPtr best;                          /// used to store best result when looping through model in a search
 
 // DYNAMICALLY-SET CONFIG VARIABLES
@@ -125,7 +125,7 @@ private:
   WorldObjectPtr getMostLikelyObjectOfType(std::string name);
 
   bool isRecognitionStarted();
-  
+
   /**
    * loads info from the parameter server and stores basic information about each item
    * being detected.
@@ -138,7 +138,7 @@ private:
 
   void startRecognition();  /// Starts the recognition running at pre-specified rate.
   void stopRecognition();   /// Stops the recognition from running.
-  
+
   /**
    * Perform recognition.
    *
@@ -148,7 +148,7 @@ private:
   void recognize(const ros::TimerEvent& event);
 
   void update();
-  
+
   /**
    * Removes any objects that are older than the "stale time" (i.e., haven't
    * been detected for a while)
@@ -182,16 +182,16 @@ private:
   void deleteMarker(WorldObjectPtr wo);
 
   /// ROS wrappers
-  void cb_startRecognition(std_msgs::Empty msg); 
+  void cb_startRecognition(std_msgs::Empty msg);
   void cb_stopRecognition(std_msgs::Empty msg);
-  
+
   /**
    * Get all currently known objects immediately.
-   * 
+   *
    * This function makes the following assumptions:
    *   - camera data is being published
    *   - at least one classifier exists
-   * 
+   *
    * If recognition is stopped when this is called, it will start it, and stop it again once the call is complete.
    * It will wait for at least one classification result to be processed and then will return the current internal object state.
    */
@@ -203,7 +203,7 @@ private:
    * @param newObject the passed message from the classifier topic
    */
   void cb_processNewClassification(orp::ClassificationResult newObject);
-  
+
   /**
    * ROS service call handler. Searches the known world model for objects that match
    * the given request, and then provides a list of poses for objects that meet the given

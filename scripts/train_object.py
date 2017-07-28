@@ -59,4 +59,4 @@ if __name__ == '__main__':
         response = train(sys.argv[1], int(sys.argv[2]))
 
     except rospy.ROSInterruptException:
-        pass    
+        pass

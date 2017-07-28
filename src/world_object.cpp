@@ -1,21 +1,21 @@
 // Copyright (c) 2016, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -62,21 +62,21 @@ WorldObject::WorldObject(float colocationDist, WorldObjectManager* manager_, std
   showGrasps(false)
 {
   nextValidID += MARKERS_PER_OBJECT;
-  
+
   covariance.setIdentity();
   Q.setIdentity();
   Q *= MEASUREMENT_COVARIANCE;
 
   setupObjectMarker();
   setupLabelMarker();
-  
+
   updateMarkers();
-  
+
   tf::Pose stubAdjustmentPose = type.generateOffsetPose();
-  
+
   Eigen::Affine3d eigStubAdjustment;
   tf::poseTFToEigen(stubAdjustmentPose, eigStubAdjustment);
-  
+
   pose = pose * eigStubAdjustment;
 } //WorldObject constructor
 
@@ -91,7 +91,7 @@ bool WorldObject::merge(WorldObjectPtr other)
   probability = other->getProbability(); //this is where we would perform Bayesian filtering on type probabilities
   setLastUpdated(ros::Time::now());
   setCloud(other->getCloud());
-  
+
   return true;
 } //merge
 
@@ -138,7 +138,7 @@ void WorldObject::setupLabelMarker() {
 void WorldObject::setStale(bool s) {
   stale = s;
 }
-  
+
 void WorldObject::refresh()
 {
   setLastUpdated(ros::Time::now());
@@ -154,14 +154,14 @@ void WorldObject::setProbability(float probability_) {
   probability = probability_;
 }
 
-void WorldObject::setPose( Eigen::Affine3d pos, bool hard) {  
+void WorldObject::setPose( Eigen::Affine3d pos, bool hard) {
   if(hard) {
     pose = pos; //no filter!
   }
   else {
     setPoseKalman(pos);
   }
-  
+
   //tPose.setRotation(tPose.getRotation().normalize());
   //update the marker
   tf::poseEigenToMsg(pose, objectMarker.pose);
@@ -171,23 +171,23 @@ void WorldObject::setPose( Eigen::Affine3d pos, bool hard) {
 
 void WorldObject::setPoseKalman(Eigen::Affine3d pos) {
   Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> K = covariance * ( (covariance + Q).inverse() );
-  
+
   Eigen::Matrix<double, KALMAN_SIZE,1> difference;
   for(int i=0; i<3; ++i) {
     difference(i) = pos(i,3)-pose(i,3);
   }
   Eigen::Matrix<double, KALMAN_SIZE,1> result = K*difference;
-  
+
   pose(0,3) += result(0);
   pose(1,3) += result(1);
   pose(2,3) += result(2);
-  
+
   pose.linear() = pos.linear();
-  
+
   Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> I;
   I.setIdentity();
   covariance = (I-K)*covariance;
-  
+
   setLastUpdated(ros::Time::now());
 }
 
@@ -221,7 +221,7 @@ std::vector<visualization_msgs::Marker> WorldObject::getMarkers() {
   else {
     markers.push_back(objectMarker);
     markers.push_back(labelMarker);
-    
+
     if(getShowGrasps()) {
       calculateGrasps(); /// setup for the arrows
       visualization_msgs::Marker arrow;
@@ -232,7 +232,7 @@ std::vector<visualization_msgs::Marker> WorldObject::getMarkers() {
       arrow.color.r = 0.5;
       arrow.header.frame_id = getFrame();
       arrow.scale.x = 0.01; arrow.scale.y = 0.02; arrow.scale.z=0.03;
-      
+
       for(std::vector<Grasp>::iterator grasp = grasps.begin(); grasp != grasps.end(); ++grasp) {
         arrow.points.clear();
         geometry_msgs::Point point;
@@ -245,7 +245,7 @@ std::vector<visualization_msgs::Marker> WorldObject::getMarkers() {
       }
     }
   }
-  
+
   return markers;
 }
 

@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -70,7 +70,7 @@ Recognizer::Recognizer() :
     showPose(false),
     showPoseStdDev(false),
     shouldDebugPrint(false),
-    
+
     classification_count(0),
     object_sequence(0),
     refreshInterval(0.01)
@@ -114,7 +114,7 @@ Recognizer::Recognizer() :
 
 void Recognizer::recognize(const ros::TimerEvent& event)
 {
-  update();     // update objects 
+  update();     // update objects
   publishROS(); // publish markers
   killStale();  // cull old objects
 }
@@ -168,7 +168,7 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
           ROS_WARN_STREAM_THROTTLE_NAMED(5.0f, "ORP Recognizer", "[Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
           return;
         }
-        
+
         tf::Stamped<tf::Pose> source, dest;
         newObject.pose.header.stamp = ros::Time(0);
         tf::poseStampedMsgToTF(newObject.pose, source);
@@ -176,11 +176,11 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
         tf::poseStampedTFToMsg(dest, newObject.pose);
         newObject.pose.header.frame_id = recognitionFrame;
       }
-      
+
       bool merged = false;
       Eigen::Affine3d eigPose;
       tf::poseMsgToEigen(newObject.pose.pose, eigPose);
-      
+
       WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.label, recognitionFrame, eigPose, 1.0f));
       p->setCloud(newObject.cloud);
       for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
@@ -234,7 +234,7 @@ void Recognizer::stopRecognition() {
     }
     //say goodbye (send delete markers)
     publishROS();
-    
+
     //clear all markers
     model.clear();
   } else {
@@ -273,7 +273,7 @@ void Recognizer::publishROS()
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
-    
+
     newObject.colocationDist = (**it).getColocationDistance();
     newObject.probability = (**it).getProbability();
     newObject.pose.header.frame_id = recognitionFrame;
@@ -281,7 +281,7 @@ void Recognizer::publishROS()
     newObject.pose.header.seq = object_sequence++;
     newObject.label  = (**it).getType().getName();
     newObject.cloud = (**it).getCloud();
-    
+
     objectMsg.objects.insert(objectMsg.objects.end(), newObject);
 
     //create the marker message
@@ -314,13 +314,13 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     tf::Pose intPose;
     tf::poseEigenToTF((**it).getPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
-    
+
     newObject.colocationDist = (**it).getColocationDistance();
     newObject.probability = (**it).getProbability();
     newObject.pose.header.frame_id = recognitionFrame;
     newObject.label  = (**it).getType().getName();
     newObject.cloud = (**it).getCloud();
-    
+
     response.objects.objects.push_back(newObject);
   }
   if(!wasStarted) {
@@ -351,7 +351,7 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
   {
     ROS_ERROR_STREAM_NAMED("ORP Recognizer", "No vision objects while trying to get most likely object of type " << wot.getName());
   }
-  
+
   int i = 0;
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); it++)
   {

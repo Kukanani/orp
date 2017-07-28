@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -194,11 +194,11 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       Eigen::Vector3f viewCentroid3f(viewCentroid[0], viewCentroid[1], viewCentroid[2]);
       Eigen::Vector3f clusterCentroid3f(clusterCentroid[0], clusterCentroid[1], clusterCentroid[2]);
       alignment.setInputAndTargetCentroids(clusterCentroid3f, viewCentroid3f);
-    
+
       // Compute the roll angle(s).
       std::vector<float> angles;
       alignment.computeRollAngle(*clusterCRH, *viewCRH, angles);
-    
+
       Eigen::Affine3d finalPose;
       finalPose(0,3) = clusterCentroid(0)+viewCentroid(0);
       finalPose(1,3) = clusterCentroid(1)+viewCentroid(1);
@@ -210,13 +210,13 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       }
       else {
         // CRH rotation
-        
+
         // get the rotation vector - just the vector to the centroid in object space
         Eigen::Vector3d rotVec = Eigen::Vector3d(0.0f, 0.0f, 1.0f);
         rotVec.normalize();
-        
+
         double radRotationAmount = 2*M_PI - angles.at(0) * M_PI/180;
-        
+
         // create a quaternion that represents rotation around an axis
         Eigen::Quaterniond quat;
         quat = Eigen::AngleAxisd(radRotationAmount, rotVec);

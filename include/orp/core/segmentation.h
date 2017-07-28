@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -71,7 +71,7 @@ typedef std::vector<pcl::PointIndices> IndexVector;
  *
  * @version 2.0
  * @ingroup objectrecognition
- * 
+ *
  * @author  Brian O'Neil <brian.oneil@lanl.gov>
  * @author  Adam Allevato <adam.d.allevato@gmail.com>
  */
@@ -83,7 +83,7 @@ private:
   /**
    * Enables usage of dynamic_reconfigure for reognition algorithm parameters.
    */
-  dynamic_reconfigure::Server<orp::SegmentationConfig> 
+  dynamic_reconfigure::Server<orp::SegmentationConfig>
     reconfigureServer;
   /**
    * Required for using dynamic_reconfigure.
@@ -97,7 +97,7 @@ private:
    */
   void paramsChanged(
     orp::SegmentationConfig &config, uint32_t level);
-  
+
   /*================================================*/
   /* CLASS VARS */
   /*================================================*/
@@ -127,7 +127,7 @@ private:
   /// Used to transform into the correct processing/recognition frames
   tf::TransformListener listener;
 
-  /// The frame to transform the recognition results into. This is useful if you need to use recognition results for 
+  /// The frame to transform the recognition results into. This is useful if you need to use recognition results for
   ///   motion planning in a specific frame, or pose x/y/z values, etc.
   std::string transformToFrame;
 
@@ -144,7 +144,7 @@ private:
   float maxY; // down in world space
   float minZ; // near clipping in world space
   float maxZ; // far clipping in world space
-  
+
   ///flags for publishing various intermediate point clouds
   bool _publishAllObjects, _publishAllPlanes, _publishBoundedScene, _publishLargestObject, _publishVoxelScene;
 
@@ -185,7 +185,7 @@ private:
   int minClusterSize;
   /**
    * Clusters that have more than this number of points won't be analyzed. The assumption
-   * is that this is either a) too computationally intensive to analyze, or b) this is just a 
+   * is that this is either a) too computationally intensive to analyze, or b) this is just a
    * background object like a wall which should be ignored anyway.
    */
   int maxClusterSize;
@@ -237,7 +237,7 @@ private:
    * @return                   the point cloud with primary planes removed as specified.
    */
   PCP& removePrimaryPlanes(PCP &input, int maxIterations, float thresholdDistance, float percentageGood);
-  
+
   /**
    * Euclidean clustering algorithm. See
    * http://www.pointclouds.org/documentation/tutorials/cluster_extraction.php

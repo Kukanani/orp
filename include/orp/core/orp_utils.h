@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -129,7 +129,7 @@ namespace ORPUtils {
   }
 
   ///Save a 4x4 matrix to a file.
-  static void saveEigenMatrix4f(std::string file, Eigen::Matrix4f mat) 
+  static void saveEigenMatrix4f(std::string file, Eigen::Matrix4f mat)
   {
     std::ofstream matFile;
     std::stringstream thisLine;
@@ -156,14 +156,14 @@ namespace ORPUtils {
     std::string thisLine;
     // Try to open the transformation file. If it does not open, set transformation to identity matrix
     transformationFile.open(file.c_str(), std::ios::in);
-    if(!transformationFile.is_open()) 
+    if(!transformationFile.is_open())
     {
       ROS_ERROR("Transformation file %s does not exist. Initializing transform to identity matrix", file.c_str());
     }
-    else 
+    else
     {
       int i = 0;
-      while(std::getline(transformationFile, thisLine) && i<4) 
+      while(std::getline(transformationFile, thisLine) && i<4)
       {
         std::istringstream objectSS(thisLine);
         //Get pose sigma

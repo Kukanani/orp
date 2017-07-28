@@ -1,21 +1,21 @@
 // Copyright (c) 2016, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -82,7 +82,7 @@ enum ObjectShape {
 
 /**
  * @brief Represents a type of object that can be found in the world.
- * 
+ *
  * Objects that are of the same WorldObjectType are functionally
  * identical in the real world (same color, size, weight, etc).
  *
@@ -115,7 +115,7 @@ public:
     }
   };
 
-  
+
   void setSize(float x, float y, float z) {
     stub.scale.x = x; stub.scale.y = y; stub.scale.z = z;
   };
@@ -146,21 +146,21 @@ public:
         break;
     }
   };
-  
+
   tf::Pose generateOffsetPose() {
     return tf::Pose(tf::createQuaternionFromRPY(
       offset.roll, offset.pitch, offset.yaw
     ));
   };
-  
+
   void setFrame(std::string frameName) {
     stub.header.frame_id = frameName;
   };
-  
+
   std::string getName() { return name; };
   visualization_msgs::Marker getStub() { return stub; };
   ObjectShape getShape() { return shape; };
-  
+
   inline bool operator <(const WorldObjectType& wot1) const {
     //ROS_INFO("%s vs %s", name.c_str(), wot1.name.c_str());
     return name < wot1.name;
@@ -175,7 +175,7 @@ public:
 
 /**
  * @brief Represents an object in the world as a probabilistic model.
- * 
+ *
  * A WorldObject has a chance of being any of a number of different WorldObjectType.
  * It stores probabilities that it is various types.
  *
@@ -184,16 +184,16 @@ public:
  */
 
 const float APPROACH_DIST = 0.04f;
-  
+
 class WorldObject {
 private:
   static int nextValidID;     /// ncremented on new object creation.
-  
+
   static const int MARKERS_PER_OBJECT = 10;
   static const int NON_GRASP_MARKER_COUNT = 2; //start grasp arrow marker IDs after this many. One reserved for object, one for name
   static const int KALMAN_SIZE = 3;
   static const float MEASUREMENT_COVARIANCE; //set in cpp file
-  
+
   void setType(WorldObjectType newType);
   void setupObjectMarker();
   void setupLabelMarker();
@@ -203,32 +203,32 @@ protected:
   float probability;          /// Certainty of classification/pose
   std::string frame;          /// The TF frame name that this object lives in.
   Eigen::Affine3d pose;       /// position and orientation of this object (center of object)
-  
+
   ros::Time lastUpdated;      /// When this object was last updated by a recognition event
   bool stale;                 /// If the object is stale, that means it needs to be deleted.
   float colocationDistance;   /// objects closer than this distance (in meters) are assumed to be the same one.
-  
+
   WorldObjectManager* manager;/// Manages global list of types.
   WorldObjectType type;       /// The type of this object
-  
+
   bool showGrasps;            /// If true, return grasp markers in getMarkers()
   std::vector<Grasp> grasps;  /// Possible grasps for this object.
   sensor_msgs::PointCloud2 cloud;
-  
+
 
   std::vector<std::string> fullSensorModel; //list of all detectable items
   std::vector<std::string> subSensorModel;  //list of items to be detected
-  
+
   visualization_msgs::Marker objectMarker; //visual representation of this
   visualization_msgs::Marker labelMarker; //the object's name
-  
+
   Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> covariance; //for Kalman filter
   Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> Q; // for Kalman filter
   void setPoseKalman(Eigen::Affine3d pos);
 public:
   ///Create a new WorldObject from a WorldObject message.
   static WorldObject createFromMessage(WorldObjectManager* manager_, orp::WorldObject message);
-  
+
   /**
    * Basic constructor.
    */
@@ -250,7 +250,7 @@ public:
   void refresh();
   void updateMarkers(); /// Set the position of the associated markers to match this object's pose.
   void calculateGrasps(); /// Use GraspGenerator to get a set of grasps for this object.
-  
+
   /**
    * Set the object's pose.
    * If the "hard" argument is true, then no filtering will be performed and the object's pose will
@@ -282,12 +282,12 @@ public:
   inline float getZ()                                 { return getPose()(2,3);     }; /// Get the Z-component of pose position
   inline float getColocationDistance()                { return colocationDistance; }; /// Objects closer than this distance should be merged with this object.
   inline std::vector<Grasp> getGrasps()               { return grasps;             };
-  
+
   inline bool isStale()                               { return stale;              }; /// If true, this object should be removed.
   bool isColocatedWith(WorldObjectPtr other);
   inline bool getShowGrasps()                         { return showGrasps;         }; /// If true, grasp markers will be returned in getMarkers().
 
-  //required for using fixed-size vectorizable Eigen types. 
+  //required for using fixed-size vectorizable Eigen types.
   //see http://eigen.tuxfamily.org/dox-devel/group__TopicStructHavingEigenMembers.html
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 }; //WorldObject

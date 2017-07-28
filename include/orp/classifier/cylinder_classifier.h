@@ -1,21 +1,21 @@
 // Copyright (c) 2016, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -51,17 +51,17 @@
  * @brief   Cylinder-only classification - fits a cylinder to the dataset and returns the cylinder's position and orientation
  *
  * TODO: THIS IMPLEMENTATION IS INCOMPLETE.
- * The cylinder is infinitely long, so although the axis of the object will probably be correct, you would need to adjust the 
+ * The cylinder is infinitely long, so although the axis of the object will probably be correct, you would need to adjust the
  * position along the cylinder's Z-axis based on the maximum and minimum spatial extents of the classified point cloud,
  * after projecting on to the object's Z-axis
  */
 class CylinderClassifier : public Classifier3D {
 protected:
-  pcl::SACSegmentationFromNormals<ORPPoint, pcl::Normal> seg; 
-  
+  pcl::SACSegmentationFromNormals<ORPPoint, pcl::Normal> seg;
+
   double normalDistanceWeight, maxIterations, distanceThreshold,
     minRadius, maxRadius;
-    
+
   /// Enables usage of dynamic_reconfigure.
   dynamic_reconfigure::Server<orp::CylinderClassifierConfig> reconfigureServer;
   dynamic_reconfigure::Server<orp::CylinderClassifierConfig>::CallbackType reconfigureCallbackType;

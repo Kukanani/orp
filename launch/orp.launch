@@ -54,9 +54,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="throttle_nodelet" default="100" />
 
   <!-- USE THIS FOR GDB -->
-  
+
   <!--      launch-prefix="xterm -e gdb &#45;&#45;args"      -->
-  
+
   <!-- DATA -->
   <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
   <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">
@@ -70,7 +70,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <!-- CLASSIFICATION -->
   <node
-    name    = "segmentation"  
+    name    = "segmentation"
     pkg     = "orp"
     type    = "segmentation"
     args    = ""

@@ -99,7 +99,7 @@ class CameraTFPublisher:
                 far_marker = tags.markers[1]
                 far_pos_msg = tags.markers[1].pose.pose.position
                 near_pos_msg = tags.markers[0].pose.pose.position
-            
+
             far_pos = (far_pos_msg.x, far_pos_msg.y, far_pos_msg.z)
             near_pos = (near_pos_msg.x, near_pos_msg.y, near_pos_msg.z)
 

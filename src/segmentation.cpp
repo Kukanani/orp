@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -63,9 +63,9 @@ Segmentation::Segmentation() :
   allPlanesPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_planes",1);
   largestObjectPublisher = node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
   allObjectsPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
-  
+
   segmentationServer = node.advertiseService("/segmentation", &Segmentation::cb_segment, this);
-  
+
   reconfigureCallbackType = boost::bind(&Segmentation::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
 }
@@ -100,7 +100,7 @@ void Segmentation::paramsChanged(orp::SegmentationConfig &config, uint32_t level
   clusterTolerance = config.cluster_tolerance;
   minClusterSize = config.min_cluster_size;
   maxClusterSize = config.max_cluster_size;
-  
+
   _publishAllObjects = config.publishAllObjects;
   _publishAllPlanes = config.publishAllPlanes;
   _publishBoundedScene = config.publishBoundedScene;
@@ -153,9 +153,9 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     transformedMessage.header.frame_id = transformToFrame;
     boundedScenePublisher.publish(transformedMessage);
   }
-    
+
   *inputCloud = *(voxelGridify(inputCloud, voxelLeafSize));
-  
+
   if(!inputCloud->points.empty() && inputCloud->points.size() < preVoxel) {
     // Publish voxelized
     if(_publishVoxelScene) {
@@ -164,7 +164,7 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
       voxelized_cloud.header.frame_id = transformToFrame;
       voxelPublisher.publish(voxelized_cloud);
     }
-      
+
     //remove planes
     inputCloud = removePrimaryPlanes(inputCloud, maxPlaneSegmentationIterations, segmentationDistanceThreshold, percentageToAnalyze);
 
@@ -213,7 +213,7 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
     new pcl::FieldComparison<ORPPoint>("z", pcl::ComparisonOps::GT, minZ)));
   clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("z", pcl::ComparisonOps::LT, maxZ)));
- 
+
   // Filter object.
   pcl::ConditionalRemoval<ORPPoint> filter;
   filter.setCondition(clip_condition);
@@ -224,7 +224,7 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
   filter.setKeepOrganized(true);
   // If keep organized was set true, points that failed the test will have their Z value set to this.
   filter.setUserFilterValue(0.0);
- 
+
   filter.filter(*processCloud);
   return processCloud;
 }
@@ -238,7 +238,7 @@ PCP& Segmentation::voxelGridify(PCP &loose, float gridSize) {
   vg.setInputCloud(loose);
   vg.setLeafSize(gridSize, gridSize, gridSize);
   vg.filter(*processCloud);
-  
+
   return processCloud;
 }
 
@@ -312,12 +312,12 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
   IndexVector cluster_indices;
   pcl::EuclideanClusterExtraction<ORPPoint> ec;
   ec.setInputCloud(input);
-  
-  ec.setClusterTolerance(clusterTolerance); 
-  ec.setMinClusterSize(minClusterSize); 
+
+  ec.setClusterTolerance(clusterTolerance);
+  ec.setMinClusterSize(minClusterSize);
   ec.setMaxClusterSize(maxClusterSize);
   ec.setSearchMethod(tree);
-  
+
   ec.extract (cluster_indices);
 
   if(cluster_indices.empty()) return clusters;
@@ -332,10 +332,10 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
     processCloud->width = processCloud->points.size();
     processCloud->height = 1;
     processCloud->is_dense = true;
-  
+
     //publish the cluster
     sensor_msgs::PointCloud2 tempROSMsg;
-    
+
     pcl::toROSMsg(*processCloud, tempROSMsg);
     tempROSMsg.header.frame_id = transformToFrame;
     clusters.push_back(tempROSMsg);

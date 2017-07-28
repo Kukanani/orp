@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -64,7 +64,7 @@
  *
  * @version 2.0
  * @ingroup objectrecognition
- * 
+ *
  * @author  Brian O'Neil <brian.oneil@lanl.gov>
  * @author  Adam Allevato <adam.d.allevato@gmail.com>
  */
@@ -130,7 +130,7 @@ public:
                   keeping track of various views of an object.
    */
   bool saveCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
-  
+
   /**
    * ROS shadow for saveCloud. Creates a segmentation request to split the large-
    * scale point cloud into smaller clouds. Then performs saveCloud() on each

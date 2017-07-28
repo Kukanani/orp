@@ -1,21 +1,21 @@
 // Copyright (c) 2015, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -93,9 +93,9 @@ protected:
   std::string dataFolder;                       /// folder to load feature vectors from
   std::string fileExtension;                    /// file extension to load feature vectors from.
 
-  /** 
+  /**
    * Search for the closest k neighbors
-   * 
+   *
    * @param index the tree
    * @param model the query model
    * @param k the number of neighbors to search for
@@ -106,7 +106,7 @@ protected:
    */
   virtual int nearestKSearch (
     flann::Index<flann::ChiSquareDistance<float> > &index,
-    const FeatureVector &model, 
+    const FeatureVector &model,
     int k,
     flann::Matrix<int> &indices,
     flann::Matrix<float> &distances);
@@ -119,7 +119,7 @@ protected:
    */
   virtual void loadModelsRecursive(
     const boost::filesystem::path &base_dir,
-    const std::string &extension, 
+    const std::string &extension,
     FeatureVectorVector &models);
 
   /**
@@ -129,7 +129,7 @@ protected:
    * @return      true, unless there was an error reading the file
    */
   virtual bool loadHist(const boost::filesystem::path &path, FeatureVector &vec) = 0;
-  
+
   /**
    * Load the list of objects and their properties from the parameter server. Blocks until the correct parameters become available.
    */

@@ -39,4 +39,4 @@ float32 sigma_pose
 float32[] prob_dist
 
 float32 sigma_filtered
-float32[] filt_dist 
+float32[] filt_dist

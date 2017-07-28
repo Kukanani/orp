@@ -39,13 +39,13 @@ TODO(Kukanani): choose a type of depth camera for training, and use the correct
 <launch>
   <arg name="home_dir"        default="$(find orp)" />
   <arg name="data_folder"     default="data/train"/>
-  
+
   <!-- GET DATA -->
   <include file="$(find freenect_launch)/launch/freenect.launch"> </include>
 
   <!-- SCENE SETUP -->
   <node
-    name    = "static_transform_publisher"  
+    name    = "static_transform_publisher"
     pkg     = "orp"
     type    = "camera_tf_publisher.py"
 
@@ -98,20 +98,20 @@ TODO(Kukanani): choose a type of depth camera for training, and use the correct
     name="arduino_interface"
     pkg="rosserial_python"
     type="serial_node.py"
-    args="/dev/ttyACM0" 
-    
+    args="/dev/ttyACM0"
+
     output="screen"
     respawn="true"
   />
 
   <!-- FIDUCIALS -->
-  
+
   <arg name="marker_size" default="4.4" />
   <arg name="max_new_marker_error" default="0.08" />
   <arg name="max_track_error" default="0.2" />
 
   <arg name="cam_image_topic" default="/camera/depth_registered/points" />
-  <arg name="cam_info_topic" default="/camera/rgb/camera_info" />    
+  <arg name="cam_info_topic" default="/camera/rgb/camera_info" />
   <arg name="output_frame" default="/camera_link" />
 
   <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkers" respawn="false" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />
