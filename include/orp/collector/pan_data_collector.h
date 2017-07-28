@@ -54,45 +54,54 @@
  */
 class PanDataCollector {
 public:
-	ros::NodeHandle n;  					/// Standard ROS node handle.
+  /// Standard ROS node handle.
+  ros::NodeHandle n;
 
-	ros::Publisher panPub; 					/// Send pan messages to be read by the pan table
-	ros::Subscriber /*Thunder*/cloudSub; 	/// Waits for point cloud data
-	ros::Publisher centerPointPub; 			/// Spits out the center point
-	ros::ServiceClient saveClient; 			/// Calls the service to save data to file
-	ros::ServiceServer dataCollectSrv; 		/// Listens for service calls to kic things off
+  /// Send pan messages to be read by the pan table
+  ros::Publisher panPub;
+  /// Waits for point cloud data
+  ros::Subscriber /*Thunder*/cloudSub;
+  /// Spits out the center point
+  ros::Publisher centerPointPub;
+  /// Calls the service to save data to file
+  ros::ServiceClient saveClient;
+  /// Listens for service calls to kick things off
+  ros::ServiceServer dataCollectSrv;
+  /// Used to get the center point
+  tf::TransformListener tfListener;
 
-	tf::TransformListener tfListener; 		/// Used to get the center point
+  /**
+   * The stored depth points, which are passed on to the point cloud processor
+   * by the main worker.
+   */
+  sensor_msgs::PointCloud2 currentCloud;
 
-	/**
-	 * The stored depth points, which are passed on to the point cloud processor by the main worker.
-	 */
-	sensor_msgs::PointCloud2 currentCloud;
+  PanDataCollector(ros::NodeHandle nh);
 
-	PanDataCollector(ros::NodeHandle nh);
+  /**
+   * Stores the incoming sensor data.
+   * @param cloud The point cloud from the sensor
+   */
+  void cb_cloud(sensor_msgs::PointCloud2 cloud);
 
-	/**
-	 * Stores the incoming sensor data.
-	 * @param cloud The point cloud from the sensor
-	 */
-	void cb_cloud(sensor_msgs::PointCloud2 cloud);
+  /**
+   * Rotate the table 360 degrees in increments as specified by the message,
+   * and process the
+   * point cloud data at each point.
+   */
+  bool rotate_cb(orp::DataCollect::Request &req,
+    orp::DataCollect::Response &res);
 
-	/**
-	 * Rotate the table 360 degrees in increments as specified by the message, and process the
-	 * point cloud data at each point.
-	 */
-	bool rotate_cb(orp::DataCollect::Request &req,
-		orp::DataCollect::Response &res);
+  /**
+   * Get the center of the pan table, and publish that center to a ROS topic.
+   */
+  void publishCenterPoint();
 
-	/**
-	 * Get the center of the pan table, and publish that center to a ROS topic.
-	 */
-	void publishCenterPoint();
-
-	/**
-	 * Determine the pan table center just from a set of AR tags, and publish to ROS topic
-	 */
-	void publishCenterPointFromARTags();
+  /**
+   * Determine the pan table center just from a set of AR tags, and publish
+   * to ROS topic
+   */
+  void publishCenterPointFromARTags();
 
 };
 

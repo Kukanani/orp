@@ -54,7 +54,8 @@
 #include "orp/core/orp_utils.h"
 
 /**
- * @brief   Simulates ORP vision objects using interactive RViz markers. Position the objects using RViz, then they act
+ * @brief   Simulates ORP vision objects using interactive RViz markers.
+ *          Position the objects using RViz, then they act
  * like normally-detected ORP objects when looking at ORP recognizer output.
  */
 class VisionSimulator {
@@ -106,10 +107,12 @@ public:
    * with the given format.
    * object_name x_pos y_pos z_pos
    */
-  VisionSimulator(ros::NodeHandle nh, std::string filename, std::string outputFrame);
+  VisionSimulator(ros::NodeHandle nh, std::string filename,
+                  std::string outputFrame);
 
   /// Called when a marker is updated
-  void cb_markerFeedback(const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
+  void cb_markerFeedback(
+      const visualization_msgs::InteractiveMarkerFeedbackConstPtr &feedback);
 };
 
 #endif
