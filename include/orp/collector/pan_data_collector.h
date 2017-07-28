@@ -34,17 +34,18 @@
 #include <sstream>
 
 #include <ros/ros.h>
-#include <tf/transform_listener.h>
+
+#include <sensor_msgs/PointCloud2.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
-#include <sensor_msgs/PointCloud2.h>
+#include <tf/transform_listener.h>
 
 #include <orp/DataCollect.h>
 #include <orp/SaveCloud.h>
 
 /**
- * @brief Sends pan commands to the pan table
- * and pipes sensor point cloud data off to other topics
+ * @brief Sends pan commands to the pan table and pipes sensor point cloud
+ * data off to other topics
  *
  * @version 1.2
  * @ingroup objectrecognition

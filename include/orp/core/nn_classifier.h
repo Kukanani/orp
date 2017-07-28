@@ -38,11 +38,12 @@
 #include <flann/flann.h>
 
 #include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
+
 #include <eigen_conversions/eigen_msg.h>
-#include <std_msgs/Empty.h>
-#include <pcl_ros/point_cloud.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl_ros/point_cloud.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <std_msgs/Empty.h>
 
 #include <orp/Segmentation.h>
 #include <orp/ClassificationResult.h>
@@ -51,22 +52,64 @@
 #include "orp/core/world_object.h"
 #include "orp/core/orp_utils.h"
 
-//http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_5:_3D_object_recognition_(pipeline)
+/**
+ * An NN Classifier is a Nearest Neighbor classifier - that is, it uses a
+ * descriptor that can be saved to a file, loads a bunch of those descriptors
+ * from a file, and then does nearest-neighbor matching with FLANN to do
+ * joint inference of object class and pose. This is the approach taken by
+ * Brian O'Neil's thesis, using the CPH object descriptor.
+ *
+ * Much of this class, especially the part about CRH (Camera Roll Histogram,
+ * note the difference from CPH, Circular Projection Histogram), was inspired
+ * by the web page:
+ * http://robotica.unileon.es/mediawiki/index.php/PCL/OpenNI_tutorial_5:_3D_object_recognition_(pipeline)
+ */
+
+/**
+ * A Camera Roll Histogram. See http://pointclouds.org/news/2011/08/04/cvfh/
+ * for a brief description. See also
+ * http://ieeexplore.ieee.org/document/6630859/
+ */
 typedef pcl::Histogram<90> CRH90;
 POINT_CLOUD_REGISTER_POINT_STRUCT (CRH90, (float[90], histogram, histogram) )
-struct KnownPose {
-  std::string name;                /// The object name (types/classification)
-  std::string dataName;            /// the original source of the data (filename)
-  float angle;                     /// Rotation around vertical axis (for 4DOF pose)
-  Eigen::Affine3d pose;            /// 6DOF pose
-  pcl::PointCloud<CRH90>::Ptr crh; /// camera roll histogram as loaded from file
-  Eigen::Vector4f centroid;        /// centroid of point cloud
-  pcl::PointCloud<ORPPoint>::Ptr cloud; /// raw point cloud
 
-  KnownPose() : cloud(new pcl::PointCloud<ORPPoint>), crh(new pcl::PointCloud<CRH90>) {};
+/**
+ * This represents a single pose that will be associated with a descriptor,
+ * usually as loaded from a file.
+ */
+struct KnownPose {
+  /// The object name (types/classification)
+  std::string name;
+  /// the original source of the data (filename)
+  std::string dataName;
+  /// Rotation around vertical axis (for 4DOF pose)
+  float angle;
+  /// 6DOF pose
+  Eigen::Affine3d pose;
+  /// camera roll histogram as loaded from file (if this descriptor type
+  /// supports CRH)
+  /// TODO(Kukanani): maybe make this a union?
+  pcl::PointCloud<CRH90>::Ptr crh;
+  /// centroid of point cloud
+  Eigen::Vector4f centroid;
+  /// raw point cloud
+  pcl::PointCloud<ORPPoint>::Ptr cloud;
+
+  /**
+   * TODO(Kukanani): structs don't usually have constructors, do they? Maybe
+   * make this a class.
+   */
+  KnownPose() :
+    cloud(new pcl::PointCloud<ORPPoint>),
+    crh(new pcl::PointCloud<CRH90>) {};
 };
+
+/// A known pose and its descriptor
 typedef std::pair<KnownPose, std::vector<float> > FeatureVector;
-typedef std::vector<FeatureVector, Eigen::aligned_allocator<FeatureVector> > FeatureVectorVector;
+
+/// Multiple feature vectors. Cool name bro.
+typedef std::vector<FeatureVector, Eigen::aligned_allocator<FeatureVector> >
+    FeatureVectorVector;
 
 /**
  * @brief   A generic nearest-neighbor classifier object.
@@ -79,19 +122,30 @@ typedef std::vector<FeatureVector, Eigen::aligned_allocator<FeatureVector> > Fea
  */
 class NNClassifier : public Classifier3D {
 protected:
-  std::vector<std::string> fullTypeList;        /// All known objects that can be detected.
-  std::vector<std::string> subTypeList;        /// Subset currently detectable.
-  FeatureVectorVector loadedModels;      /// The list of models as loaded from files
-  FeatureVectorVector subModels;         /// The subset of models for better FLANN searching
+  /// All known objects that can be detected.
+  std::vector<std::string> fullTypeList;
+  /// Subset currently detectable.
+  std::vector<std::string> subTypeList;
+  /// The list of models as loaded from files
+  FeatureVectorVector loadedModels;
+  /// The subset of models for better FLANN searching
+  FeatureVectorVector subModels;
 
-  flann::Index<flann::ChiSquareDistance<float> >* kIndex; /// The indexed data for knn search.
-  flann::Matrix<int> kIndices;                  /// The indices for the knn search.
-  flann::Matrix<float> kDistances;              /// The resulting distances for the knn search.
-  flann::Matrix<float>* kData;                  /// The data for the knn search.
+  /// The indexed data for knn search.
+  flann::Index<flann::ChiSquareDistance<float> >* kIndex;
+  /// The indices for the knn search.
+  flann::Matrix<int> kIndices;
+  /// The resulting distances for the knn search.
+  flann::Matrix<float> kDistances;
+  /// The data for the knn search.
+  flann::Matrix<float>* kData;
 
-  float threshold;                              /// knn distance threshold
-  std::string dataFolder;                       /// folder to load feature vectors from
-  std::string fileExtension;                    /// file extension to load feature vectors from.
+  /// knn distance threshold
+  float threshold;
+  /// folder to load feature vectors from
+  std::string dataFolder;
+  /// file extension to load feature vectors from.
+  std::string fileExtension;
 
   /**
    * Search for the closest k neighbors
@@ -142,6 +196,9 @@ public:
   NNClassifier();
   virtual ~NNClassifier();
 
+  /**
+   * Actually set things up.
+   */
   virtual void init();
 
   /**

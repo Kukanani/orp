@@ -30,6 +30,14 @@
 
 #include "orp/collector/histogram_saver.h"
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/features/vfh.h>
+#include <pcl/features/cvfh.h>
+#include <pcl/features/crh.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/io/pcd_io.h>
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "histogram_saver");

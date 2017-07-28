@@ -30,6 +30,11 @@
 
 #include "orp/classifier/sixdof_classifier.h"
 
+#include <pcl/features/cvfh.h>
+#include <pcl/features/crh.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/recognition/crh_alignment.h>
+
 #include <boost/filesystem.hpp>
 
 /**

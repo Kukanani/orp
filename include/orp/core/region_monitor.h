@@ -34,6 +34,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+// TODO(Kukanani): clean up these includes and the whole header section.
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
@@ -50,26 +51,29 @@
 
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
-#include <tf/transform_listener.h>
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/point_cloud_conversion.h>
+#include <tf/transform_listener.h>
 
 #include <orp/Monitor.h>
 #include <orp/Region.h>
 
 #include "orp/core/orp_utils.h"
 
-//usefule PCL typedefs
-typedef pcl::PointCloud<ORPPoint> PC;
-typedef pcl::PointCloud<ORPPoint>::Ptr PCP;
-typedef std::vector<pcl::PointIndices> IndexVector;
-
+/**
+ * Monitor a region of space for any points. This was originally written for
+ * the Guido guide-bot project, to see when a door region was clear and
+ * initiate motion.
+ *
+ * TODO(Kukanani): This node is very separate from the rest of ORP and
+ * could/should be split into its own package.
+ */
 class RegionMonitor {
 private:
-  /*================================================*/
-  /* CLASS VARS */
-  /*================================================*/
+///////////////////////////////////////////////////////////////////////////////
+// CLASS VARS
+///////////////////////////////////////////////////////////////////////////////
   /// Standard ROS node handle
   ros::NodeHandle node;
   ros::AsyncSpinner spinner;
@@ -90,11 +94,9 @@ private:
   tf::TransformListener listener;
   std::string transformToFrame;
 
-
-
-  /*================================================*/
-  /* SEGMENTATION PARAMS */
-  /*================================================*/
+///////////////////////////////////////////////////////////////////////////////
+// SEGMENTATION PARAMS
+///////////////////////////////////////////////////////////////////////////////
   //The minimum camera-space X for the working area bounding box
   float minX; // left in world space
   float maxX; // right in world space
@@ -108,10 +110,9 @@ private:
   ///used as intermediate step for cloud processing
   PCP processCloud;
 
-
-  /*================================================*/
-  /* FILTERING STEPS (FUNCTIONS) */
-  /*================================================*/
+///////////////////////////////////////////////////////////////////////////////
+// FILTERING STEPS (FUNCTIONS)
+///////////////////////////////////////////////////////////////////////////////
 
   /**
    * Spatially filter a point cloud
@@ -127,6 +128,7 @@ private:
   PCP& clipByDistance(PCP &unclipped);
 
 public:
+  /// Basic constructor
   RegionMonitor();
 
   /// Start!
@@ -134,8 +136,11 @@ public:
 
   /// Do the segmentation steps enabled by parameter flags and return the result.
   void cb_params(const orp::Region::ConstPtr& region);
+
+  /// Called when a point cloud comes in
   void cb_pointCloud(const sensor_msgs::PointCloud::ConstPtr& cloud);
 
+  /// process a request to monitor.
   bool cb_monitor(orp::MonitorRequest& req, orp::MonitorResponse& res);
 }; //RegionMonitor
 

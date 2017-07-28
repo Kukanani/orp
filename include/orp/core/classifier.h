@@ -41,18 +41,22 @@ class Classifier {
 protected:
   /// Interface to ROS
   ros::NodeHandle node_;
+  /// For getting private parameters
   ros::NodeHandle node_private_;
 
-  /// Publishes completed classifications
+  /// Where to publish completed classifications
   std::string classification_topic_;
+  /// Publishes completed classifications
   ros::Publisher classification_pub_;
 
-  /// Listens for requests to start recognition
+  /// Topic to listen for start requests on
   std::string start_topic_;
+  /// Listens for requests to start recognition
   ros::Subscriber start_sub_;
 
-  /// Listens for requests to stop recognition
+  /// Topic to listen for stop requests on
   std::string stop_topic_;
+  /// Listens for requests to stop recognition
   ros::Subscriber stop_sub_;
 
 
@@ -68,12 +72,16 @@ protected:
   void cb_stop(std_msgs::Empty msg);
 
 public:
+  /**
+   * Default constructor
+   */
   Classifier();
 
   /**
-   * If the autostart argument is true, then start. Call at the end of the constructor.
-   * This has to be its own method because otherwise
-   * Classifier would call virtual methods in the constructor. See this page for more info:
+   * If the autostart argument is true, then start. Call at the end of the
+   * constructor. This has to be its own method because otherwise Classifier
+   * would call virtual methods in the constructor. See this page for more
+   * info:
    * http://www.parashift.com/c++-faq-lite/calling-virtuals-from-ctors.html
    */
   virtual void init();

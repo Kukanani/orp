@@ -33,12 +33,27 @@
 
 #include <vector>
 
-#include <tf/tf.h>
 #include "orp/core/world_object.h"
-#include "grasp.h"
+#include "orp/core/grasp.h"
 
 /**
- * Generates basic grasps for objects.
+ * @brief Generates basic grasps for objects.
+ *
+ * This was part of a now-dormant attempt to have ORP objects be more than
+ * just vision objects, and have grasp generation tied closely to the object
+ * definition. This doesn't make sense for a number of reasons, the most
+ * important of which is that it creates a lot of unnecessary coupling between
+ * the vision and grasping code. If there was a package or set of packages
+ * that defined an agnostic "objectness" concept, then vision pipelines could
+ * produce objects, and grasp generators could act on them. For an attempt
+ * at this latter approach, see
+ *
+ * All that to say, that this class, along with the Grasp struct, could and
+ * should be removed. HOWEVER the multiuse_workcell class currently uses the
+ * grasp generator in a limited capacity (see sorter.cpp), so that
+ * implementation would have to be modified as a result of removing this class.
+ *
+ * It may be better to save this change for "ORP 2" or something similar.
  *
  * @author Adam Allevato
  * @email allevato@utexas.edu
@@ -46,19 +61,39 @@
  * @version 0.1.0
  */
 
+/**
+ * Different gripper types that the generator can generate grasps for.
+ * (each gripper's geometry is different)
+ */
 enum GripperType {
   UNDEFINED       = 0,
   ROBOTIQ_S_MODEL = 1
 };
 
+/**
+ * Given objects, generates grasps.
+ */
 class GraspGenerator {
 protected:
+  /// What type of gripper to use
   GripperType gripperType;
 
+  /**
+   * Generate grasps from all 8 cartesian axis directions (+/- X/Y/Z).
+   */
+  std::vector<Grasp> generateAxisGrabs(WorldObject target, float approachDist);
 public:
+  /**
+   * Basic constructor
+   *
+   * @param g the type of gripper to use for generation
+   */
   GraspGenerator(GripperType g = UNDEFINED);
 
-  std::vector<Grasp> generateAxisGrabs(WorldObject target, float approachDist);
+  /**
+   * Generate grasps for the object in question. Different object shapes, for
+   * example, may require different grasp generation strategies.
+   */
   std::vector<Grasp> createGrasps(WorldObject target, float approachDist);
 };
 

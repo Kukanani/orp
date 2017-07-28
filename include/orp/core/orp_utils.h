@@ -33,19 +33,34 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <fstream>
 #include <stdexcept>
 #include <sstream>
-#include <fstream>
 
 #include <pcl/io/pcd_io.h>
-//#include <pcl/io/vtk_lib_io.h>
 #include <pcl/point_cloud.h>
 
 #include <interactive_markers/interactive_marker_server.h>
 #include <interactive_markers/menu_handler.h>
 
+/// ORP can be switched from RGBD mode to depth-only mode by removing the
+/// XYZ in this typedef.
+/// TODO(Kukanani): add a way to change this, maybe with a compile flag
+/// or CMake arg?
 typedef pcl::PointXYZRGB ORPPoint;
 
+/// An ORP point cloud
+typedef pcl::PointCloud<ORPPoint> PC;
+
+/// A smart pointer to an ORP point cloud
+typedef pcl::PointCloud<ORPPoint>::Ptr PCP;
+
+/// Shorthand used for processing point clouds by point indices.
+typedef std::vector<pcl::PointIndices> IndexVector;
+
+/**
+ * Basic custom std exception type.
+ */
 class file_error: public std::runtime_error
 {
 public:
@@ -55,38 +70,36 @@ public:
 };
 
 /**
- * Utility methods
+ * Lots of utility methods live here.
  */
-
 namespace ORPUtils {
-//public:
-
-  ///Convert degrees to radians.
+  /// Convert degrees to radians.
   static double radFromDeg(double deg) {
     return deg * M_PI / 180.0;
   }
 
-  ///Convert radians to degrees.
+  /// Convert radians to degrees.
   static double degFromRad(double rad) {
     return rad * 180.0 / M_PI;
   }
 
-  ///Load a point cloud from the input file, whether that file is an STL, PCD, or PLY file.
+  /// Load a point cloud from the input file. Currently, PCD files only.
   static pcl::PointCloud<ORPPoint>::Ptr loadCloudFrom(std::string path) {
     pcl::PointCloud<ORPPoint>::Ptr cloud_out (new pcl::PointCloud<ORPPoint>);
-    //pcl::PolygonMesh testMesh;
     std::string arg1 = path;
     std::string filetype1 = path.substr(path.length()-3);
     if(filetype1 == "stl") {
-      std::cout << "PLY file loading is no longer supported due to deprecated loader libraries. Please load PCD files." << std::endl;
+      std::cout << "PLY file loading is no longer supported due to deprecated "
+                << "loader libraries. Please load PCD files." << std::endl;
     }
-
     else if(filetype1 == "ply") {
-      std::cout << "PLY file loading is no longer supported due to deprecated loader libraries. Please load PCD files." << std::endl;
+      std::cout << "PLY file loading is no longer supported due to deprecated "
+                << "loader libraries. Please load PCD files." << std::endl;
     }
 
     else if(filetype1 == "pcd") {
-      if (pcl::io::loadPCDFile<ORPPoint>(path.c_str(), *cloud_out) == -1) // load input
+      // load input
+      if (pcl::io::loadPCDFile<ORPPoint>(path.c_str(), *cloud_out) == -1)
       {
         PCL_ERROR ("Couldn't read input PCD file\n");
         throw file_error("Couldn't read input PCD file");
@@ -99,8 +112,9 @@ namespace ORPUtils {
     return cloud_out;
   }
 
-  ///Create a box marker with the specified dimensions and color.
-  static visualization_msgs::Marker makeBoxMarker(float xsize, float ysize, float zsize, float r, float g, float b)
+  /// Create a box marker with the specified dimensions and color.
+  static visualization_msgs::Marker makeBoxMarker(
+    float xsize, float ysize, float zsize, float r, float g, float b)
   {
     visualization_msgs::Marker marker;
 
@@ -116,10 +130,12 @@ namespace ORPUtils {
     return marker;
   }
 
-  ///Create an interactive 6DOF box marker with the specified color and dimensions.
+  ///Create an interactive 6DOF box marker with the specified color and
+  ///dimensions.
   static visualization_msgs::InteractiveMarkerControl& makeBoxControl(
     visualization_msgs::InteractiveMarker &msg,
-    float xsize, float ysize, float zsize, float r = 0.5f, float g = 0.5f, float b = 0.5f)
+    float xsize, float ysize, float zsize,
+    float r = 0.5f, float g = 0.5f, float b = 0.5f)
   {
     visualization_msgs::InteractiveMarkerControl control;
     control.always_visible = true;
@@ -128,7 +144,7 @@ namespace ORPUtils {
     return msg.controls.back();
   }
 
-  ///Save a 4x4 matrix to a file.
+  /// Save a 4x4 matrix to a file.
   static void saveEigenMatrix4f(std::string file, Eigen::Matrix4f mat)
   {
     std::ofstream matFile;
@@ -145,20 +161,22 @@ namespace ORPUtils {
       matFile << thisLine.str() << std::endl;
     }
     matFile.close();
-  }; //saveEigenMatrix4f
+  };
 
-  ///Load a 4x4 matrix from a file.
+  /// Load a 4x4 matrix from a file.
   static Eigen::Matrix4f loadEigenMatrix4f(std::string file) {
     Eigen::Matrix4f mat;
 
     // Read the transformation file
     std::ifstream transformationFile;
     std::string thisLine;
-    // Try to open the transformation file. If it does not open, set transformation to identity matrix
+    // Try to open the transformation file. If it does not open, set
+    // transformation to identity matrix
     transformationFile.open(file.c_str(), std::ios::in);
     if(!transformationFile.is_open())
     {
-      ROS_ERROR("Transformation file %s does not exist. Initializing transform to identity matrix", file.c_str());
+      ROS_ERROR_STREAM("Transformation file " << file << " does not exist. "
+        << "Initializing transform to identity matrix" );
     }
     else
     {
@@ -166,7 +184,7 @@ namespace ORPUtils {
       while(std::getline(transformationFile, thisLine) && i<4)
       {
         std::istringstream objectSS(thisLine);
-        //Get pose sigma
+        // Get pose sigma
         objectSS >> mat(i, 0);
         objectSS >> mat(i, 1);
         objectSS >> mat(i, 2);
@@ -178,7 +196,8 @@ namespace ORPUtils {
     return mat;
   }
 
-  ///Return a string representation of an integer with a fixed width, padded by leading zeros.
+  /// Return a string representation of an integer with a fixed width,
+  /// padded by leading zeros.
   static std::string zeroPad(int num, int fixedWidth)
   {
       std::ostringstream ss;
@@ -187,4 +206,4 @@ namespace ORPUtils {
   }
 };
 
-#endif //_ORP_UTILS_H_
+#endif

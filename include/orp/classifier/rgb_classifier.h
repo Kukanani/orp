@@ -31,13 +31,9 @@
 #ifndef _RGB_CLASSIFIER_H_
 #define _RGB_CLASSIFIER_H_
 
-#include <pcl/features/cvfh.h>
-#include <pcl/features/crh.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/recognition/crh_alignment.h>
-
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <pcl/features/normal_3d.h>
 #include <pcl_ros/transforms.h>
 
 //NRG internal files
@@ -48,7 +44,8 @@
  */
 class RGBClassifier : public Classifier3D {
 protected:
-  cv::Mat M; ///For RGB cluster visualization
+  ///For RGB cluster visualization
+  cv::Mat M;
 public:
   RGBClassifier();
 
@@ -60,7 +57,7 @@ public:
   void cb_classify(sensor_msgs::PointCloud2 cloud);
 
   /**
-   * Posterize the colors in a cv Mat.
+   * Posterize the colors in a cv Mat. See
    * http://stackoverflow.com/questions/5906693/how-to-reduce-the-number-of-colors-in-an-image-with-opencv-in-python
    */
   void processColors(cv::Mat& img);

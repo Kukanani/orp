@@ -31,45 +31,64 @@
 #ifndef CYLINDER_CLASSIFIER_H
 #define CYLINDER_CLASSIFIER_H
 
+#include <eigen_conversions/eigen_msg.h>
+#include <dynamic_reconfigure/server.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/recognition/crh_alignment.h>
-
+#include <pcl_conversions/pcl_conversions.h>
 #include <pcl_ros/transforms.h>
 #include <tf/transform_listener.h>
-#include <dynamic_reconfigure/server.h>
-#include <eigen_conversions/eigen_msg.h>
-#include <pcl_conversions/pcl_conversions.h>
-
-#include <orp/CylinderClassifierConfig.h>
 
 //NRG internal files
+#include <orp/CylinderClassifierConfig.h>
 #include "orp/core/classifier3d.h"
 #include "orp/core/orp_utils.h"
 
 /**
- * @brief   Cylinder-only classification - fits a cylinder to the dataset and returns the cylinder's position and orientation
+ * @brief   Cylinder-only classification - fits a cylinder to the dataset and
+ *          returns the cylinder's position and orientation
  *
- * TODO: THIS IMPLEMENTATION IS INCOMPLETE.
- * The cylinder is infinitely long, so although the axis of the object will probably be correct, you would need to adjust the
- * position along the cylinder's Z-axis based on the maximum and minimum spatial extents of the classified point cloud,
- * after projecting on to the object's Z-axis
+ * TODO(Kukanani): THIS IMPLEMENTATION IS INCOMPLETE.
+ * The cylinder is infinitely long, so although the axis of the object will
+ * probably be correct, you would need to adjust the position along the
+ * cylinder's Z-axis based on the maximum and minimum spatial extents of the
+ * classified point cloud, after projecting on to the object's Z-axis
  */
 class CylinderClassifier : public Classifier3D {
 protected:
+  /// used to find the cylindrical shape
   pcl::SACSegmentationFromNormals<ORPPoint, pcl::Normal> seg;
 
-  double normalDistanceWeight, maxIterations, distanceThreshold,
-    minRadius, maxRadius;
+  /// tuning parameter for the the cylinder-finding algorithm.
+  double normalDistanceWeight;
+
+  /// terminate after this many refinements
+  double maxIterations;
+
+  /// Not exactly sure what this does, perhaps points must be within this
+  /// distance (m) to be considered as part of the cylinder?
+  double distanceThreshold;
+
+  /// minimum radius of cylinder model
+  double minRadius;
+
+  /// maximum radius of cylinder model
+  double maxRadius;
 
   /// Enables usage of dynamic_reconfigure.
   dynamic_reconfigure::Server<orp::CylinderClassifierConfig> reconfigureServer;
-  dynamic_reconfigure::Server<orp::CylinderClassifierConfig>::CallbackType reconfigureCallbackType;
+  /// Used for dynamic reconfigure internals
+  dynamic_reconfigure::Server<orp::CylinderClassifierConfig>::CallbackType
+      reconfigureCallbackType;
 public:
+  /**
+   * Basic constructor.
+   */
   CylinderClassifier();
 
   /**
-   * Dynamic reconfigure
+   * Dynamic reconfigure callback
    */
   void paramsChanged(orp::CylinderClassifierConfig &config, uint32_t level);
 

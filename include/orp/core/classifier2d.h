@@ -34,31 +34,42 @@
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 
-#include <sensor_msgs/PointCloud2.h>
-#include <orp/Segmentation.h>
-
 #include "orp/core/classifier.h"
 
 /**
- * @brief   A 3D classifier
+ * @brief A 2D classifier
  *
- * Extension of the basic classifier, but includes a segmentation client and depth subscriber.
+ * Extension of the basic classifier, but includes an image subscriber.
  */
 class Classifier2D : public Classifier {
 protected:
-  /// Listens for incoming images
+  /// Where to listen for images
   std::string image_topic_;
-  image_transport::ImageTransport image_transport_;
+  /// Listens for incoming images
   image_transport::Subscriber image_sub_;
+  /// Generates image subscriptions
+  image_transport::ImageTransport image_transport_;
 public:
   /**
    * Constructor. Don't forget to call init() afterwards.
    */
   Classifier2D();
 
+  /**
+   * callback for whenever an image is received. Implementations of this
+   * method should emit a Classification message to some topic.
+   *
+   * @param input_image the image to generate a classification from.
+   */
   virtual void cb_classify(const sensor_msgs::ImageConstPtr& input_image) = 0;
 
+  /**
+   * Start listening to images
+   */
   virtual void start();
+  /**
+   * Stop listening for images
+   */
   virtual void stop();
 };
 

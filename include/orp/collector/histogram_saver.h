@@ -35,18 +35,10 @@
 #include <fstream>
 #include <stdlib.h>
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/features/vfh.h>
-#include <pcl/features/cvfh.h>
-#include <pcl/features/crh.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/io/pcd_io.h>
-
-#include <ros/ros.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <dynamic_reconfigure/server.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <ros/ros.h>
+#include <sensor_msgs/PointCloud2.h>
 
 #include <orp/SaveCloud.h>
 #include <orp/Segmentation.h>
@@ -57,10 +49,14 @@
 /**
  * @brief Extracts features from point clouds and saves to file.
  *
- * Extracts features from point clouds and saves three types of files per cloud:
- * 1. the circular projection histogram (CPH)
- * 2. the viewpoint feature histogram (VFH)
- * 3. the raw point cloud (.CSV)
+ * Extracts features from point clouds and saves three types of files per
+ * cloud:
+ *   1. the circular projection histogram (CPH)
+ *   2. the viewpoint feature histogram (VFH)
+ *   3. the raw point cloud (.CSV)
+ *
+ * TODO(Kukanani): update this class to use the new set of classifiers that
+ *   ORP supports.
  *
  * @version 2.0
  * @ingroup objectrecognition
@@ -70,42 +66,51 @@
  */
 class HistogramSaver {
 private:
-  /**
-   * Standard ROS node handle.
-   */
+  /// Standard ROS node handle
   ros::NodeHandle n;
 
-  ros::ServiceClient segClient;         /// Calls segmentation
-  ros::ServiceServer saveCloudSrv;      /// Handles requests to save files
+  /// Calls segmentation
+  ros::ServiceClient segClient;
+  /// Handles requests to save files
+  ros::ServiceServer saveCloudSrv;
 
-  ros::Subscriber tableCenterPointSub;  /// Listens for the centerpoint of the training table, used to set object origins
+  /// Listens for the centerpoint of the training table, used to set object
+  /// origins
+  ros::Subscriber tableCenterPointSub;
 
-  //where to save histogram-based files
+  // Where to save histogram-based files
   std::string outDir;
 
-  //method flags
+  // Flags to turn savers on and off
   bool savePCD, saveCVFH, save6DOF;
 
-  //CVFH options
+  // CVFH options
   float cvfhRadiusSearch;
-  Eigen::Vector4f tableCenterPoint;   ///Used to calculate distance between point cloud center and object center.
+  /// Used to calculate distance between point cloud center and object center.
+  Eigen::Vector4f tableCenterPoint;
 
-  std::vector<float> feature;         ///Gets filled with classifier data
+  /// Gets filled with classifier data
+  std::vector<float> feature;
 
   /// Dynamic reconfigure
   dynamic_reconfigure::Server<orp::HistogramSaverConfig> reconfigureServer;
-  dynamic_reconfigure::Server<orp::HistogramSaverConfig>::CallbackType reconfigureCallbackType;
+  dynamic_reconfigure::Server<orp::HistogramSaverConfig>::CallbackType
+      reconfigureCallbackType;
   void paramsChanged(orp::HistogramSaverConfig &config, uint32_t level);
 
 
   /// Write the cloud as a PCD file
-  void writeRawCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+  void writeRawCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
+      int angle);
 
   /// Improved VFH descriptor
-  void writeCVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+  void writeCVFH(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
+      int angle);
 
-  /// CVFH descriptor, plus CRH (roll histogram) and object centroid to allow inference of 6DOF pose
-  void write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int num);
+  /// CVFH descriptor, plus CRH (roll histogram) and object centroid to allow
+  /// inference of 6DOF pose
+  void write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
+      int num);
 
   /// Used to calc object origins
   void setTableCenterPoint(float x, float y, float z);
@@ -114,32 +119,37 @@ public:
   /**
    * Initialize the histogram saver and set up subscribers.
    * @param nh the ROS node handle to use for subscribers, etc.
-   * @param location the folder (absolute path) in which to save the output data.
+   * @param location the folder (absolute path) in which to save the output
+   *                 data.
    */
   HistogramSaver(ros::NodeHandle nh, std::string location);
 
   /**
-   * Save a point cloud to file. This will automatically save multiple files to the
-   * output folder, depending on which save flags have been enabled.
+   * Save a point cloud to file. This will automatically save multiple files to
+   * the output folder, depending on which save flags have been enabled.
    *
    * @param cluster the PCL point cloud to save to file
-   * @param name the name to save the files under (i.e., the cluster/object name)
-   * @param angle the number for the pose. In a 4-DOF pose estimation (position + rotation
-                  about vertical axis), this would be the angle from which the cluster
-                  was collected. But it can also simply be a sequential number for
-                  keeping track of various views of an object.
+   * @param name the name to save the files under (i.e., the cluster/object
+   *             name)
+   * @param angle the number for the pose. In a 4-DOF pose estimation (position
+   *              + rotation
+                  about vertical axis), this would be the angle from which the
+                  cluster was collected. But it can also simply be a sequential
+                  number for keeping track of various views of an object.
    */
-  bool saveCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name, int angle);
+  bool saveCloud(pcl::PointCloud<ORPPoint>::Ptr cluster, std::string name,
+      int angle);
 
   /**
-   * ROS shadow for saveCloud. Creates a segmentation request to split the large-
-   * scale point cloud into smaller clouds. Then performs saveCloud() on each
-   * smaller point cloud.
+   * ROS shadow for saveCloud. Creates a segmentation request to split the
+   * large- scale point cloud into smaller clouds. Then performs saveCloud()
+   * on each smaller point cloud.
    *
    * Eventually, this splitting functionality should probably be moved into
    * the segmentation node, to help keep the code modular.
    */
-  bool cb_saveCloud(orp::SaveCloud::Request &req, orp::SaveCloud::Response &res);
+  bool cb_saveCloud(orp::SaveCloud::Request &req,
+      orp::SaveCloud::Response &res);
 
   ///ROS shadow for setCenterPoint().
   void cb_setTableCenterPoint(geometry_msgs::Vector3 _centerPoint);

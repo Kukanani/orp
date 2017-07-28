@@ -30,7 +30,14 @@
 
 #pragma once
 
+/**
+ * A single possible grasp. See grasp_generator.h for important documentation.
+ */
 struct Grasp {
+  /// The position to move to before the grasp pose
   tf::Stamped<tf::Pose> approachPose;
+
+  /// The position from which the gripper can be closed to achieve a successful
+  /// grasp.
   tf::Stamped<tf::Pose> graspPose;
 };

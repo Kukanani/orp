@@ -30,6 +30,8 @@
 
 #include "orp/core/grasp_generator.h"
 
+#include <tf/tf.h>
+
 GraspGenerator::GraspGenerator(GripperType g) : gripperType(g) {
 
 }

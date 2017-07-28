@@ -36,20 +36,22 @@
 
 #include "orp/core/world_object.h"
 /**
- * @brief Keeps track of world object types so that their properties remain constant.
+ * @brief Keeps track of world object types so that their properties remain
+ *        constant.
  */
 class WorldObjectManager {
 private:
-  WorldObjectType unknownType; ///Default object type
+  /// Default object type
+  WorldObjectType unknownType;
 public:
-  std::map<std::string, WorldObjectType> types; //The possible world object types
+  /// The possible world object types
+  std::map<std::string, WorldObjectType> types;
 
   /**
     * Create a new world object manager with the specified default type.
     * @arg unknown the world object to fall back on when nothing can be found.
     */
   WorldObjectManager();
-
 
   /// Return how many object types this manager is aware of.
   int getNumTypes() { return types.size(); };
@@ -64,19 +66,26 @@ public:
   WorldObjectType& getTypeByName(std::string name);
 
   /// Load a full set of world object types from the parameter server.
-  /// This can be called after loading a yaml file (or sqlite database) of object properties onto the parameter server.
-  /// Throws no exceptions, but if all type parameters can't be found it will assume some default values.
+  /// This can be called after loading a yaml file (or sqlite database) of
+  /// object properties onto the parameter server. Throws no exceptions, but
+  /// if all type parameters can't be found it will assume some default values.
   void loadTypesFromParameterServer();
-  /// Attempt to copy a float stored in the parameter server to a different location in the parameter server.
-  static bool attemptToCopyFloatParam(const ros::NodeHandle &node, std::string from, std::string to);
+  /// Attempt to copy a float stored in the parameter server to a different
+  /// location in the parameter server.
+  static bool attemptToCopyFloatParam(const ros::NodeHandle &node,
+      std::string from, std::string to);
   /// Attempt to put a float into the parameter server.
-  static bool attemptToSetFloatParam(const ros::NodeHandle &node, float val, std::string to);
+  static bool attemptToSetFloatParam(const ros::NodeHandle &node,
+      float val, std::string to);
   /// Attempt to put a load a float from the parameter server.
-  static bool attemptToReloadFloatParam(const ros::NodeHandle &node, std::string paramName, float &toFill, bool strict = false);
+  static bool attemptToReloadFloatParam(const ros::NodeHandle &node,
+      std::string paramName, float &toFill, bool strict = false);
   /// Attempt to put a load a double from the parameter server.
-  static bool attemptToReloadDoubleParam(const ros::NodeHandle &node, std::string paramName, double &toFill, bool strict = false);
+  static bool attemptToReloadDoubleParam(const ros::NodeHandle &node,
+      std::string paramName, double &toFill, bool strict = false);
   /// Attempt to put a load a string from the parameter server.
-  static bool attemptToReloadStringParam(const ros::NodeHandle &node, std::string paramName, std::string &toFill, bool strict = false);
+  static bool attemptToReloadStringParam(const ros::NodeHandle &node,
+    std::string paramName, std::string &toFill, bool strict = false);
 
   /// Convert degrees to radians.
   static double radFromDeg(double deg);
@@ -84,4 +93,4 @@ public:
   static double degFromRad(double rad);
 };
 
-#endif // _WORLD_OBJECT_MANAGER_H_
+#endif

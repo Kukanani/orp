@@ -41,7 +41,8 @@
 /**
  * @brief   A 3D classifier
  *
- * Extension of the basic classifier, but includes a segmentation client and depth subscriber.
+ * Extension of the basic classifier, but includes a segmentation client and
+ * depth subscriber.
  */
 class Classifier3D : public Classifier {
 protected:
@@ -61,10 +62,22 @@ public:
    */
   Classifier3D();
 
+  /**
+   * callback for whenever a point cloud is received. Implementations of this
+   * method should emit a Classification message to some topic.
+   *
+   * @param cloud the point cloud to generate a classification from.
+   */
   virtual void cb_classify(sensor_msgs::PointCloud2 cloud) = 0;
 
+  /**
+   * Start listening to images
+   */
   virtual void start();
 
+  /**
+   * Stop listening to points
+   */
   virtual void stop();
 };
 
