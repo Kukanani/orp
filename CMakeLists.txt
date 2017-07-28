@@ -22,7 +22,8 @@ find_package(catkin REQUIRED COMPONENTS
     tf_conversions
 )
 find_package(OpenCV REQUIRED)
-# find_package(VTK REQUIRED NO_MODULE)
+find_package(Boost REQUIRED)
+# find_package(VTK REQUIRED)
 
 add_message_files(
     FILES
