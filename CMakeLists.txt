@@ -12,13 +12,13 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     std_msgs
     geometry_msgs
-		#message_generation
+    #message_generation
     tf
-		tf_conversions
-		eigen_conversions
-		#pcl_conversions
-		interactive_markers
-		#cv_bridge
+    tf_conversions
+    eigen_conversions
+    #pcl_conversions
+    interactive_markers
+    #cv_bridge
     image_transport
 )
 find_package(Boost REQUIRED COMPONENTS system)
