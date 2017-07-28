@@ -1,21 +1,21 @@
 // Copyright (c) 2016, Adam Allevato
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 //    this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright
 //    notice, this list of conditions and the following disclaimer in the
 //    documentation and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its
 //    contributors may be used to endorse or promote products derived from
 //    this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 // IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 // THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -56,10 +56,10 @@ int main(int argc, char **argv)
   std::string filename = argv[1];
   std::string outputFrame = argv[2];
   ROS_INFO("Starting Vision Simulator");
-  
+
   ros::AsyncSpinner spinner(2);
   spinner.start();
-  
+
   VisionSimulator s(n, filename, outputFrame);
   return 1;
 } //main
@@ -76,7 +76,7 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename, std::
 
   markerServer.reset( new interactive_markers::InteractiveMarkerServer("vision_simulator_objects","",false) );
   objectPoseServer = n.advertiseService("/get_object_pose", &VisionSimulator::getObjectPose, this);
-  
+
   ros::Publisher objectsPub = n.advertise<orp::WorldObjects>("detected_objects", 1);
 
   std::string line;
@@ -85,7 +85,7 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename, std::
   tf::Vector3 position;
 
   orp::WorldObjects theMessage;
-    
+
   std::ifstream infile(filename.c_str());
   while (std::getline(infile, line))
   {
@@ -96,7 +96,7 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename, std::
     position = tf::Vector3(x,y,z);
     make6DofMarker(visualization_msgs::InteractiveMarkerControl::MOVE_ROTATE_3D, position, true, objName );
 
-  
+
     orp::WorldObject theObject;
     theObject.label = objName;
     theObject.pose.header.frame_id = outputFrame;
@@ -146,7 +146,7 @@ bool VisionSimulator::getObjectPose(
 void VisionSimulator::make6DofMarker( unsigned int interaction_mode, const tf::Vector3& position, bool show_6dof, std::string name )
 {
   float xsize = 0.1;
-  float ysize = 0.1; 
+  float ysize = 0.1;
   float zsize = 0.1;
 
   visualization_msgs::InteractiveMarker int_marker;

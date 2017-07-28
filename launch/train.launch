@@ -30,6 +30,12 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
+<!--
+TODO(Kukanani): choose a type of depth camera for training, and use the correct
+  camera driver for it. Kinect 1 -> freenect, ASUS -> openni2, etc. Or allow
+  multiple types of cameras with args.
+-->
+
 <launch>
   <arg name="home_dir"        default="$(find orp)" />
   <arg name="data_folder"     default="data/train"/>
