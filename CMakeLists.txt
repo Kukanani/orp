@@ -1,28 +1,32 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(orp)
 
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-enum-compare" )
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 11)
+endif()
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+    cv_bridge
+    eigen_conversions
+    geometry_msgs
+    image_transport
+    interactive_markers
+    message_generation
+    message_runtime
+    pcl_conversions
     pcl_ros
     roscpp
     sensor_msgs
     std_msgs
-    geometry_msgs
-    #message_generation
     tf
     tf_conversions
-    eigen_conversions
-    #pcl_conversions
-    interactive_markers
-    #cv_bridge
-    image_transport
 )
-find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
+find_package(Boost REQUIRED)
+# find_package(VTK REQUIRED)
 
 ########################################################
 ## Declare ROS messages, services, and configurations ##
@@ -68,7 +72,7 @@ catkin_package(
     INCLUDE_DIRS include
     LIBRARIES orp
     CATKIN_DEPENDS pcl_ros sensor_msgs std_msgs
-    # DEPENDS 
+    # DEPENDS
 )
 
 include_directories(
@@ -90,13 +94,13 @@ add_library(orp
 )
 add_dependencies(orp ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 
-target_link_libraries(orp ${Boost_LIBRARIES} ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(orp ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 ####################################################################################################
 
 add_executable(recognizer src/recognizer.cpp)
 add_dependencies(recognizer ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(recognizer ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp)
+target_link_libraries(recognizer ${catkin_LIBRARIES} orp)
 
 add_executable(segmentation src/segmentation.cpp)
 add_dependencies(segmentation ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
@@ -104,13 +108,13 @@ target_link_libraries(segmentation ${catkin_LIBRARIES} orp )
 
 # add_executable(region_monitor src/region_monitor.cpp)
 # add_dependencies(region_monitor ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-# target_link_libraries(region_monitor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+# target_link_libraries(region_monitor ${catkin_LIBRARIES} orp )
 
 ####################################################################################################
 
 add_executable(sixdof_classifier src/sixdof_classifier.cpp)
 add_dependencies(sixdof_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(sixdof_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+target_link_libraries(sixdof_classifier ${catkin_LIBRARIES} orp )
 
 add_executable(rgb_classifier src/rgb_classifier.cpp)
 add_dependencies(rgb_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
@@ -118,38 +122,23 @@ target_link_libraries(rgb_classifier ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 # add_executable(cylinder_classifier src/cylinder_classifier.cpp)
 # add_dependencies(cylinder_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-# target_link_libraries(cylinder_classifier ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
-
-# add_executable(linemod_train src/linemod_train.cpp)
-# add_dependencies(linemod_train ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-# target_link_libraries(linemod_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-
-# add_executable(train_linemod_template src/train_linemod_template.cpp)
-# add_dependencies(train_linemod_template ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-# target_link_libraries(train_linemod_template ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+# target_link_libraries(cylinder_classifier ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 ####################################################################################################
 
 # add_executable(pan_data_collector src/pan_data_collector.cpp)
 # add_dependencies(pan_data_collector ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-# target_link_libraries(pan_data_collector ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-
-#add_executable(apc_data_collector src/apc_data_collector.cpp)
-#add_dependencies(apc_data_collector ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-#target_link_libraries(apc_data_collector ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+# target_link_libraries(pan_data_collector ${catkin_LIBRARIES} orp )
 
 # add_executable(histogram_saver src/histogram_saver.cpp)
 # add_dependencies(histogram_saver ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-# target_link_libraries(histogram_saver ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+# target_link_libraries(histogram_saver ${catkin_LIBRARIES} orp )
 
-#add_executable(virtual_train src/virtual_train.cpp)
-#add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-#target_link_libraries(virtual_train ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} libvtkIO.so libvtkFiltering.so)
+# TODO(kukanani): the virtual trainer doesn't build at the moment.
+# add_executable(virtual_train src/virtual_train.cpp)
+# add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+# target_link_libraries(virtual_train ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} vtkIO vtkFiltering)
 
 add_executable(vision_simulator src/vision_simulator.cpp)
 add_dependencies(vision_simulator ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(vision_simulator ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
-
-# add_executable(point_cloud_batch_processor src/point_cloud_processor.cpp)
-# add_dependencies(point_cloud_batch_processor ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
-# target_link_libraries(point_cloud_batch_processor ${Boost_LIBRARIES} ${catkin_LIBRARIES} orp )
+target_link_libraries(vision_simulator ${catkin_LIBRARIES} orp )

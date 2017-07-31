@@ -1,5 +1,4 @@
-<!--
-Copyright (c) 2015, Adam Allevato
+Copyright (c) 2015-2016, Adam Allevato
 Copyright (c) 2017, The University of Texas at Austin
 All rights reserved.
 
@@ -28,49 +27,3 @@ OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
 WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
--->
-
-<launch>
-  <arg name="data_folder" default="data" />
-  <arg name="list" default="$(find orp)/cfg/test_1.list" />
-  <arg name="rviz" default="true" />
-
-  <rosparam command="load" param="items/" file="$(find orp)/data/colored_objs.yaml" />
-
-  <include file="$(find orp)/launch/orp.launch">
-    <arg name="openni2"          value="true"/>
-    <arg name="list"             value="$(arg list)"/>
-    <arg name="autostart"        value="true" />
-    <arg name="rviz"             value="$(arg rviz)" />
-    <arg name="rviz_file"        value="$(find orp)/cfg/recognition.rviz" />
-  </include>
-
-  <node
-    name    = "rgb_classifier"
-    pkg     = "orp"
-    type    = "rgb_classifier"
-    args    = ". true"
-    respawn = "true"
-  />
-
-  <node
-    name    = "$(anon sixdof3)"
-    pkg     = "dynamic_reconfigure"
-    type    = "dynparam"
-    args    = "set segmentation min_cluster_size 35"
-
-    respawn = "false"
-    output  = "screen"
-  />
-
-  <node
-    name    = "$(anon sixdof4)"
-    pkg     = "dynamic_reconfigure"
-    type    = "dynparam"
-    args    = "set segmentation max_cluster_size 150"
-
-    respawn = "false"
-    output  = "screen"
-  />
-
-</launch>

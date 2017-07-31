@@ -1,24 +1,42 @@
 // Copyright (c) 2015, Adam Allevato
+// Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
-// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-// 
-// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-// 
-// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this
-// software without specific prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its
+//    contributors may be used to endorse or promote products derived from
+//    this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+// IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+// OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+// ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "orp/collector/histogram_saver.h"
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/features/vfh.h>
+#include <pcl/features/cvfh.h>
+#include <pcl/features/crh.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/io/pcd_io.h>
 
 int main(int argc, char **argv)
 {
@@ -63,7 +81,7 @@ void HistogramSaver::setTableCenterPoint(float x, float y, float z) {
 }
 
 bool HistogramSaver::cb_saveCloud(orp::SaveCloud::Request &req,
-  orp::SaveCloud::Response &res)   
+  orp::SaveCloud::Response &res)
 {
   //Segment cloud
   std::vector<pcl::PointCloud<ORPPoint>::Ptr> clouds;
@@ -71,7 +89,7 @@ bool HistogramSaver::cb_saveCloud(orp::SaveCloud::Request &req,
   segSrvCall.request.scene = req.in_cloud;
 
   segClient.call(segSrvCall);
-  
+
   if(segSrvCall.response.clusters.size() < 1) {
     ROS_ERROR("no points returned from segmentation node.");
     return false;
@@ -198,14 +216,14 @@ void HistogramSaver::write6DOF(pcl::PointCloud<ORPPoint>::Ptr cluster, std::stri
   crh.compute(*histogram);
 
   //http://www.pcl-users.org/Save-pcl-Pointcloud-lt-pcl-Histogram-lt-N-gt-gt-td4035239.html
-  //pcl::PointCloud< CRH90 > histogram_cloud; 
-  //histogram_cloud.push_back(*histogram); 
+  //pcl::PointCloud< CRH90 > histogram_cloud;
+  //histogram_cloud.push_back(*histogram);
 
   fileName_ss.str("");
   fileName_ss.clear();
   fileName_ss << outDir << "/sixdof/" << name << "_" << num << ".crh";
   ROS_INFO_STREAM("Writing 6DOF CRH to '" << fileName_ss.str().c_str() << "'...");
-  pcl::io::savePCDFile(fileName_ss.str(), *histogram); 
+  pcl::io::savePCDFile(fileName_ss.str(), *histogram);
 
   Eigen::Vector4f cloudCentroid;
   pcl::compute3DCentroid(*cluster, cloudCentroid);

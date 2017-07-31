@@ -1,3 +1,13 @@
+# This YAML file builds a database of ORP objects. These objects are the
+# "canonical" definition of objects that ORP can recognize. Some of the
+# attributes, such as mass, may not be fully utilized.
+# the color, nickname, geometry, and size determine how the object will look
+# when visualized as an RViz marker.
+#
+# Dimensions are in mm.
+# Color values range from 0 to 1.
+# The acceptable values for "geometry" are BLOB (sphere), CYLINDER, and BOX.
+
 ball:
   blue: 0.5
   depth: 102

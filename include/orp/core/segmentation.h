@@ -1,22 +1,32 @@
 // Copyright (c) 2015, Adam Allevato
+// Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
-// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-// 
-// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-// 
-// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-// 
-// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this
-// software without specific prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-// EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its
+//    contributors may be used to endorse or promote products derived from
+//    this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+// IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+// OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+// ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _SEGMENTATION_H_
 #define _SEGMENTATION_H_
@@ -24,6 +34,9 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 
+// TODO(Kukanani): make sure all of these includes are still needed, and
+// see which can be moved to the .cpp file instead of slowing down the compile
+// here in the .h
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
@@ -39,41 +52,45 @@
 #include <pcl/segmentation/extract_clusters.h>
 
 #include <ros/ros.h>
+
 #include <dynamic_reconfigure/server.h>
-#include <tf/transform_listener.h>
 #include <pcl_ros/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <tf/transform_listener.h>
 
 #include <orp/Segmentation.h>
 #include <orp/SegmentationConfig.h>
 
 #include "orp/core/orp_utils.h"
 
-//usefule PCL typedefs
-typedef pcl::PointCloud<ORPPoint> PC;
-typedef pcl::PointCloud<ORPPoint>::Ptr PCP;
-typedef std::vector<pcl::PointIndices> IndexVector;
-
 /**
- * @brief   Performs point cloud segmentation to clarify noisy data for object recognition.
+ * @brief Performs point cloud segmentation to clarify noisy data for object
+ *        recognition.
  *
- * Filtering used includes Euclidean clustering, transformation, plane segmentation.
+ * Filtering used includes Euclidean clustering, transformation, plane
+ * segmentation. Many of these are modified versions of the PCL tutorials with
+ * their parameters exposed.
+ *
+ * TODO(Kukanani): this could be combined with other ORP nodes into one process
+ * by using nodelets. That has ramifications for debugging and readability, but
+ * will result in improved performance, because it's very expensive to pass
+ * point clouds from node to node.
  *
  * @version 2.0
  * @ingroup objectrecognition
- * 
+ *
  * @author  Brian O'Neil <brian.oneil@lanl.gov>
  * @author  Adam Allevato <adam.d.allevato@gmail.com>
  */
 class Segmentation {
 private:
-  /*================================================*/
-  /* DYNAMIC RECONFIGURE */
-  /*================================================*/
+///////////////////////////////////////////////////////////////////////////////
+// DYNAMIC RECONFIGURE
+///////////////////////////////////////////////////////////////////////////////
   /**
    * Enables usage of dynamic_reconfigure for reognition algorithm parameters.
    */
-  dynamic_reconfigure::Server<orp::SegmentationConfig> 
+  dynamic_reconfigure::Server<orp::SegmentationConfig>
     reconfigureServer;
   /**
    * Required for using dynamic_reconfigure.
@@ -87,12 +104,14 @@ private:
    */
   void paramsChanged(
     orp::SegmentationConfig &config, uint32_t level);
-  
-  /*================================================*/
-  /* CLASS VARS */
-  /*================================================*/
+
+///////////////////////////////////////////////////////////////////////////////
+// CLASS VARS
+///////////////////////////////////////////////////////////////////////////////
   /// Standard ROS node handle
   ros::NodeHandle node;
+  /// Because of the time taken to process segmentations, use a multithreaded
+  /// spinner.
   ros::AsyncSpinner spinner;
 
   /// Accepts the segmentation requests
@@ -117,50 +136,67 @@ private:
   /// Used to transform into the correct processing/recognition frames
   tf::TransformListener listener;
 
-  /// The frame to transform the recognition results into. This is useful if you need to use recognition results for 
+  /// The frame to transform the recognition results into. This is useful if
+  ///   you need to use recognition results for
   ///   motion planning in a specific frame, or pose x/y/z values, etc.
   std::string transformToFrame;
 
   /// updated after each message received
   std::string originalCloudFrame;
 
-  /*================================================*/
-  /* SEGMENTATION PARAMS */
-  /*================================================*/
-  //The minimum camera-space X for the working area bounding box
-  float minX; // left in world space
-  float maxX; // right in world space
-  float minY; // up in world space
-  float maxY; // down in world space
-  float minZ; // near clipping in world space
-  float maxZ; // far clipping in world space
-  
-  ///flags for publishing various intermediate point clouds
-  bool _publishAllObjects, _publishAllPlanes, _publishBoundedScene, _publishLargestObject, _publishVoxelScene;
+///////////////////////////////////////////////////////////////////////////////
+// SEGMENTATION PARAMS
+///////////////////////////////////////////////////////////////////////////////
+  /// Minimum X for processing area bounding box (left in world space)
+  float minX;
+  /// Maximum X for processing area bounding box (right in world space)
+  float maxX;
+  /// Minimum Y for processing area bounding box (up in world space)
+  float minY;
+  /// Maximum Y for processing area bounding box (down in world space)
+  float maxY;
+  /// Minimum Z for processing area bounding box (near clipping in world space)
+  float minZ;
+  /// Maximum Z for processing area bounding box (far clipping in world space)
+  float maxZ;
 
+  /// Publish a point cloud of all objects?
+  bool _publishAllObjects;
+  /// Publish a point cloud of all removed planes?
+  bool _publishAllPlanes;
+  /// Publish a point cloud of the scene after clipping to the processing area?
+  bool _publishBoundedScene;
+  /// Publish a point cloud of only the largest object?
+  bool _publishLargestObject;
+  /// Publish a point cloud of the bounded scene after voxelization?
+  bool _publishVoxelScene;
+
+  /// Maximum number of object clusters to process
   int maxClusters;
   /**
-   * The maximum number of iterations to perform when looking for planar features.
+   * The maximum number of iterations to perform when looking for planar
+   * features.
    */
   int maxPlaneSegmentationIterations;
   /**
-   * The maximum distance that a point can be from a planar feature to be considered part of that
-   * planar feature.
+   * The maximum distance that a point can be from a planar feature to be
+   * considered part of that planar feature.
    */
   float segmentationDistanceThreshold;
   /**
    * The percentage of the scene to analyze (pass onward to clustering).
-   * The clustering algorithm will continue to remove planar features until this condition
-   * is satisfied.
+   * The clustering algorithm will continue to remove planar features until
+   * this condition is satisfied.
    *
    * 1.0 = the entire scene is one object
    * 0.0 = nothing will be analyzed
    */
   float percentageToAnalyze;
   /**
-   * The distance between points in the voxel grid (used to clean up the point cloud and make
-   * it well-behaved for further analysis). If this value is too small, the grid will be too fine.
-   * there won't be enough integers to provide indices for each point and you will get errors.
+   * The distance between points in the voxel grid (used to clean up the point
+   * cloud and make it well-behaved for further analysis). If this value is too
+   * small, there won't be enough integers to provide indices for each point
+   * and you will get errors.
    */
   float voxelLeafSize;
   /**
@@ -169,27 +205,32 @@ private:
    */
   float clusterTolerance;
   /**
-   * Clusters with less than this number of points won't be analyzed. Usually this is used to
-   * filter out small point clouds like anomalies, noise, bits of whatnot in the scene, etc.
+   * Clusters with less than this number of points won't be analyzed. Usually
+   * this is used to filter out small point clouds like anomalies, noise, bits
+   * of whatnot in the scene, etc.
    */
   int minClusterSize;
   /**
-   * Clusters that have more than this number of points won't be analyzed. The assumption
-   * is that this is either a) too computationally intensive to analyze, or b) this is just a 
-   * background object like a wall which should be ignored anyway.
+   * Clusters that have more than this number of points won't be analyzed. The
+   * assumption is that this is either a) too computationally intensive to
+   * analyze, or b) this is just a large background object like a wall which
+   * should be ignored anyway.
    */
   int maxClusterSize;
 
-  ///input is stored here
+  /// Input is stored here
   PCP inputCloud;
-  ///used as intermediate step for cloud processing
+  /// Used as intermediate step for cloud processing, without having to
+  /// realloc more clouds.
+  /// TODO(kukanani): does this actually save any time? Use of this variable
+  /// should be revisited.
   PCP processCloud;
 
   std::vector<sensor_msgs::PointCloud2> clusters;
 
-  /*================================================*/
-  /* FILTERING STEPS (FUNCTIONS) */
-  /*================================================*/
+///////////////////////////////////////////////////////////////////////////////
+// FILTERING STEPS (FUNCTIONS)
+///////////////////////////////////////////////////////////////////////////////
 
   /**
    * Spatially filter a point cloud
@@ -220,33 +261,44 @@ private:
    * http://pointclouds.org/documentation/tutorials/planar_segmentation.php
    * @param  input             the point cloud from which to remove planes
    * @param  maxIterations     maximum iterations for clustering algorithm.
-   * @param  thresholdDistance how close a point must be to hte model in order to be considered
-   *  an inlier.
-   * @param  percentageGood    keep removing planes until the amount of data left is less than this
-   *  percentage of the initial data.
-   * @return                   the point cloud with primary planes removed as specified.
+   * @param  thresholdDistance how close a point must be to hte model in order
+   *                           to be considered an inlier.
+   * @param  percentageGood    keep removing planes until the amount of data
+   *                           left is less than this percentage of the initial
+   *                           data.
+   * @return                   the point cloud with primary planes removed as
+   *                           specified.
    */
-  PCP& removePrimaryPlanes(PCP &input, int maxIterations, float thresholdDistance, float percentageGood);
-  
+  PCP& removePrimaryPlanes(PCP &input, int maxIterations,
+      float thresholdDistance, float percentageGood);
+
   /**
    * Euclidean clustering algorithm. See
    * http://www.pointclouds.org/documentation/tutorials/cluster_extraction.php
    * @param input            the cloud to cluster
-   * @param clusterTolerance the maximum distance between points in a given cluster
+   * @param clusterTolerance the maximum distance between points in a given
+   *                         cluster
    * @param minClusterSize   clusters of size less than this will be discarded
-   * @param maxClusterSize   clusters of size greater than this will be discarded
-   * @return                 a vector of point clouds, each representing a cluster from the clustering
-   *  algorithm.
+   * @param maxClusterSize   clusters of size greater than this will be
+   *                         discarded
+   * @return                 a vector of point clouds, each representing a
+   *                         cluster from the clustering algorithm.
    */
-  std::vector<sensor_msgs::PointCloud2> cluster(PCP &input, float clusterTolerance, int minClusterSize, int maxClusterSize);
+  std::vector<sensor_msgs::PointCloud2> cluster(PCP &input,
+      float clusterTolerance, int minClusterSize, int maxClusterSize);
 public:
+  /**
+   * Default constructor
+   */
   Segmentation();
 
   /// Start!
   void run();
 
-  /// Do the segmentation steps enabled by parameter flags and return the result.
-  bool cb_segment(orp::Segmentation::Request &req, orp::Segmentation::Response &response);
-}; //Segmentation
+  /// Do the segmentation steps enabled by parameter flags and return the
+  /// result.
+  bool cb_segment(orp::Segmentation::Request &req,
+      orp::Segmentation::Response &response);
+};
 
-#endif //_SEGMENTATION_H_
+#endif

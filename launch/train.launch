@@ -1,13 +1,51 @@
+<!--
+Copyright (c) 2015, Adam Allevato
+Copyright (c) 2017, The University of Texas at Austin
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!--
+TODO(Kukanani): choose a type of depth camera for training, and use the correct
+  camera driver for it. Kinect 1 -> freenect, ASUS -> openni2, etc. Or allow
+  multiple types of cameras with args.
+-->
+
 <launch>
   <arg name="home_dir"        default="$(find orp)" />
   <arg name="data_folder"     default="data/train"/>
-  
+
   <!-- GET DATA -->
   <include file="$(find freenect_launch)/launch/freenect.launch"> </include>
 
   <!-- SCENE SETUP -->
   <node
-    name    = "static_transform_publisher"  
+    name    = "static_transform_publisher"
     pkg     = "orp"
     type    = "camera_tf_publisher.py"
 
@@ -60,20 +98,20 @@
     name="arduino_interface"
     pkg="rosserial_python"
     type="serial_node.py"
-    args="/dev/ttyACM0" 
-    
+    args="/dev/ttyACM0"
+
     output="screen"
     respawn="true"
   />
 
   <!-- FIDUCIALS -->
-  
+
   <arg name="marker_size" default="4.4" />
   <arg name="max_new_marker_error" default="0.08" />
   <arg name="max_track_error" default="0.2" />
 
   <arg name="cam_image_topic" default="/camera/depth_registered/points" />
-  <arg name="cam_info_topic" default="/camera/rgb/camera_info" />    
+  <arg name="cam_info_topic" default="/camera/rgb/camera_info" />
   <arg name="output_frame" default="/camera_link" />
 
   <node name="ar_track_alvar" pkg="ar_track_alvar" type="individualMarkers" respawn="false" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic) $(arg cam_info_topic) $(arg output_frame)" />

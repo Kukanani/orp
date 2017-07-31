@@ -1,3 +1,0 @@
-<launch>
-  <rosparam command="load" param="items/" file="$(find orp)/data/colored_objs.yaml" />
-</launch>

@@ -1,2 +1,2 @@
-
+# default segmentation parameters for training objects.
 segmentation_node: {  spatial_min_y: -0.4}

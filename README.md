@@ -8,9 +8,9 @@
 ## About
 TO BE ADDED LATER.
 
-Maintainer: [Adam Allevato](allevato@utexas.edu "Bill Nye the Science Guy") 
+Maintainer: [Adam Allevato](allevato@utexas.edu "Bill Nye the Science Guy")
 
-## Installation 
+## Installation
 1. **Generate a RSA Key**
 	* Ensure you have been added to the [UT Nuclear Robotics Group](https://github.com/UTNuclearRobotics) on github
 	* Open a terminal and type:
@@ -22,12 +22,12 @@ Maintainer: [Adam Allevato](allevato@utexas.edu "Bill Nye the Science Guy")
 	* Once saved, log into your github account
 	* Add the RSA key from /home/username/.ssh/id_rsa to your [github settings](https://github.com/settings/key)
 
-2. **Download the repository from GitHub** 
+2. **Download the repository from GitHub**
 	* Open a new terminal and enter
         ```
 		cd ~/
 		git clone https://github.com/UTNuclearRobotics/nrg-ros-support.git
-       ``` 
+       ```
 3. **Install AR Track Alvar**
 	* Open a terminal and enter
 		```
@@ -42,7 +42,7 @@ Maintainer: [Adam Allevato](allevato@utexas.edu "Bill Nye the Science Guy")
 
 1. Set up the camera to view the table and two AR tags
 
-2. Run in a terminal 
+2. Run in a terminal
 	```
 	roslaunch orp train.launch
 	```
@@ -54,7 +54,7 @@ Maintainer: [Adam Allevato](allevato@utexas.edu "Bill Nye the Science Guy")
 	rosrun train_object.py <your_object_name> <angle_increment_in_degrees>
 	```
 
-5. The spin table will spin 360 degrees to allow point cloud data taken for every side of the object. 
+5. The spin table will spin 360 degrees to allow point cloud data taken for every side of the object.
 
 ## How to Use<a name="how-to-use" />
 
