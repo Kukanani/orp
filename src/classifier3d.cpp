@@ -35,9 +35,14 @@
 Classifier3D::Classifier3D():
   Classifier()
 {
-  node_private_.param<std::string>("segmentation_service", segmentation_service_, "/segmentation");
-  segmentation_client_ = node_.serviceClient<orp::Segmentation>(segmentation_service_);
+  // allow remapping to different segmentation service
+  node_private_.param<std::string>("segmentation_service",
+      segmentation_service_, "/segmentation");
+  segmentation_client_ =
+      node_.serviceClient<orp::Segmentation>(segmentation_service_);
 
+  // allow remapping to different depth cloud topic, but by default
+  // use the default camera's point cloud
   node_private_.param<std::string>("depth_topic", depth_topic_,
     "/camera/depth_registered/points");
 }
@@ -45,7 +50,8 @@ Classifier3D::Classifier3D():
 void Classifier3D::start()
 {
   Classifier::start();
-  depth_sub_ = node_.subscribe(depth_topic_, 1, &Classifier3D::cb_classify, this);
+  depth_sub_ = node_.subscribe(depth_topic_, 1,
+      &Classifier3D::cb_classify, this);
 }
 
 void Classifier3D::stop()

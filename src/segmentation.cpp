@@ -30,14 +30,9 @@
 
 #include "orp/core/segmentation.h"
 
-/**
- * Start the segmentation node and all ROS publishers
- * @param  argc num args
- * @param  argv args
- * @return      1 if all is well.
- */
 int main(int argc, char **argv)
 {
+  // Start the segmentation node and all ROS publishers
   ros::init(argc, argv, "segmentation");
   pcl::console::setVerbosityLevel(pcl::console::L_ALWAYS);
   ROS_INFO("Starting Segmentation");
@@ -58,15 +53,23 @@ Segmentation::Segmentation() :
     transformToFrame = "odom";
   }
 
-  boundedScenePublisher = node.advertise<sensor_msgs::PointCloud2>("/bounded_scene",1);
-  voxelPublisher = node.advertise<sensor_msgs::PointCloud2>("/voxel_scene",1);
-  allPlanesPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_planes",1);
-  largestObjectPublisher = node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
-  allObjectsPublisher = node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
+  boundedScenePublisher =
+    node.advertise<sensor_msgs::PointCloud2>("/bounded_scene",1);
+  voxelPublisher =
+    node.advertise<sensor_msgs::PointCloud2>("/voxel_scene",1);
+  allPlanesPublisher =
+    node.advertise<sensor_msgs::PointCloud2>("/all_planes",1);
+  largestObjectPublisher =
+    node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
+  allObjectsPublisher =
+    node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
 
-  segmentationServer = node.advertiseService("/segmentation", &Segmentation::cb_segment, this);
+  segmentationServer =
+    node.advertiseService("/segmentation", &Segmentation::cb_segment, this);
 
-  reconfigureCallbackType = boost::bind(&Segmentation::paramsChanged, this, _1, _2);
+  // dynamic reconfigure
+  reconfigureCallbackType =
+    boost::bind(&Segmentation::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
 }
 
@@ -76,7 +79,8 @@ void Segmentation::run() {
   ros::waitForShutdown();
 }
 
-void Segmentation::paramsChanged(orp::SegmentationConfig &config, uint32_t level)
+void Segmentation::paramsChanged(
+  orp::SegmentationConfig &config, uint32_t level)
 {
   //spatial bounds
   minX = config.spatial_min_x;
@@ -108,7 +112,12 @@ void Segmentation::paramsChanged(orp::SegmentationConfig &config, uint32_t level
   _publishVoxelScene = config.publishVoxelScene;
 }
 
-bool compareClusterSize(const sensor_msgs::PointCloud2& a, const sensor_msgs::PointCloud2& b) { return a.width > b.width; }
+bool compareClusterSize(
+  const sensor_msgs::PointCloud2& a,
+  const sensor_msgs::PointCloud2& b)
+{
+  return a.width > b.width;
+}
 
 bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     orp::Segmentation::Response &response) {
@@ -129,25 +138,35 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     pcl::fromROSMsg(req.scene, *inputCloud);
     rawMessage.header.frame_id = req.scene.header.frame_id;
   }
-  else if(listener.waitForTransform(req.scene.header.frame_id, transformToFrame, req.scene.header.stamp, ros::Duration(0.5)))
+  else if(listener.waitForTransform(
+    req.scene.header.frame_id, transformToFrame, req.scene.header.stamp,
+    ros::Duration(0.5)))
   {
-    pcl_ros::transformPointCloud (transformToFrame, req.scene, transformedMessage, listener);
+    pcl_ros::transformPointCloud(transformToFrame, req.scene,
+      transformedMessage, listener);
     pcl::fromROSMsg(transformedMessage, *inputCloud);
   }
   else {
-    ROS_WARN_THROTTLE(60, "[ORP Segmentation] listen for transformation from %s to %s timed out. Proceeding...", req.scene.header.frame_id.c_str(), transformToFrame.c_str());
+    ROS_WARN_STREAM_THROTTLE(60,
+      "listen for transformation from " <<
+      req.scene.header.frame_id.c_str() <<
+      " to " << transformToFrame.c_str() <<
+      " timed out. Proceeding...");
     pcl::fromROSMsg(req.scene, *inputCloud);
     rawMessage.header.frame_id = req.scene.header.frame_id;
   }
 
   if(inputCloud->points.size() <= minClusterSize) {
-    ROS_INFO_STREAM("[ORP Segmentation] point cloud is too small to segment: Min: " << minClusterSize << ", actual: " << inputCloud->points.size());
+    ROS_INFO_STREAM(
+      "point cloud is too small to segment: Min: " <<
+      minClusterSize << ", actual: " << inputCloud->points.size());
     return false;
   }
 
   //clip
   int preVoxel = inputCloud->points.size();
-  *inputCloud = *(clipByDistance(inputCloud, minX, maxX, minY, maxY, minZ, maxZ));
+  *inputCloud =
+    *(clipByDistance(inputCloud, minX, maxX, minY, maxY, minZ, maxZ));
   if(_publishBoundedScene) {
     pcl::toROSMsg(*inputCloud, transformedMessage);
     transformedMessage.header.frame_id = transformToFrame;
@@ -166,7 +185,9 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     }
 
     //remove planes
-    inputCloud = removePrimaryPlanes(inputCloud, maxPlaneSegmentationIterations, segmentationDistanceThreshold, percentageToAnalyze);
+    inputCloud =
+      removePrimaryPlanes(inputCloud,maxPlaneSegmentationIterations,
+        segmentationDistanceThreshold, percentageToAnalyze);
 
     if(_publishAllObjects) {
       pcl::toROSMsg(*inputCloud, transformedMessage);
@@ -175,17 +196,23 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     }
 
     if(_publishLargestObject) {
-      response.clusters = cluster(inputCloud, clusterTolerance, minClusterSize, maxClusterSize);
+      response.clusters = cluster(inputCloud, clusterTolerance, minClusterSize,
+        maxClusterSize);
       if(!response.clusters.empty()) {
         largestObjectPublisher.publish(response.clusters[0]);
       }
     }
   } else {
     if(inputCloud->points.empty()) {
-      ROS_WARN_STREAM("[ORP Segmentation] After filtering, the cloud contained no points. No segmentation will occur.");
+      ROS_WARN_STREAM("After filtering, the cloud "
+        << "contained no points. No segmentation will occur.");
     }
     else {
-      ROS_ERROR_STREAM("[ORP Segmentation] After filtering, the cloud contained " << inputCloud->points.size() << " points. This is more than BEFORE the voxel filter was applied, so something is wrong. No segmentation will occur.");
+      ROS_ERROR_STREAM(
+        "After filtering, the cloud contained "
+        << inputCloud->points.size() << " points. This is more than BEFORE "
+        << "the voxel filter was applied, so something is wrong. No "
+        << "segmentation will occur.");
     }
   }
   return true;
@@ -198,9 +225,11 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
   processCloud->resize(0);
 
   // We must build a condition.
-  // And "And" condition requires all tests to check true. "Or" conditions also available.
+  // And "And" condition requires all tests to check true.
+  // "Or" conditions also available.
   // Checks available: GT, GE, LT, LE, EQ.
-  pcl::ConditionAnd<ORPPoint>::Ptr clip_condition(new pcl::ConditionAnd<ORPPoint>);
+  pcl::ConditionAnd<ORPPoint>::Ptr clip_condition(
+    new pcl::ConditionAnd<ORPPoint>);
   clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
     new pcl::FieldComparison<ORPPoint>("x", pcl::ComparisonOps::GT, minX)));
   clip_condition->addComparison(pcl::FieldComparison<ORPPoint>::ConstPtr(
@@ -218,11 +247,13 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
   pcl::ConditionalRemoval<ORPPoint> filter;
   filter.setCondition(clip_condition);
   filter.setInputCloud(unclipped);
-  // If true, points that do not pass the filter will be set to a certain value (default NaN).
-  // If false, they will be just removed, but that could break the structure of the cloud
-  // (organized clouds are clouds taken from camera-like sensors that return a matrix-like image).
+  // If true, points that do not pass the filter will be set to a certain value
+  // (default NaN). If false, they will be just removed, but that could break
+  // the structure of the cloud (organized clouds are clouds taken from
+  // camera-like sensors that return a matrix-like image).
   filter.setKeepOrganized(true);
-  // If keep organized was set true, points that failed the test will have their Z value set to this.
+  // If keep organized was set true, points that failed the test will have
+  // their Z value set to this.
   filter.setUserFilterValue(0.0);
 
   filter.filter(*processCloud);
@@ -242,14 +273,15 @@ PCP& Segmentation::voxelGridify(PCP &loose, float gridSize) {
   return processCloud;
 }
 
-PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thresholdDistance,
-    float percentageGood) {
-  //ROS_INFO("Filtering planes...");
+PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations,
+  float thresholdDistance, float percentageGood)
+{
   PCP planes(new PC());
   PCP planeCloud(new pcl::PointCloud<ORPPoint> ());
 
   processCloud->resize(0);
-  // Create the segmentation object for the planar model and set all the parameters
+  // Create the segmentation object for the planar model and set all the
+  // parameters
   pcl::SACSegmentation<ORPPoint> seg;
   seg.setOptimizeCoefficients (true);
   seg.setModelType (pcl::SACMODEL_PLANE);
@@ -270,7 +302,8 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thre
     seg.segment (*planeIndices, *coefficients);
 
     if(planeIndices->indices.size () == 0) {
-      ROS_ERROR("[ORP Segmentation] Could not find any good planes in the point cloud.");
+      ROS_ERROR(
+        "[Could not find any good planes in the point cloud.");
       break;
     }
     // Segment the largest planar component from the remaining cloud
@@ -301,8 +334,10 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations, float thre
   return input;
 }
 
-std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float clusterTolerance,
-    int minClusterSize, int maxClusterSize) {
+std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(
+  PCP &input, float clusterTolerance,
+  int minClusterSize, int maxClusterSize)
+{
   clusters.clear();
 
   // Creating the KdTree object for the search method of the extraction
@@ -323,10 +358,14 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(PCP &input, float cl
   if(cluster_indices.empty()) return clusters;
 
   // go through the set of indices. Each set of indices is one cloud
-  for (IndexVector::const_iterator it = cluster_indices.begin(); it != cluster_indices.end(); ++it) {
+  for(IndexVector::const_iterator it = cluster_indices.begin();
+      it != cluster_indices.end(); ++it)
+  {
     //extract all the points based on the set of indices
     processCloud = PCP(new PC());
-    for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end (); ++pit) {
+    for(std::vector<int>::const_iterator pit = it->indices.begin();
+        pit != it->indices.end (); ++pit)
+    {
       processCloud->points.push_back (input->points[*pit]);
     }
     processCloud->width = processCloud->points.size();

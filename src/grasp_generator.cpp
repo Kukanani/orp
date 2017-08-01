@@ -36,7 +36,10 @@ GraspGenerator::GraspGenerator(GripperType g) : gripperType(g) {
 
 }
 
-std::vector<Grasp> GraspGenerator::createGrasps(WorldObject target, float approachDist) {
+std::vector<Grasp> GraspGenerator::createGrasps(
+    WorldObject target, float approachDist) {
+  // For now, all of these are the same, but perhaps in the future they could
+  // split into different grasp strategies for different object types
   switch(target.getType().getShape()) {
     case BOX:
       return generateAxisGrabs(target, approachDist);
@@ -52,7 +55,8 @@ std::vector<Grasp> GraspGenerator::createGrasps(WorldObject target, float approa
   }
 }
 
-std::vector<Grasp> GraspGenerator::generateAxisGrabs(WorldObject target, float approachDist) {
+std::vector<Grasp> GraspGenerator::generateAxisGrabs(
+    WorldObject target, float approachDist) {
   std::vector<Grasp> graspSet;
   Grasp grasp = Grasp();
   tf::Quaternion orientation = tf::Quaternion();
@@ -115,7 +119,6 @@ std::vector<Grasp> GraspGenerator::generateAxisGrabs(WorldObject target, float a
   grasp.approachPose.getOrigin().setY(approachDist);
   grasp.approachPose.setData(offset * grasp.approachPose);
   graspSet.push_back(grasp);
-
 
   return graspSet;
 }

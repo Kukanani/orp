@@ -61,7 +61,9 @@ SixDOFClassifier::SixDOFClassifier():
   NNClassifier::init();
 }
 
-bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVector &sixdof) {
+bool SixDOFClassifier::loadHist(
+  const boost::filesystem::path &path, FeatureVector &sixdof)
+{
   //ROS_INFO("Loading histogram %s", path.string().c_str());
   //path is the location of the file being read.
   int sixdof_idx;
@@ -83,13 +85,16 @@ bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVect
 
   kp.name = path.filename().string();
   kp.dataName.assign(kp.name.begin()+kp.name.rfind("/")+1, kp.name.end());
-  kp.name.assign(kp.name.begin()+kp.name.rfind("/")+1, kp.name.begin()+kp.name.rfind("_"));
+  kp.name.assign(kp.name.begin()+kp.name.rfind("/")+1,
+                kp.name.begin()+kp.name.rfind("_"));
   std::string cloud_name = path.string();
 
   std::string cloudName;
-  cloudName.assign(cloud_name.begin(), cloud_name.begin()+cloud_name.rfind("."));
+  cloudName.assign(cloud_name.begin(),
+                   cloud_name.begin()+cloud_name.rfind("."));
   cloudName += ".pcd";
-  if (pcl::io::loadPCDFile<ORPPoint> (cloudName, *(kp.cloud)) == -1) //* load the file
+  // load the file
+  if (pcl::io::loadPCDFile<ORPPoint> (cloudName, *(kp.cloud)) == -1)
   {
     ROS_ERROR ("Couldn't read file %s", cloudName.c_str());
     return false;
@@ -100,7 +105,10 @@ bool SixDOFClassifier::loadHist(const boost::filesystem::path &path, FeatureVect
   matName += ".mat4";
   kp.pose = ORPUtils::loadEigenMatrix4f(matName.c_str()).cast<double>();
 
-  kp.centroid = Eigen::Vector4f(kp.pose(0,3), kp.pose(1,3), kp.pose(2,3), kp.pose(3,3));
+  kp.centroid = Eigen::Vector4f(kp.pose(0,3),
+                                kp.pose(1,3),
+                                kp.pose(2,3),
+                                kp.pose(3,3));
 
   std::string crhName;
   crhName.assign(cloud_name.begin(), cloud_name.begin()+cloud_name.rfind("."));
@@ -126,12 +134,16 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
 
   if(!clouds.empty()) {
-    for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
-      if(eachCloud->width < 3) {
+    for(auto eachCloud = clouds.begin(); eachCloud != clouds.end();
+      eachCloud++)
+    {
+      if(eachCloud->width < 3)
+      {
         continue;
       }
       orp::WorldObject thisObject;
-      pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
+      pcl::PointCloud<ORPPoint>::Ptr thisCluster(
+        new pcl::PointCloud<ORPPoint>);
       pcl::fromROSMsg(*eachCloud, *thisCluster);
 
       //Compute sixdof:
@@ -140,16 +152,19 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       //Estimate normals:
       pcl::NormalEstimation<ORPPoint, pcl::Normal> ne;
       ne.setInputCloud (thisCluster);
-      pcl::search::KdTree<ORPPoint>::Ptr treeNorm (new pcl::search::KdTree<ORPPoint> ());
+      pcl::search::KdTree<ORPPoint>::Ptr treeNorm(
+        new pcl::search::KdTree<ORPPoint> ());
       ne.setSearchMethod (treeNorm);
-      pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+      pcl::PointCloud<pcl::Normal>::Ptr cloud_normals(
+        new pcl::PointCloud<pcl::Normal>);
       ne.setRadiusSearch (0.03);
       ne.compute (*cloud_normals);
 
       //SixDOF estimation
       cvfh.setInputNormals(cloud_normals);
       cvfh.setSearchMethod(treeNorm);
-      pcl::PointCloud<pcl::VFHSignature308>::Ptr cvfhs(new pcl::PointCloud<pcl::VFHSignature308> ());
+      pcl::PointCloud<pcl::VFHSignature308>::Ptr cvfhs(
+        new pcl::PointCloud<pcl::VFHSignature308> ());
       cvfh.compute(*cvfhs);
 
       //Nearest neighbor algorigthm
@@ -157,16 +172,19 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       histogram.second.resize(308);
 
       for (size_t i = 0; i < 308; ++i) {
+        // TODO(Kukanani): does the fact that we only look at index 0 here
+        // matter? I think it might.
         histogram.second[i] = cvfhs->points[0].histogram[i];
-        //TODO: does the fact that we only look at index 0 here matter? I think it might.
       }
 
       int numNeighbors = 1;
-      //KNN classification find nearest neighbors based on histogram. Only concerned with the first one,
-      // Since our dataset only includes one data point for each classification/pose pair
+      // KNN classification find nearest neighbors based on histogram. Only
+      // concerned with the first one, since our dataset only includes one
+      // data point for each classification/pose pair
       int numFound = 0;
 
-      numFound = nearestKSearch (*kIndex, histogram, numNeighbors, kIndices, kDistances);
+      numFound = nearestKSearch (*kIndex, histogram, numNeighbors,
+        kIndices, kDistances);
 
       if(numFound == 0) {
         ROS_ERROR("KNN search found 0 nearby feature vectors");
@@ -175,7 +193,8 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       int limit = std::min<int>(numNeighbors, numFound);
 
       for(int j=0; j<limit; j++) {
-        ROS_DEBUG("SixDOF: Dist(%s@%.2f): %f", subModels.at(kIndices[0][j]).first.name.c_str(),
+        ROS_DEBUG("SixDOF: Dist(%s@%.2f): %f",
+          subModels.at(kIndices[0][j]).first.name.c_str(),
           subModels.at(kIndices[0][j]).first.angle, kDistances[0][j]);
       }
 
@@ -189,15 +208,22 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       clusterCRHGen.setCentroid(clusterCentroid);
       clusterCRHGen.compute(*clusterCRH);
 
-      Eigen::Vector4f viewCentroid = subModels.at(kIndices[0][0]).first.centroid;
+      Eigen::Vector4f viewCentroid =
+        subModels.at(kIndices[0][0]).first.centroid;
 
-      pcl::PointCloud<CRH90>::Ptr viewCRH = subModels.at(kIndices[0][0]).first.crh;
+      pcl::PointCloud<CRH90>::Ptr viewCRH =
+        subModels.at(kIndices[0][0]).first.crh;
 
       pcl::CRHAlignment<ORPPoint, 90> alignment;
-      alignment.setInputAndTargetView(thisCluster, subModels.at(kIndices[0][0]).first.cloud);
+      alignment.setInputAndTargetView(thisCluster,
+        subModels.at(kIndices[0][0]).first.cloud);
       // CRHAlignment works with Vector3f, not Vector4f.
-      Eigen::Vector3f viewCentroid3f(viewCentroid[0], viewCentroid[1], viewCentroid[2]);
-      Eigen::Vector3f clusterCentroid3f(clusterCentroid[0], clusterCentroid[1], clusterCentroid[2]);
+      Eigen::Vector3f viewCentroid3f(viewCentroid[0],
+                                     viewCentroid[1],
+                                     viewCentroid[2]);
+      Eigen::Vector3f clusterCentroid3f(clusterCentroid[0],
+                                        clusterCentroid[1],
+                                        clusterCentroid[2]);
       alignment.setInputAndTargetCentroids(clusterCentroid3f, viewCentroid3f);
 
       // Compute the roll angle(s).
@@ -216,7 +242,8 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       else {
         // CRH rotation
 
-        // get the rotation vector - just the vector to the centroid in object space
+        // get the rotation vector - just the vector to the centroid in object
+        // space
         Eigen::Vector3d rotVec = Eigen::Vector3d(0.0f, 0.0f, 1.0f);
         rotVec.normalize();
 
@@ -229,7 +256,8 @@ void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
         Eigen::Matrix3d rotMat; rotMat = quat;
 
         // rotate the object using the quaternion.
-        Eigen::Affine3d crhRot; crhRot = Eigen::Affine3d(Eigen::AngleAxisd(radRotationAmount, rotVec));
+        Eigen::Affine3d crhRot; crhRot =
+          Eigen::Affine3d(Eigen::AngleAxisd(radRotationAmount, rotVec));
         finalPose.linear() = rotMat;
       }
 

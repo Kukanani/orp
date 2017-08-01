@@ -54,7 +54,7 @@ int main(int argc, char **argv)
   return 1;
 }
 
-///////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 Recognizer::Recognizer() :
     colocationDist(0.05),
@@ -84,21 +84,32 @@ Recognizer::Recognizer() :
     autostart = true;
   }
 
-  ROS_INFO_STREAM_NAMED("ORP Recognizer", "Recognition frame: " << recognitionFrame);
+  ROS_INFO_STREAM_NAMED("ORP Recognizer",
+    "Recognition frame: " << recognitionFrame);
 
   //dynamic reconfigure
-  reconfigureCallbackType = boost::bind(&Recognizer::paramsChanged, this, _1, _2);
+  reconfigureCallbackType =
+      boost::bind(&Recognizer::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
 
   //ROS clients and publishers
-  markerPub         = n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1, true);
-  objectPub         = n.advertise<orp::WorldObjects>(objectTopic, 1);
-  stopPub           = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
+  markerPub =
+      n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1, true);
+  objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
+  stopPub = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
 
-  objectPoseServer  = n.advertiseService("/get_object_pose", &Recognizer::getObjectPose, this);
-  objectsServer     = n.advertiseService("/get_objects", &Recognizer::cb_getObjects, this);
-  startSub          = n.subscribe("orp_start_recognition", 1, &Recognizer::cb_startRecognition, this);
-  stopSub           = n.subscribe("orp_stop_recognition", 1, &Recognizer::cb_stopRecognition, this);
+  objectPoseServer =
+      n.advertiseService("/get_object_pose",
+        &Recognizer::getObjectPose, this);
+  objectsServer =
+      n.advertiseService("/get_objects",
+        &Recognizer::cb_getObjects, this);
+  startSub =
+      n.subscribe("orp_start_recognition", 1,
+        &Recognizer::cb_startRecognition, this);
+  stopSub =
+      n.subscribe("orp_stop_recognition", 1,
+        &Recognizer::cb_stopRecognition, this);
 
   transformListener = new tf::TransformListener();
 
@@ -114,23 +125,26 @@ Recognizer::Recognizer() :
 
 void Recognizer::recognize(const ros::TimerEvent& event)
 {
-  update();     // update objects
-  publishROS(); // publish markers
-  killStale();  // cull old objects
+  // update objects
+  update();
+  // publish markers
+  publishROS();
+  // cull old objects
+  killStale();
 }
 
 void Recognizer::paramsChanged(orp::RecognizerConfig &config, uint32_t level)
 {
   setRefreshInterval(config.refresh_interval);
-  staleTime                  = ros::Duration(config.stale_time);
-  colocationDist             = config.colocation_dist;
-  shouldDebugPrint           = config.debug_print;
+  staleTime = ros::Duration(config.stale_time);
+  colocationDist = config.colocation_dist;
+  shouldDebugPrint = config.debug_print;
 
-  showUnknownLabels          = config.show_unknown_labels;
+  showUnknownLabels = config.show_unknown_labels;
   showRecognitionProbability = config.show_recognition_probability;
-  showPosition               = config.show_position;
-  showPose                   = config.show_pose;
-  showPoseStdDev             = config.show_pose_std_dev;
+  showPosition = config.show_position;
+  showPose = config.show_pose;
+  showPoseStdDev = config.show_pose_std_dev;
 }
 
 bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
@@ -163,9 +177,14 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
       std::string sourceFrame = newObject.pose.header.frame_id;
       if(sourceFrame != recognitionFrame) {
         std::string msg = "";
-        if(!transformListener->canTransform(recognitionFrame, sourceFrame, ros::Time(0), &msg)) {
+        if(!transformListener->canTransform(recognitionFrame, sourceFrame,
+                                            ros::Time(0), &msg))
+        {
           //can't determine object's pose in real world.
-          ROS_WARN_STREAM_THROTTLE_NAMED(5.0f, "ORP Recognizer", "[Throttled at 5s] can't determine objects pose in frame " << sourceFrame << " with respect to recognition frame " << recognitionFrame << ": " << msg);
+          ROS_WARN_STREAM_THROTTLE_NAMED(5.0f, "ORP Recognizer",
+            "[Throttled at 5s] can't determine objects pose in frame " <<
+            sourceFrame << " with respect to recognition frame " <<
+            recognitionFrame << ": " << msg);
           return;
         }
 
@@ -181,9 +200,12 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
       Eigen::Affine3d eigPose;
       tf::poseMsgToEigen(newObject.pose.pose, eigPose);
 
-      WorldObjectPtr p = WorldObjectPtr(new WorldObject(colocationDist,&typeManager,newObject.label, recognitionFrame, eigPose, 1.0f));
+      WorldObjectPtr p = WorldObjectPtr(
+        new WorldObject(colocationDist, &typeManager, newObject.label,
+                        recognitionFrame, eigPose, 1.0f));
       p->setCloud(newObject.cloud);
-      for(WorldObjectList::iterator it = model.begin(); it != model.end() && !merged; ++it) {
+      for(WorldObjectList::iterator it = model.begin();
+          it != model.end() && !merged; ++it) {
         if((*it)->isColocatedWith(p)) {
           merged = true;
           // let the objects figure out how to merge themselves
@@ -191,7 +213,8 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
         }
       }
 
-      if(!merged) { // Since it wasn't merged with any old objects, create a new object
+      if(!merged) {
+        // Since it wasn't merged with any old objects, create a new object
         model.push_back(p);
       }
     }
@@ -216,10 +239,12 @@ void Recognizer::startRecognition() {
       &Recognizer::cb_processNewClassification,
       this);
 
-    timer = n.createTimer(ros::Duration(refreshInterval), boost::bind(&Recognizer::recognize, this, _1));
+    timer = n.createTimer(ros::Duration(refreshInterval),
+        boost::bind(&Recognizer::recognize, this, _1));
     timer.start();
   } else {
-    ROS_ERROR_NAMED("ORP Recognizer", "Attempted to start recognition, but already started");
+    ROS_ERROR_NAMED("ORP Recognizer",
+                    "Attempted to start recognition, but already started");
   }
 }
 
@@ -229,7 +254,9 @@ void Recognizer::stopRecognition() {
     ROS_INFO("Stopping Visual Recognition");
     timer.stop();
     recognitionSub.shutdown();
-    for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it) {
+    for(WorldObjectList::iterator it = model.begin();
+        it != model.end(); ++it)
+    {
       (*it)->setStale(true);
     }
     //say goodbye (send delete markers)
@@ -238,13 +265,15 @@ void Recognizer::stopRecognition() {
     //clear all markers
     model.clear();
   } else {
-    ROS_WARN_NAMED("ORP Recognizer", "Attempted to stop recognition, but it hasn't started.");
+    ROS_WARN_NAMED("ORP Recognizer",
+        "Attempted to stop recognition, but it hasn't started.");
   }
 }
 
 void Recognizer::update()
 {
-  //only update the stale objects if we have new data. No camera points->no updates (lazy)
+  // Only update the stale objects if we have new data.
+  // No camera points->no updates (lazy)
   if(!dirty) return;
   ros::Time now = ros::Time::now();
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
@@ -274,6 +303,7 @@ void Recognizer::publishROS()
     tf::poseEigenToTF((**it).getPose(), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
 
+    // fill the new object with data
     newObject.colocationDist = (**it).getColocationDistance();
     newObject.probability = (**it).getProbability();
     newObject.pose.header.frame_id = recognitionFrame;
@@ -286,7 +316,8 @@ void Recognizer::publishROS()
 
     //create the marker message
     std::vector<visualization_msgs::Marker> newMarkers = (**it).getMarkers();
-    markerMsg.markers.insert(markerMsg.markers.end(), newMarkers.begin(), newMarkers.end());
+    markerMsg.markers.insert(markerMsg.markers.end(),
+        newMarkers.begin(), newMarkers.end());
   }
   //publish 'em
   markerPub.publish(markerMsg);
@@ -349,7 +380,9 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(WorldObjectType wot)
   best = WorldObjectPtr();
   if(model.size() < 1)
   {
-    ROS_ERROR_STREAM_NAMED("ORP Recognizer", "No vision objects while trying to get most likely object of type " << wot.getName());
+    ROS_ERROR_STREAM_NAMED("ORP Recognizer",
+      "No vision objects while trying to get most likely object of type "
+      << wot.getName());
   }
 
   int i = 0;
@@ -372,7 +405,8 @@ WorldObjectPtr Recognizer::getMostLikelyObjectOfType(std::string name)
   try {
     typeManager.getTypeByName(name);
   } catch(std::logic_error le) {
-    ROS_WARN_STREAM_THROTTLE(30, "[ORP Recognizer] Item type " + name + " not found. Continuing with default unknown object type");
+    ROS_WARN_STREAM_THROTTLE(30, "[ORP Recognizer] Item type " + name +
+      " not found. Continuing with default unknown object type");
   }
   return getMostLikelyObjectOfType(type);
 }
@@ -388,7 +422,7 @@ void Recognizer::setRefreshInterval(float interval)
 }
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // ROS shadows for internal functions
 
 void Recognizer::cb_startRecognition(std_msgs::Empty msg) {

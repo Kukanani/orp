@@ -36,13 +36,15 @@ Classifier2D::Classifier2D():
   Classifier(),
   image_transport_(node_)
 {
-  node_private_.param<std::string>("image_topic", image_topic_, "/camera/rgb/image_raw");
+  node_private_.param<std::string>("image_topic",
+      image_topic_, "/camera/rgb/image_raw");
 }
 
 void Classifier2D::start()
 {
   Classifier::start();
-  image_sub_ = image_transport_.subscribe(image_topic_, 1, &Classifier2D::cb_classify, this);
+  image_sub_ = image_transport_.subscribe(image_topic_, 1,
+      &Classifier2D::cb_classify, this);
 }
 
 void Classifier2D::stop()

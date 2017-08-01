@@ -37,14 +37,9 @@
 
 #include <sstream>
 
-/**
- * Starts up the name and handles command-line arguments.
- * @param  argc num args
- * @param  argv args
- * @return      1 if all is well.
- */
 int main(int argc, char **argv)
 {
+  // Start up the name and handle command-line arguments.
   srand (static_cast <unsigned> (time(0)));
 
   ros::init(argc, argv, "rgb_classifier");
@@ -53,6 +48,7 @@ int main(int argc, char **argv)
   RGBClassifier v;
   v.init();
 
+  // for cluster visualization
   //cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
   ros::AsyncSpinner spinner(2);
   spinner.start();
@@ -60,7 +56,7 @@ int main(int argc, char **argv)
   ros::waitForShutdown();
   //cv::destroyAllWindows();
   return 1;
-} //main
+}
 
 RGBClassifier::RGBClassifier():
   Classifier3D()
@@ -78,11 +74,14 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
 
   if(!clouds.empty()) {
-    for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
+    for(auto eachCloud = clouds.begin();
+        eachCloud != clouds.end(); eachCloud++)
+    {
       if(eachCloud->width < 3) {
         continue;
       }
-      pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
+      pcl::PointCloud<ORPPoint>::Ptr thisCluster(
+          new pcl::PointCloud<ORPPoint>);
       pcl::fromROSMsg(*eachCloud, *thisCluster);
 
       std::string color = "unknown";
@@ -93,7 +92,9 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
       pcl::PointCloud<ORPPoint>::iterator point;
       float r=0, g=0, b=0;
 
-      for(point = thisCluster->points.begin(); point < thisCluster->points.end(); ++point, ++i) {
+      for(point = thisCluster->points.begin();
+          point < thisCluster->points.end(); ++point, ++i)
+      {
         r += point->r;
         g += point->g;
         b += point->b;
@@ -150,10 +151,13 @@ void RGBClassifier::processColors(cv::Mat& img)
 
 std::string RGBClassifier::getColor(float r, float g, float b)
 {
-  // This function used to take a cv::Mat and use the cv::sum function to calculate the r, g, and b
-  // values in one line each. However, this began giving me segfaults after migrating to a new machine.
-  // I don't know the exact issue, but I suspect a conflict with OpenCV versions 2 and 3. Whatever
-  // the reason, you now have the pass the r/g/b values directly to this function.
+  // TODO(Kukanani):
+  // This function used to take a cv::Mat and use the cv::sum function to
+  // calculate the r, g, and b values in one line each. However, this began
+  // giving me segfaults after migrating to a new machine. I don't know the
+  // exact issue, but I suspect a conflict with OpenCV versions 2 and 3.
+  // Whatever the reason, you now have the pass the r/g/b values directly to
+  // this function.
 
   //which is greater?
   if(r > g && r > b) return "red";

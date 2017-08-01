@@ -28,5 +28,6 @@
 // OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+// TODO(Kukanani): I think this file can be safely removed.
 #include "orp/core/orp_utils.h"
 

@@ -35,9 +35,12 @@ Classifier::Classifier():
   node_("")
 {
   //load configuration parameters and defaults
-  node_private_.param<std::string>("classification_topic", classification_topic_, "/classification");
-  node_private_.param<std::string>("start_topic", start_topic_, "/orp_start_recognition");
-  node_private_.param<std::string>("stop_topic", stop_topic_, "/orp_stop_recognition");
+  node_private_.param<std::string>("classification_topic",
+      classification_topic_, "/classification");
+  node_private_.param<std::string>("start_topic",
+      start_topic_, "/orp_start_recognition");
+  node_private_.param<std::string>("stop_topic",
+      stop_topic_, "/orp_stop_recognition");
 
   start_sub_ = node_.subscribe(start_topic_, 1, &Classifier::cb_start, this);
   stop_sub_ = node_.subscribe(stop_topic_, 1, &Classifier::cb_stop, this);
@@ -58,8 +61,9 @@ void Classifier::init()
 
 void Classifier::start()
 {
-    ROS_INFO("Classifier is starting");
-  classification_pub_ = node_.advertise<orp::ClassificationResult>(classification_topic_, 10);
+  ROS_INFO("Classifier is starting");
+  classification_pub_ =
+      node_.advertise<orp::ClassificationResult>(classification_topic_, 10);
 }
 
 void Classifier::stop()

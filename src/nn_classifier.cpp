@@ -63,7 +63,8 @@ void NNClassifier::init() {
         subModels.size(),
         subModels[0].second.size());
 
-      ROS_INFO_STREAM("data size: [" << kData->rows << " , " << kData->cols << "]");
+      ROS_INFO_STREAM("data size: [" << kData->rows <<
+                      " , " << kData->cols << "]");
       for(size_t i = 0; i < kData->rows; ++i)
       {
         for(size_t j = 0; j < kData->cols; ++j)
@@ -72,7 +73,8 @@ void NNClassifier::init() {
         }
       }
 
-      kIndex = new flann::Index<flann::ChiSquareDistance<float> >(*kData, flann::LinearIndexParams ());
+      kIndex = new flann::Index<flann::ChiSquareDistance<float> >(
+          *kData, flann::LinearIndexParams ());
       kIndex->buildIndex();
     }
     ROS_INFO("Training data loaded.");
@@ -84,10 +86,12 @@ void NNClassifier::loadTypeList() {
   XmlRpc::XmlRpcValue paramMap;
   std::vector<WorldObjectType> objects;
   while(!node_.getParam("/items", paramMap)) {
-    ROS_INFO_THROTTLE(5.0, "Waiting for object type list on parameter server...");
+    ROS_INFO_THROTTLE(5.0,
+                      "Waiting for object type list on parameter server...");
     ros::Duration(1.0).sleep();
   }
-  for(XmlRpc::XmlRpcValue::iterator it = paramMap.begin(); it != paramMap.end(); ++it) {
+  for(XmlRpc::XmlRpcValue::iterator it = paramMap.begin();
+      it != paramMap.end(); ++it) {
     fullTypeList.push_back(it->first);
   }
 }
@@ -97,21 +101,35 @@ NNClassifier::~NNClassifier() {
   delete kIndex;
 }
 
-int NNClassifier::nearestKSearch(flann::Index<flann::ChiSquareDistance<float> > &index,
-    const FeatureVector &homeFeature,
-    int k,
-    flann::Matrix<int> &indices,
-    flann::Matrix<float> &distances)
+int NNClassifier::nearestKSearch(
+  flann::Index<flann::ChiSquareDistance<float> > &index,
+  const FeatureVector &homeFeature,
+  int k,
+  flann::Matrix<int> &indices,
+  flann::Matrix<float> &distances)
 {
   int rows = 1;
   // Query point
-  //flann::Matrix<float> home = flann::Matrix<float>(const_cast<float*>(&(homeFeature.second[0])), home.rows, homeFeature.second.size ());
-  flann::Matrix<float> home = flann::Matrix<float>(new float[homeFeature.second.size ()], rows, homeFeature.second.size ());
-  memcpy (&home.ptr ()[0], &homeFeature.second.at(0), home.cols * home.rows * sizeof (int));
+  //flann::Matrix<float> home =
+  //  flann::Matrix<float>(
+  //    const_cast<float*>(&(homeFeature.second[0])),
+  //                       home.rows,
+  //                       homeFeature.second.size ());
+  flann::Matrix<float> home =
+      flann::Matrix<float>(
+        new float[homeFeature.second.size()],
+        rows,
+        homeFeature.second.size());
+  memcpy(&home.ptr ()[0],
+         &homeFeature.second.at(0),
+         home.cols * home.rows * sizeof (int));
 
-  indices = flann::Matrix<int>(new int[home.rows*k], home.rows, k);
-  distances = flann::Matrix<float>(new float[home.rows*k], home.rows, k);
-  int foundCount = index.knnSearch (home, indices, distances, k, flann::SearchParams (128));
+  indices =
+      flann::Matrix<int>(new int[home.rows*k], home.rows, k);
+  distances =
+      flann::Matrix<float>(new float[home.rows*k], home.rows, k);
+  int foundCount =
+      index.knnSearch (home, indices, distances, k, flann::SearchParams (128));
 
   return foundCount;
 }
@@ -131,25 +149,34 @@ void NNClassifier::loadModelsRecursive(
     return;
   }
 
-  for(boost::filesystem::directory_iterator it (base_dir); it != boost::filesystem::directory_iterator (); ++it) {
+  for(boost::filesystem::directory_iterator it (base_dir);
+      it != boost::filesystem::directory_iterator (); ++it) {
     if(boost::filesystem::is_directory(it->status ())) {
       std::stringstream ss;
       ss << it->path();
       ROS_INFO("NOT traversing into directory %s.", ss.str().c_str());
     }
-    if(boost::filesystem::is_regular_file(it->status()) && boost::filesystem::extension(it->path()) == extension) {
+    if(boost::filesystem::is_regular_file(it->status()) &&
+       boost::filesystem::extension(it->path()) == extension) {
       FeatureVector m;
       boost::regex pattern("");
       boost::cmatch what;
-      for(std::vector<std::string>::iterator types = fullTypeList.begin(); types != fullTypeList.end(); ++types) {
+      for(std::vector<std::string>::iterator types = fullTypeList.begin();
+          types != fullTypeList.end(); ++types) {
         //match just the filename against the regex
         pattern = boost::regex("(" + *types + ")(.*)");
-        if(boost::regex_match(it->path().filename().string().c_str(), what, pattern)) {
-          if (loadHist(it->path(), m)) {
+        if(boost::regex_match(
+           it->path().filename().string().c_str(), what, pattern))
+        {
+          if(loadHist(it->path(), m))
+          {
             loadedModels.push_back(m);
-            ROS_INFO("Loading file %s", it->path().filename().string().c_str());
-          } else {
-            ROS_INFO_STREAM("histogram loader rejected file " << it->path().filename().string().c_str());
+            ROS_INFO("Loading file %s",
+                      it->path().filename().string().c_str());
+          } else
+          {
+            ROS_INFO_STREAM("histogram loader rejected file " <<
+                            it->path().filename().string().c_str());
           }
         }
       }

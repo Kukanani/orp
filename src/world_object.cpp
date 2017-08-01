@@ -41,15 +41,20 @@ int WorldObject::nextValidID = 0;
 
 const float WorldObject::MEASUREMENT_COVARIANCE = 0.001f; //1mm measurement covariance
 
-WorldObject WorldObject::createFromMessage(WorldObjectManager* manager_, orp::WorldObject message) {
+WorldObject WorldObject::createFromMessage(
+  WorldObjectManager* manager_, orp::WorldObject message)
+{
   Eigen::Affine3d eigenPose;
   tf::poseMsgToEigen(message.pose.pose, eigenPose);
-  WorldObject obj(message.colocationDist, manager_, message.label, message.pose.header.frame_id, eigenPose, message.probability);
+  WorldObject obj(message.colocationDist, manager_, message.label,
+    message.pose.header.frame_id, eigenPose, message.probability);
   obj.setCloud(message.cloud);
   return obj;
 }
 
-WorldObject::WorldObject(float colocationDist, WorldObjectManager* manager_, std::string type_, std::string _frame, Eigen::Affine3d pose_, float probability_):
+WorldObject::WorldObject(float colocationDist, WorldObjectManager* manager_,
+                         std::string type_, std::string _frame,
+                         Eigen::Affine3d pose_, float probability_):
   type(manager_->getTypeByName(type_)),
   lastUpdated(ros::Time::now()),
   id(nextValidID),
@@ -87,8 +92,10 @@ bool WorldObject::merge(WorldObjectPtr other)
   id = id;
   stale = false;
   manager = other->manager;
-  setPose(other->getPose()); //perform Kalman Filtering
-  probability = other->getProbability(); //this is where we would perform Bayesian filtering on type probabilities
+  //perform Kalman Filtering
+  setPose(other->getPose());
+  //this is where we would perform Bayesian filtering on type probabilities
+  probability = other->getProbability();
   setLastUpdated(ros::Time::now());
   setCloud(other->getCloud());
 
@@ -102,7 +109,8 @@ void WorldObject::calculateGrasps() {
 }
 
 bool WorldObject::isColocatedWith(WorldObjectPtr other) {
-  return ((pose.translation()-other->getPose().translation()).norm() <= colocationDistance);
+  return ((pose.translation()-other->getPose().translation()).norm() <=
+    colocationDistance);
   return false;
 }
 
@@ -115,19 +123,20 @@ void WorldObject::setType(WorldObjectType newType) {
 void WorldObject::setupObjectMarker() {
   objectMarker = type.getStub();
   objectMarker.header.frame_id = frame;
-  objectMarker.header.stamp       = ros::Time::now();
-  objectMarker.id                 = id;
-  objectMarker.action             = visualization_msgs::Marker::ADD;
+  objectMarker.header.stamp = ros::Time::now();
+  objectMarker.id = id;
+  objectMarker.action = visualization_msgs::Marker::ADD;
   objectMarker.color.a = 0.5;
 }
 
 void WorldObject::setupLabelMarker() {
-  labelMarker.header.frame_id    = frame;
-  labelMarker.header.stamp       = ros::Time::now();
-  labelMarker.type               = visualization_msgs::Marker::TEXT_VIEW_FACING;
-  labelMarker.action             = visualization_msgs::Marker::ADD;
-  labelMarker.id                 = id+1; // id is reserved for the object marker
-  labelMarker.text               = type.getName();
+  labelMarker.header.frame_id = frame;
+  labelMarker.header.stamp = ros::Time::now();
+  labelMarker.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+  labelMarker.action = visualization_msgs::Marker::ADD;
+  // 1 id is reserved for the object marker
+  labelMarker.id = id + 1;
+  labelMarker.text = type.getName();
   labelMarker.scale.z = 0.03f;
   labelMarker.color.r = 1.0f;
   labelMarker.color.g = 1.0f;
@@ -170,7 +179,8 @@ void WorldObject::setPose( Eigen::Affine3d pos, bool hard) {
 }
 
 void WorldObject::setPoseKalman(Eigen::Affine3d pos) {
-  Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> K = covariance * ( (covariance + Q).inverse() );
+  Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> K =
+    covariance * (covariance + Q).inverse();
 
   Eigen::Matrix<double, KALMAN_SIZE,1> difference;
   for(int i=0; i<3; ++i) {
@@ -233,7 +243,7 @@ std::vector<visualization_msgs::Marker> WorldObject::getMarkers() {
       arrow.header.frame_id = getFrame();
       arrow.scale.x = 0.01; arrow.scale.y = 0.02; arrow.scale.z=0.03;
 
-      for(std::vector<Grasp>::iterator grasp = grasps.begin(); grasp != grasps.end(); ++grasp) {
+      for(auto grasp = grasps.begin(); grasp != grasps.end(); ++grasp) {
         arrow.points.clear();
         geometry_msgs::Point point;
         tf::pointTFToMsg(grasp->approachPose.getOrigin(), point);

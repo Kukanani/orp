@@ -62,11 +62,13 @@ CylinderClassifier::CylinderClassifier():
   maxRadius(0.1)
 {
   //dynamic reconfigure
-  reconfigureCallbackType = boost::bind(&CylinderClassifier::paramsChanged, this, _1, _2);
+  reconfigureCallbackType =
+      boost::bind(&CylinderClassifier::paramsChanged, this, _1, _2);
   reconfigureServer.setCallback(reconfigureCallbackType);
 }
 
-void CylinderClassifier::paramsChanged(orp::CylinderClassifierConfig &config, uint32_t level)
+void CylinderClassifier::paramsChanged(
+    orp::CylinderClassifierConfig &config, uint32_t level)
 {
   normalDistanceWeight = config.normal_distance_weight;
   maxIterations = config.max_iterations;
@@ -77,26 +79,21 @@ void CylinderClassifier::paramsChanged(orp::CylinderClassifierConfig &config, ui
 }
 
 void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
-  //ROS_INFO_STREAM("Camera classification callback with " << cloud.width*cloud.height << " points.");
   orp::ClassificationResult classRes;
   classRes.method = "cylinder";
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
-  //ROS_INFO("Cylinder classifier calling segmentation");
   segmentation_client_.call(seg_srv);
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
-  //ROS_INFO("Cylinder classifier finished calling segmentation");
-  //ROS_INFO("data size: %d x %d", kData->rows, kData->cols);
 
   if(!clouds.empty()) {
     for(std::vector<sensor_msgs::PointCloud2>::iterator eachCloud = clouds.begin(); eachCloud != clouds.end(); eachCloud++) {
       orp::WorldObject thisObject;
       if(eachCloud->width < 3) {
-        //ROS_INFO("Cloud too small!");
+        // cloud is too small to perform model estimation
         continue;
       }
-      //ROS_INFO("cloud acceptable size");
       pcl::PointCloud<ORPPoint>::Ptr thisCluster (new pcl::PointCloud<ORPPoint>);
       pcl::fromROSMsg(*eachCloud, *thisCluster);
 
@@ -125,32 +122,39 @@ void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
       pcl::ModelCoefficients::Ptr coefficients_cylinder (new pcl::ModelCoefficients);
       pcl::PointIndices::Ptr inliers_cylinder (new pcl::PointIndices);
       seg.segment (*inliers_cylinder, *coefficients_cylinder);
-    // std::cerr << "Cylinder coefficients: " << *coefficients_cylinder << std::endl;
+      // std::cerr << "Cylinder coefficients: " << *coefficients_cylinder << std::endl;
 
       Eigen::Affine3d finalPose;
 
       finalPose(0,3) = coefficients_cylinder->values[0];
       finalPose(1,3) = coefficients_cylinder->values[1];
 
-      //the z value is so special because the cylinder model has infinite height. So instead we take the midway point
-      // between the highest-z and lowest-z points as the center. Using a centroid-based approach wouldn't work because
-      //  sometimes we can see the top/bottom of the object, which would throw us off.
-      //TODO fix this to work for arbitrary axis orientations by finding the principal components, generating bounding box, etc.
+      // the z value is so special because the cylinder model has infinite
+      // height. So instead we take the midway point between the highest-z and
+      // lowest-z points as the center. Using a centroid-based approach
+      // wouldn't work because sometimes we can see the top/bottom of the
+      // object, which would throw us off.
+      //
+      // TODO(kukanani): fix this to work for arbitrary axis orientations by
+      //   finding the principal components, generating bounding box, etc.
       ORPPoint min_pt, max_pt;
       pcl::getMinMax3D(*thisCluster, min_pt, max_pt);
 
       finalPose(2,3) = (max_pt.z + min_pt.z)/2.0f;
 
       // http://answers.ros.org/question/31006/how-can-a-vector3-axis-be-used-to-produce-a-quaternion/
-
       Eigen::Vector3d start_vector(0.0, 0.0, 1.0); //cylinder default axis orientation: up
-      Eigen::Vector3d axis_vector(coefficients_cylinder->values[3], coefficients_cylinder->values[3], coefficients_cylinder->values[5]);
+      Eigen::Vector3d axis_vector(coefficients_cylinder->values[3],
+                                  coefficients_cylinder->values[3], // 4?
+                                  coefficients_cylinder->values[5]);
       Eigen::Quaterniond rotation;
       rotation.setFromTwoVectors(start_vector, axis_vector).normalize();
       Eigen::Matrix3d rotMat; rotMat = rotation;
       finalPose.linear() = rotMat;
 
       tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
+
+      // Use some default object type for now.
       thisObject.label = "obj_red";
       classRes.result.push_back(thisObject);
     }

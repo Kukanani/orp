@@ -46,7 +46,8 @@ int main(int argc, char** argv) {
 
 LinemodTrain::LinemodTrain() : node_()
 {
-  //TODO: remove
+  // TODO(Kukanani): remove these magic constants and replace with
+  // configurable parameters (ROS params?)
   DISTANCE_THRESHOLD = 0.01;
   FAR_CLIP = 2.0;
   NEAR_CLIP = 0.5;
