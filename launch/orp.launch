@@ -31,15 +31,17 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <launch>
-  <!-- ARGUMENTS TO ALLOW RUN FROM ANYWHERE -->
   <arg name="home_dir"         default="$(find orp)" />
   <arg name="list"             default="cfg/test_1.list" />
+
+  <arg name="recognition_frame" default="world" />
 
   <arg name="openni"           default="false"/>
   <arg name="openni2"          default="false"/>
   <arg name="realsense"        default="false"/>
 
   <arg name="autostart"        default="true"/>
+  <arg name="reconfigure"      default="true"/>
   <arg name="sim"              default="false"/>
   <arg name="rviz"             default="false"/>
   <arg name="rviz_file"        default="$(arg home_dir)/cfg/recognition.rviz" />
@@ -68,6 +70,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/>
 
+
   <!-- CLASSIFICATION -->
   <node
     name    = "segmentation"
@@ -78,7 +81,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     respawn = "true"
     output  = "screen"
   >
-    <param name="clippingFrame" value="world"/>
+    <param name="clippingFrame" value="$(arg recognition_frame)"/>
   </node>
 
   <node
@@ -123,13 +126,13 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     output  = "screen"
     respawn = "true"
   >
-    <param name="recognitionFrame" value="world"/>
+    <param name="recognition_frame" value="$(arg recognition_frame)"/>
     <param name="autostart" type="bool" value="$(arg autostart)"/>
   </node>
 
   <!-- VISUALIZATION AND CONFIGURATION -->
   <node
-    if      = "$(arg autostart)"
+    if      = "$(arg reconfigure)"
     name    = "rqt_reconfigure"
     pkg     = "rqt_reconfigure"
     type    = "rqt_reconfigure"

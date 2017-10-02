@@ -50,7 +50,7 @@ void Classifier::init()
 {
   //autostart
   bool autostart = true;
-  node_.param<bool>("autostart", autostart, true);
+  node_.param<bool>("autostart", autostart, autostart);
   if(autostart) {
     ROS_INFO("Classifier is autostarting");
     start();
