@@ -106,9 +106,9 @@ void WorldObjectManager::loadTypesFromParameterServer() {
         n, "/items/" + objName + "/pitch", pitch);
       WorldObjectManager::attemptToReloadDoubleParam(
         n, "/items/" + objName + "/yaw", yaw);
-      roll = WorldObjectManager::radFromDeg(roll);
-      pitch = WorldObjectManager::radFromDeg(pitch);
-      yaw = WorldObjectManager::radFromDeg(yaw);
+      // roll = WorldObjectManager::radFromDeg(roll);
+      // pitch = WorldObjectManager::radFromDeg(pitch);
+      // yaw = WorldObjectManager::radFromDeg(yaw);
 
       WorldObjectManager::attemptToReloadFloatParam(
         n, "/items/" + objName + "/red", r);
