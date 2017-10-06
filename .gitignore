@@ -53,6 +53,5 @@ qtcreator-*
 # Catkin custom files
 CATKIN_IGNORE
 
-# GitHub pages files
-_site
-*.lock
+# Sphinx files
+doc/_build/
