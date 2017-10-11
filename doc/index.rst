@@ -1,18 +1,15 @@
-.. orp documentation master file, created by
-   sphinx-quickstart on Fri Oct  6 12:48:16 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
+===============================================================================
 Object Recognition and Pose Perception (ORP) Documentation
 ===============================================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :hidden:
 
+    extending
+    troubleshooting
 
 Overview
-===============================================================================
+--------
 ORP is an object recognition library for detecting objects using visual data
 (such as information from 2D or 3D cameras). ORP bridges the gap between camera
 data and useful information that your robotics application can use. It provides
@@ -45,7 +42,7 @@ such as the YOLO detector, in the ORP framework, and in fact, it's encouraged
 because it allows visual classifiers to be more interoperable.
 
 Structure
-===============================================================================
+---------
 ORP is based on ROS, and each component of ORP is its own ROS node. These nodes
 can each be modified, swapped, or configured separately, making ORP a powerful,
 flexible tool for ROS-based recognition.
@@ -66,7 +63,7 @@ point cloud processing algorithms out of the box, and has tunable parameters
 exposed by the ``rqt_reconfigure`` ROS package.
 
 Project History
-===============================================================================
+---------------
 ORP was originally conceived as part of Adam Allevato's masters thesis,
 published in 2016 at The University of Texas at Austin, for the Nuclear and
 Applied Robotics group's entry in the 2015 Amazon Picking Challenge.

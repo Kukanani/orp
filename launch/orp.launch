@@ -50,8 +50,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="fourdof_folder"   default="data/fourdof" />
   <arg name="sixdof"           default="false"/>
   <arg name="sixdof_folder"    default="data/sixdof" />
-  <arg name="cph"              default="false"/>
-  <arg name="cph_folder"       default="data/cph" />
+  <arg name="segmentation_server" default="true" />
 
   <arg name="throttle_nodelet" default="100" />
 
@@ -73,6 +72,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <!-- CLASSIFICATION -->
   <node
+    if      = "$(arg segmentation_server)"
     name    = "segmentation"
     pkg     = "orp"
     type    = "segmentation"
@@ -83,17 +83,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   >
     <param name="clippingFrame" value="$(arg recognition_frame)"/>
   </node>
-
-  <node
-    if      = "$(arg cph)"
-    name    = "cph_classifier"
-    pkg     = "orp"
-    type    = "cph_classifier"
-    args    = "$(arg home_dir)/$(arg cph_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
-
-    respawn = "true"
-    output  = "screen"
-  />
 
   <node
     if      = "$(arg sixdof)"
