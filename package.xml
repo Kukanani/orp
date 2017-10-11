@@ -24,6 +24,7 @@
   <depend>std_msgs</depend>
   <depend>tf</depend>
   <depend>tf_conversions</depend>
+  <depend>opencv_apps</depend>
 
   <exec_depend>message_runtime</exec_depend>
 

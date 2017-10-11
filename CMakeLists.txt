@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     tf
     tf_conversions
+    opencv_apps
 )
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
