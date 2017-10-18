@@ -196,7 +196,6 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
         newObject.pose.header.frame_id = recognitionFrame;
       }
 
-      bool merged = false;
       Eigen::Affine3d eigPose;
       tf::poseMsgToEigen(newObject.pose.pose, eigPose);
 
@@ -204,17 +203,33 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
         new WorldObject(colocationDist, &typeManager, newObject.label,
                         recognitionFrame, eigPose, 1.0f));
       p->setCloud(newObject.cloud);
-      for(WorldObjectList::iterator it = model.begin();
-          it != model.end() && !merged; ++it) {
-        if((*it)->isColocatedWith(p)) {
-          merged = true;
-          // let the objects figure out how to merge themselves
-          (*it)->merge(p);
+
+      // build a list of objects sorted by their distance to the new one
+      std::map<float, WorldObjectPtr> distances;
+      for(auto it = model.begin(); it != model.end(); ++it)
+      {
+        distances[(**it).distanceTo(p)] = *it;
+      }
+      // std::sort(distances.begin(); distances.end());
+
+      // go through the list, checking for colocation. If any of the objects
+      // are colocated with the new one, STOP.
+      bool colocated = false;
+      for(auto distance : distances)
+      {
+        if(distance.second->isColocatedWith(p))
+        {
+          // try to merge
+          bool mergedIn = distance.second->merge(p);
+          // we found a colocation, so stop looking
+          colocated = true;
+          break;
         }
       }
-
-      if(!merged) {
-        // Since it wasn't merged with any old objects, create a new object
+      // if we make it all the way to the end with no colocation, then it's
+      // time to create a new object
+      if(!colocated)
+      {
         model.push_back(p);
       }
     }
@@ -278,6 +293,8 @@ void Recognizer::update()
   ros::Time now = ros::Time::now();
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
+    // decay probabiilty of detection over time
+    (**it).setProbability((**it).getProbability() * 0.99);
     if(now - (**it).getLastUpdated() > staleTime)
     {
       (**it).setStale(true);
