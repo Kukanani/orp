@@ -74,7 +74,7 @@ VisionSimulator::VisionSimulator(ros::NodeHandle nh, std::string filename,
     new interactive_markers::InteractiveMarkerServer(
       "vision_simulator_objects","",false) );
   objectPoseServer =
-    n.advertiseService("/get_object_pose",
+    n.advertiseService("get_object_pose",
       &VisionSimulator::getObjectPose, this);
 
   ros::Publisher objectsPub =

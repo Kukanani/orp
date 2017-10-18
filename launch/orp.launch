@@ -60,85 +60,86 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <arg name="depth_camera_info_url" value="$(arg depth_calib_url)" />
   </include>
   <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_rviz.launch"> </include>
-  <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
+  <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/orp/input_cloud" />
 
   <node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/>
 
+  <group ns="orp">
+    <!-- CLASSIFICATION -->
+    <node
+      if      = "$(arg segmentation_server)"
+      name    = "segmentation"
+      pkg     = "orp"
+      type    = "segmentation"
+      args    = ""
 
-  <!-- CLASSIFICATION -->
-  <node
-    if      = "$(arg segmentation_server)"
-    name    = "segmentation"
-    pkg     = "orp"
-    type    = "segmentation"
-    args    = ""
+      respawn = "true"
+      output  = "screen"
+    >
+      <param name="clippingFrame" value="$(arg recognition_frame)"/>
+    </node>
 
-    respawn = "true"
-    output  = "screen"
-  >
-    <param name="clippingFrame" value="$(arg recognition_frame)"/>
-  </node>
+    <node
+      if      = "$(arg sixdof)"
+      name    = "sixdof_classifier"
+      pkg     = "orp"
+      type    = "sixdof_classifier"
+      args    = ""
 
-  <node
-    if      = "$(arg sixdof)"
-    name    = "sixdof_classifier"
-    pkg     = "orp"
-    type    = "sixdof_classifier"
-    args    = ""
+      respawn = "true"
+      output  = "screen"
+    >
+      <param name="autostart" type="bool" value="$(arg autostart)"/>
+    </node>
 
-    respawn = "true"
-    output  = "screen"
-  >
-    <param name="autostart" type="bool" value="$(arg autostart)"/>
-  </node>
+    <node
+      if      = "$(arg rgb)"
+      name    = "rgb_classifier"
+      pkg     = "orp"
+      type    = "rgb_classifier"
+      args    = ""
 
-  <node
-    if      = "$(arg rgb)"
-    name    = "rgb_classifier"
-    pkg     = "orp"
-    type    = "rgb_classifier"
-    args    = ""
+      respawn = "true"
+      output  = "screen"
+    >
+      <param name="autostart" type="bool" value="$(arg autostart)"/>
+    </node>
 
-    respawn = "true"
-    output  = "screen"
-  >
-    <param name="autostart" type="bool" value="$(arg autostart)"/>
-  </node>
+    <!-- Main recognition node, which interprets and combines results
+         from (possibly several different) classifiers. -->
+    <node
+      name    = "recognizer"
+      pkg     = "orp"
+      type    = "recognizer"
+      output  = "screen"
+      respawn = "true"
+    >
+      <param name="recognition_frame" value="$(arg recognition_frame)"/>
+      <param name="autostart" type="bool" value="$(arg autostart)"/>
+    </node>
 
-  <!-- Main recognition node, which interprets and combines results
-       from (possibly several different) classifiers. -->
-  <node
-    name    = "recognizer"
-    pkg     = "orp"
-    type    = "recognizer"
-    output  = "screen"
-    respawn = "true"
-  >
-    <param name="recognition_frame" value="$(arg recognition_frame)"/>
-    <param name="autostart" type="bool" value="$(arg autostart)"/>
-  </node>
+    <!-- VISUALIZATION AND CONFIGURATION -->
+    <node
+      if      = "$(arg reconfigure)"
+      name    = "rqt_reconfigure"
+      pkg     = "rqt_reconfigure"
+      type    = "rqt_reconfigure"
+      args    = ""
 
-  <!-- VISUALIZATION AND CONFIGURATION -->
-  <node
-    if      = "$(arg reconfigure)"
-    name    = "rqt_reconfigure"
-    pkg     = "rqt_reconfigure"
-    type    = "rqt_reconfigure"
-    args    = ""
+      respawn = "false"
+    />
 
-    respawn = "false"
-  />
+    <node
+      if      = "$(arg rviz)"
+      name    = "rviz"
+      pkg     = "rviz"
+      type    = "rviz"
+      args    = "-d $(arg rviz_file) -s $(find orp)/rviz/splash.png"
 
-  <node
-    if      = "$(arg rviz)"
-    name    = "rviz"
-    pkg     = "rviz"
-    type    = "rviz"
-    args    = "-d $(arg rviz_file) -s $(find orp)/rviz/splash.png"
+      respawn = "false"
+      output  = "screen"
+    />
 
-    respawn = "false"
-    output  = "screen"
-  />
-
-  <rosparam command="load" file="$(find orp)/cfg/default.yaml" />
+    <rosparam command="load" file="$(find orp)/cfg/default.yaml" />
+  </group>
 </launch>

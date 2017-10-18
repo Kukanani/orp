@@ -54,18 +54,18 @@ Segmentation::Segmentation() :
   }
 
   boundedScenePublisher =
-    node.advertise<sensor_msgs::PointCloud2>("/bounded_scene",1);
+    node.advertise<sensor_msgs::PointCloud2>("~bounded_scene",1);
   voxelPublisher =
-    node.advertise<sensor_msgs::PointCloud2>("/voxel_scene",1);
+    node.advertise<sensor_msgs::PointCloud2>("~voxel_scene",1);
   allPlanesPublisher =
-    node.advertise<sensor_msgs::PointCloud2>("/all_planes",1);
+    node.advertise<sensor_msgs::PointCloud2>("~all_planes",1);
   largestObjectPublisher =
-    node.advertise<sensor_msgs::PointCloud2>("/largest_object",1);
+    node.advertise<sensor_msgs::PointCloud2>("~largest_object",1);
   allObjectsPublisher =
-    node.advertise<sensor_msgs::PointCloud2>("/all_objects",1);
+    node.advertise<sensor_msgs::PointCloud2>("~all_objects",1);
 
   segmentationServer =
-    node.advertiseService("/segmentation", &Segmentation::cb_segment, this);
+    node.advertiseService("segmentation", &Segmentation::cb_segment, this);
 
   // dynamic reconfigure
   reconfigureCallbackType =

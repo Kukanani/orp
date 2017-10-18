@@ -61,8 +61,8 @@ Recognizer::Recognizer() :
     dirty(false),
     typeManager(),
 
-    markerTopic("/detected_object_markers"),
-    objectTopic("/detected_objects"),
+    markerTopic("detected_object_markers"),
+    objectTopic("detected_objects"),
 
     showUnknownLabels(true),
     showRecognitionProbability(true),
@@ -99,16 +99,16 @@ Recognizer::Recognizer() :
   stopPub = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
 
   objectPoseServer =
-      n.advertiseService("/get_object_pose",
+      n.advertiseService("get_object_pose",
         &Recognizer::getObjectPose, this);
   objectsServer =
-      n.advertiseService("/get_objects",
+      n.advertiseService("get_objects",
         &Recognizer::cb_getObjects, this);
   startSub =
-      n.subscribe("orp_start_recognition", 1,
+      n.subscribe("orp/start_recognition", 1,
         &Recognizer::cb_startRecognition, this);
   stopSub =
-      n.subscribe("orp_stop_recognition", 1,
+      n.subscribe("orp/stop_recognition", 1,
         &Recognizer::cb_stopRecognition, this);
 
   transformListener = new tf::TransformListener();
@@ -234,7 +234,7 @@ void Recognizer::startRecognition() {
   {
     ROS_INFO("Starting Visual Recognition");
     recognitionSub = n.subscribe(
-      "/classification",
+      "classification",
       10,
       &Recognizer::cb_processNewClassification,
       this);
@@ -329,7 +329,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
   bool wasStarted = isRecognitionStarted();
   ros::Publisher startPub;
   if(!wasStarted) {
-    startPub = n.advertise<std_msgs::Empty>("/orp_start_recognition", 1, true);
+    startPub = n.advertise<std_msgs::Empty>("orp_start_recognition", 1, true);
     startPub.publish(std_msgs::Empty());
   }
   //block until classification message is published

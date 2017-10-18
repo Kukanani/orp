@@ -1,0 +1,19 @@
+ORP 1 -> ORP 2 migration guide
+==============================
+
+- Change instances of /orp_start_recognition and /orp_stop_recognition to
+  /orp/start_recognition and /orp/stop_recognition, respectively
+- Prefix the following with "orp":
+  /classification
+  /segmentation
+  /items (parameter)
+  /detected_objects
+  /detected_object_markers
+  /get_object_pose
+  /get_objects
+- Prefix the following with "orp/segmentation":
+  bounded_scene
+  voxel_scene
+  all_planes
+  largest_object
+  all_objects
