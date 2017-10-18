@@ -6,3 +6,4 @@ segmentation_node: {cluster_tolerance: 0.03, max_cluster_size: 2000,
   segmentation_distance_threshold: 0.01, spatial_max_x: -5, spatial_max_y: 5,
   spatial_max_z: 5, spatial_min_x: -5, spatial_min_y: -5.0, spatial_min_z: 5,
   spatial_theta_x: 0.0, voxel_leaf_size: 0.005}
+camera: {driver: {depth_registration: true}}

@@ -31,38 +31,33 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
 <launch>
-  <arg name="home_dir"         default="$(find orp)" />
-  <arg name="list"             default="cfg/test_1.list" />
+  <arg name="recognition_frame"   default="world" />
 
-  <arg name="recognition_frame" default="world" />
+  <arg name="openni"              default="false"/>
+  <arg name="openni2"             default="false"/>
+  <arg name="realsense"           default="false"/>
 
-  <arg name="openni"           default="false"/>
-  <arg name="openni2"          default="false"/>
-  <arg name="realsense"        default="false"/>
+  <!-- calibration files used for OpenNI2 -->
+  <arg name="rgb_calib_url"       default="" />
+  <arg name="depth_calib_url"     default="" />
 
-  <arg name="autostart"        default="true"/>
-  <arg name="reconfigure"      default="true"/>
-  <arg name="sim"              default="false"/>
-  <arg name="rviz"             default="false"/>
-  <arg name="rviz_file"        default="$(arg home_dir)/cfg/recognition.rviz" />
+  <arg name="autostart"           default="true"/>
+  <arg name="reconfigure"         default="true"/>
+  <arg name="sim"                 default="false"/>
+  <arg name="rviz"                default="false"/>
+  <arg name="rviz_file"           default="$(find orp)/cfg/recognition.rviz" />
 
-  <arg name="fourdof"          default="false"/>
-  <arg name="fourdof_folder"   default="data/fourdof" />
-  <arg name="sixdof"           default="false"/>
-  <arg name="sixdof_folder"    default="data/sixdof" />
+  <arg name="sixdof"              default="false"/>
+  <arg name="rgb"                 default="false"/>
   <arg name="segmentation_server" default="true" />
 
-  <arg name="throttle_nodelet" default="100" />
+  <arg name="throttle_nodelet"    default="100" />
 
-  <!-- USE THIS FOR GDB -->
-
-  <!--      launch-prefix="xterm -e gdb &#45;&#45;args"      -->
-
-  <!-- DATA -->
+  <!-- CAMERA NODES -->
   <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
   <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">
-    <arg name="rgb_camera_info_url" value="file://$(find orp)/camera_calib/rgb_PS1080_PrimeSense.yaml" />
-    <arg name="depth_camera_info_url" value="file://$(find orp)/camera_calib/depth_PS1080_PrimeSense.yaml" />
+    <arg name="rgb_camera_info_url" value="$(arg rgb_calib_url)" />
+    <arg name="depth_camera_info_url" value="$(arg depth_calib_url)" />
   </include>
   <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_rviz.launch"> </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
@@ -89,25 +84,29 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     name    = "sixdof_classifier"
     pkg     = "orp"
     type    = "sixdof_classifier"
-    args    = "$(arg home_dir)/$(arg sixdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+    args    = ""
 
     respawn = "true"
     output  = "screen"
-  />
+  >
+    <param name="autostart" type="bool" value="$(arg autostart)"/>
+  </node>
 
   <node
-    if      = "$(arg fourdof)"
-    name    = "fourdof_classifier"
+    if      = "$(arg rgb)"
+    name    = "rgb_classifier"
     pkg     = "orp"
-    type    = "cvfh_classifier"
-    args    = "$(arg home_dir)/$(arg fourdof_folder) $(arg home_dir)/$(arg list) $(arg autostart)"
+    type    = "rgb_classifier"
+    args    = ""
 
     respawn = "true"
     output  = "screen"
-  />
+  >
+    <param name="autostart" type="bool" value="$(arg autostart)"/>
+  </node>
 
-  <!-- CONDUCTOR     -->
-
+  <!-- Main recognition node, which interprets and combines results
+       from (possibly several different) classifiers. -->
   <node
     name    = "recognizer"
     pkg     = "orp"
@@ -135,20 +134,11 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     name    = "rviz"
     pkg     = "rviz"
     type    = "rviz"
-    args    = "-d $(arg rviz_file) -s $(arg home_dir)/rviz/splash.png"
+    args    = "-d $(arg rviz_file) -s $(find orp)/rviz/splash.png"
 
     respawn = "false"
     output  = "screen"
   />
 
-  <rosparam command="load" file="$(arg home_dir)/cfg/default.yaml" />
-
-  <node
-    name    = "dynparam"
-    pkg     = "dynamic_reconfigure"
-    type    = "dynparam"
-    args    = "set camera/driver depth_registration true"
-
-    respawn = "false"
-  />
+  <rosparam command="load" file="$(find orp)/cfg/default.yaml" />
 </launch>
