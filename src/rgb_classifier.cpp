@@ -100,7 +100,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
         b += point->b;
       }
 
-      std::cout << "M has " << eachCloud->width << " elements." << std::endl;
+      // std::cout << "M has " << eachCloud->width << " elements." << std::endl;
 
       color = getColor(r, g, b);
 
@@ -117,6 +117,11 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
       finalPose(1,3) = clusterCentroid(1);
       finalPose(2,3) = clusterCentroid(2);
       tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
+
+      thisObject.pose.pose.orientation.x = 0;
+      thisObject.pose.pose.orientation.y = 0;
+      thisObject.pose.pose.orientation.z = 0;
+      thisObject.pose.pose.orientation.w = 1;
 
       classRes.result.push_back(thisObject);
     }
