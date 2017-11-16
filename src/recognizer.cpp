@@ -34,6 +34,7 @@
 
 #include <eigen_conversions/eigen_msg.h>
 #include <tf/transform_datatypes.h>
+#include <vision_msgs/Detection3DArray.h>
 
 #include "orp/core/grasp_generator.h"
 
@@ -60,9 +61,10 @@ Recognizer::Recognizer() :
     colocationDist(0.05),
     dirty(false),
     typeManager(),
+    visionInfo(),
 
-    markerTopic("detected_object_markers"),
-    objectTopic("detected_objects"),
+    markerTopic(),
+    objectTopic(),
 
     showUnknownLabels(true),
     showRecognitionProbability(true),
@@ -83,6 +85,15 @@ Recognizer::Recognizer() :
   if(!privateNode.getParam("autostart", autostart)) {
     autostart = true;
   }
+  if(!privateNode.getParam("detection_topic", markerTopic)) {
+    markerTopic = "orp/detected_object_markers";
+  }
+  if(!privateNode.getParam("detection_markers_topic", objectTopic)) {
+    objectTopic = "orp/detected_objects";
+  }
+  if(!privateNode.getParam("classification_topic", classificationTopic)) {
+    objectTopic = "orp/classification";
+  }
 
   ROS_INFO_STREAM_NAMED("ORP Recognizer",
     "Recognition frame: " << recognitionFrame);
@@ -93,10 +104,17 @@ Recognizer::Recognizer() :
   reconfigureServer.setCallback(reconfigureCallbackType);
 
   //ROS clients and publishers
-  markerPub =
-      n.advertise<visualization_msgs::MarkerArray>(markerTopic, 1, true);
-  objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
-  stopPub = n.advertise<std_msgs::Empty>("/orp_stop_recognition", 1, true);
+  markerPub = privateNode.advertise<visualization_msgs::MarkerArray>(
+      markerTopic, 1, true);
+  objectPub = n.advertise<vision_msgs::Detection3DArray>(objectTopic, 1);
+  stopPub = n.advertise<std_msgs::Empty>("stop_recognition", 1, true);
+  visionInfoPub = n.advertise<vision_msgs::VisionInfo>("vision_info", 1, true);
+
+  // Create VisionInfo message with pipeline metadata
+  visionInfo.header.frame_id = recognitionFrame;
+  visionInfo.database_location = "/orp/items";
+  visionInfo.database_version = 0;
+  visionInfo.method = "ORP";
 
   objectPoseServer =
       n.advertiseService("get_object_pose",
@@ -249,7 +267,7 @@ void Recognizer::startRecognition() {
   {
     ROS_INFO("Starting Visual Recognition");
     recognitionSub = n.subscribe(
-      "classification",
+      classificationTopic,
       10,
       &Recognizer::cb_processNewClassification,
       this);
@@ -309,27 +327,56 @@ void Recognizer::update()
 void Recognizer::publishROS()
 {
   //add all world objects to message
-  orp::WorldObjects objectMsg;
+  vision_msgs::Detection3DArray objectArray;
+  objectArray.header.frame_id = recognitionFrame;
+  objectArray.header.stamp = ros::Time::now();
+  objectArray.header.seq = object_sequence;
+
   visualization_msgs::MarkerArray markerMsg, labelMsg;
 
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     //create the object message
-    orp::WorldObject newObject;
-    tf::Pose intPose;
-    tf::poseEigenToTF((**it).getPose(), intPose);
-    tf::poseTFToMsg(intPose, newObject.pose.pose);
+    // orp::WorldObject newObject;
+    // tf::Pose intPose;
+    // tf::poseEigenToTF((**it).getPose(), intPose);
+    // tf::poseTFToMsg(intPose, newObject.pose.pose);
 
     // fill the new object with data
-    newObject.colocationDist = (**it).getColocationDistance();
-    newObject.probability = (**it).getProbability();
-    newObject.pose.header.frame_id = recognitionFrame;
-    newObject.pose.header.stamp = ros::Time::now();
-    newObject.pose.header.seq = object_sequence++;
-    newObject.label  = (**it).getType().getName();
-    newObject.cloud = (**it).getCloud();
+    // newObject.colocationDist = (**it).getColocationDistance();
+    // newObject.probability = (**it).getProbability();
+    // newObject.pose.header.frame_id = recognitionFrame;
+    // newObject.pose.header.stamp = ros::Time::now();
+    // newObject.pose.header.seq = object_sequence++;
 
-    objectMsg.objects.insert(objectMsg.objects.end(), newObject);
+    // newObject.cloud = (**it).getCloud();
+
+    // objectMsg.objects.insert(objectMsg.objects.end(), newObject);
+
+
+
+    // Create a hypothesis
+    vision_msgs::ObjectHypothesisWithPose hypothesis;
+    hypothesis.score = (**it).getProbability();
+    // TODO(kukanani): actually provide a meaningful id
+    // // newObject.label  = (**it).getType().getName();
+    hypothesis.id = 42;
+    tf::poseEigenToMsg((**it).getPose(), hypothesis.pose.pose);
+
+
+    // create a detection
+    vision_msgs::Detection3D newDetection;
+    newDetection.header.frame_id = recognitionFrame;
+    newDetection.header.stamp = ros::Time::now();
+    newDetection.header.seq = object_sequence;
+    newDetection.source_cloud = (**it).getCloud();
+
+    // attach the hypothesis to the detection
+    newDetection.results.push_back(hypothesis);
+
+    // add the detection to the list
+    objectArray.detections.push_back(newDetection);
+    object_sequence++;
 
     //create the marker message
     std::vector<visualization_msgs::Marker> newMarkers = (**it).getMarkers();
@@ -338,7 +385,7 @@ void Recognizer::publishROS()
   }
   //publish 'em
   markerPub.publish(markerMsg);
-  objectPub.publish(objectMsg);
+  objectPub.publish(objectArray);
 }
 
 bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,

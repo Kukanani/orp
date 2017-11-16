@@ -60,7 +60,7 @@ generate_dynamic_reconfigure_options(
 
 generate_messages(
     DEPENDENCIES
-    sensor_msgs std_msgs geometry_msgs
+    sensor_msgs std_msgs geometry_msgs vision_msgs
 )
 
 ###################################
@@ -70,7 +70,7 @@ generate_messages(
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES orp
-    CATKIN_DEPENDS pcl_ros sensor_msgs std_msgs
+    CATKIN_DEPENDS pcl_ros sensor_msgs std_msgs vision_msgs
     # DEPENDS
 )
 
@@ -135,7 +135,7 @@ target_link_libraries(rgb_classifier ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
 # TODO(kukanani): the virtual trainer doesn't build at the moment.
 # add_executable(virtual_train src/virtual_train.cpp)
-# add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} orp_generate_messages_cpp)
+# add_dependencies(virtual_train ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 # target_link_libraries(virtual_train ${catkin_LIBRARIES} orp ${PCL_LIBRARIES} vtkIO vtkFiltering)
 
 add_executable(vision_simulator src/vision_simulator.cpp)

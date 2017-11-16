@@ -62,7 +62,7 @@ void WorldObjectManager::loadTypesFromParameterServer() {
 
   XmlRpc::XmlRpcValue paramMap;
   std::vector<WorldObjectType> objects;
-  while(!n.getParam("/items", paramMap)) {
+  while(!n.getParam("/orp/items", paramMap)) {
     ROS_INFO_THROTTLE(5.0,
       "Waiting for object type list on parameter server...");
     ros::Duration(1.0).sleep();
@@ -79,7 +79,7 @@ void WorldObjectManager::loadTypesFromParameterServer() {
     try {
       std::string geom;
       WorldObjectManager::attemptToReloadStringParam(n,
-        "/items/" + objName + "/geometry", geom);
+        "/orp/items/" + objName + "/geometry", geom);
       if(geom == "BOX") {
         shape = BOX;
       } else if(geom == "CYLINDER") {
@@ -94,28 +94,28 @@ void WorldObjectManager::loadTypesFromParameterServer() {
         shape = BLOB;
       }
       WorldObjectManager::attemptToReloadDoubleParam(
-        n, "/items/" + objName + "/depth", x, true);
+        n, "/orp/items/" + objName + "/depth", x, true);
       WorldObjectManager::attemptToReloadDoubleParam(
-        n, "/items/" + objName + "/width", y, true);
+        n, "/orp/items/" + objName + "/width", y, true);
       WorldObjectManager::attemptToReloadDoubleParam(
-        n, "/items/" + objName + "/height", z, true);
+        n, "/orp/items/" + objName + "/height", z, true);
 
       WorldObjectManager::attemptToReloadDoubleParam(
-        n, "/items/" + objName + "/roll", roll);
+        n, "/orp/items/" + objName + "/roll", roll);
       WorldObjectManager::attemptToReloadDoubleParam(
-        n, "/items/" + objName + "/pitch", pitch);
+        n, "/orp/items/" + objName + "/pitch", pitch);
       WorldObjectManager::attemptToReloadDoubleParam(
-        n, "/items/" + objName + "/yaw", yaw);
+        n, "/orp/items/" + objName + "/yaw", yaw);
       // roll = WorldObjectManager::radFromDeg(roll);
       // pitch = WorldObjectManager::radFromDeg(pitch);
       // yaw = WorldObjectManager::radFromDeg(yaw);
 
       WorldObjectManager::attemptToReloadFloatParam(
-        n, "/items/" + objName + "/red", r);
+        n, "/orp/items/" + objName + "/red", r);
       WorldObjectManager::attemptToReloadFloatParam(
-        n, "/items/" + objName + "/green", g);
+        n, "/orp/items/" + objName + "/green", g);
       WorldObjectManager::attemptToReloadFloatParam(
-        n, "/items/" + objName + "/blue", b);
+        n, "/orp/items/" + objName + "/blue", b);
 
     } catch(std::exception e) {
       ROS_ERROR_STREAM("error while creating marker stub for world object of "
@@ -124,9 +124,11 @@ void WorldObjectManager::loadTypesFromParameterServer() {
       shape = BLOB;
     }
     if(x > 1 && y > 1 && z > 1) { //detect sizes in mm instead of m
-      ROS_WARN_STREAM("This object is bigger than 1meter in one direction! "
+      ROS_WARN_STREAM("While loading " << objName << ", I found a dimension"
+               << "greater than 1 meter. "
                << "Since that's highly unlikely for our tasks, I'm going to "
-               << "scale it down by 1000 (assuming you specified it in mm).");
+               << "scale it down by 1000, assuming that the dimension is in "
+               << " mm.");
       x /= 1000.0f;
       y /= 1000.0f;
       z /= 1000.0f;

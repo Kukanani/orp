@@ -40,6 +40,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <vision_msgs/VisionInfo.h>
 
 #include "orp/RecognizerConfig.h"
 #include "orp/GetObjectPose.h"
@@ -82,6 +83,8 @@ private:
   std::string objectTopic;
   /// Where to publish the RViz markers for visualization
   std::string markerTopic;
+  /// Where to look for classification messages to be published
+  std::string classificationTopic;
   /// If true, udpate our model of the world (and remove old objects). Used
   /// for lazy updates
   bool dirty;
@@ -90,6 +93,11 @@ private:
   bool autostart;
 
 // ROS
+
+  /// Publishes vision_msgs meta information
+  ros::Publisher visionInfoPub;
+  /// Keep track of the vision_msgs meta information to publish
+  vision_msgs::VisionInfo visionInfo;
 
   /// Listens for new recognized objects and adds them to the model.
   ros::Subscriber recognitionSub;
