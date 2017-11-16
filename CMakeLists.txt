@@ -1,13 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(orp)
 
+# Use C++11
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 11)
 endif()
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
     cv_bridge
     eigen_conversions
@@ -16,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
     interactive_markers
     message_generation
     message_runtime
+    opencv_apps
     pcl_conversions
     pcl_ros
     roscpp
@@ -23,11 +22,10 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     tf
     tf_conversions
-    opencv_apps
+    vision_msgs
 )
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
-# find_package(VTK REQUIRED)
 
 ########################################################
 ## Declare ROS messages, services, and configurations ##
