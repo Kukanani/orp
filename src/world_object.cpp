@@ -87,19 +87,29 @@ WorldObject::WorldObject(float colocationDist, WorldObjectManager* manager_,
 
 bool WorldObject::merge(WorldObjectPtr other)
 {
-  colocationDistance = other->getColocationDistance();
-  setType(other->getType());
-  id = id;
-  stale = false;
-  manager = other->manager;
-  //perform Kalman Filtering
-  setPose(other->getPose());
-  //this is where we would perform Bayesian filtering on type probabilities
-  probability = other->getProbability();
-  setLastUpdated(ros::Time::now());
-  setCloud(other->getCloud());
+  if(probability > other->getProbability())
+  {
+    // I'm better. Stay as I am
+    return false;
+  }
+  else {
+    // the other one is better, steal its properties
+    colocationDistance = other->getColocationDistance();
+    setType(other->getType());
+    id = id;
+    stale = false;
+    manager = other->manager;
+    //perform Kalman Filtering
+    setPose(other->getPose());
+    //this is where we would perform Bayesian filtering on type probabilities
+    probability = other->getProbability();
+    setLastUpdated(ros::Time::now());
+    setCloud(other->getCloud());
 
-  return true;
+    // request yourself to be destroyed in the future
+    // merge successful
+    return true;
+  }
 } //merge
 
 
@@ -109,9 +119,13 @@ void WorldObject::calculateGrasps() {
 }
 
 bool WorldObject::isColocatedWith(WorldObjectPtr other) {
-  return ((pose.translation()-other->getPose().translation()).norm() <=
-    colocationDistance);
+  return distanceTo(other) <=
+    colocationDistance;
   return false;
+}
+
+float WorldObject::distanceTo(WorldObjectPtr other) {
+  return (pose.translation()-other->getPose().translation()).norm();
 }
 
 void WorldObject::setType(WorldObjectType newType) {

@@ -476,6 +476,9 @@ public:
   /// If true, then this object is close enough to the other object
   /// to be considered the same object, and a merge is imminent.
   bool isColocatedWith(WorldObjectPtr other);
+
+  /// Return the distance from this object to the other.
+  float distanceTo(WorldObjectPtr other);
   /// If true, grasp markers will be returned in getMarkers().
   inline bool getShowGrasps() {
     return showGrasps;
