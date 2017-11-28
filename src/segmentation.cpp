@@ -126,8 +126,8 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     return false;
   }
 
-  inputCloud = PCP(new PC());
-  processCloud = PCP(new PC());
+  PCP inputCloud = PCP(new PC());
+  // processCloud = PCP(new PC());
   inputCloud->points.clear();
   originalCloudFrame = req.scene.header.frame_id;
 
@@ -222,7 +222,8 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
 PCP& Segmentation::clipByDistance(PCP &unclipped,
     float minX, float maxX, float minY, float maxY, float minZ, float maxZ) {
 
-  processCloud->resize(0);
+  PCP processCloud = PCP(new PC());
+  // processCloud->resize(0);
 
   // We must build a condition.
   // And "And" condition requires all tests to check true.
@@ -263,7 +264,8 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
 PCP& Segmentation::voxelGridify(PCP &loose, float gridSize) {
   //ROS_INFO("Voxel grid filtering...");
 
-  processCloud->resize(0);
+  PCP processCloud = PCP(new PC());
+  // processCloud->resize(0);
   // Create the filtering object: downsample the dataset
   pcl::VoxelGrid<ORPPoint> vg;
   vg.setInputCloud(loose);
@@ -277,9 +279,10 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations,
   float thresholdDistance, float percentageGood)
 {
   PCP planes(new PC());
-  PCP planeCloud(new pcl::PointCloud<ORPPoint> ());
+  PCP planeCloud(new PC());
 
-  processCloud->resize(0);
+  PCP processCloud = PCP(new PC());
+  // processCloud->resize(0);
   // Create the segmentation object for the planar model and set all the
   // parameters
   pcl::SACSegmentation<ORPPoint> seg;
@@ -362,7 +365,7 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(
       it != cluster_indices.end(); ++it)
   {
     //extract all the points based on the set of indices
-    processCloud = PCP(new PC());
+    PCP processCloud = PCP(new PC());
     for(std::vector<int>::const_iterator pit = it->indices.begin();
         pit != it->indices.end (); ++pit)
     {

@@ -219,12 +219,12 @@ private:
   int maxClusterSize;
 
   /// Input is stored here
-  PCP inputCloud;
+  // PCP inputCloud;
   /// Used as intermediate step for cloud processing, without having to
   /// realloc more clouds.
   /// TODO(kukanani): does this actually save any time? Use of this variable
   /// should be revisited.
-  PCP processCloud;
+  // PCP processCloud;
 
   std::vector<sensor_msgs::PointCloud2> clusters;
 
