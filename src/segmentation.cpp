@@ -121,13 +121,14 @@ bool compareClusterSize(
 
 bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     orp::Segmentation::Response &response) {
+  ROS_DEBUG("received segmentation request");
   if(req.scene.height * req.scene.width < 3) {
     ROS_DEBUG("Not segmenting cloud, it's too small.");
     return false;
   }
 
-  PCP inputCloud = PCP(new PC());
-  // processCloud = PCP(new PC());
+  PCPtr inputCloud = PCPtr(new PC());
+  // processCloud = PCPtr(new PC());
   inputCloud->points.clear();
   originalCloudFrame = req.scene.header.frame_id;
 
@@ -219,10 +220,10 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
 }
 
 
-PCP& Segmentation::clipByDistance(PCP &unclipped,
+PCPtr Segmentation::clipByDistance(PCPtr &unclipped,
     float minX, float maxX, float minY, float maxY, float minZ, float maxZ) {
 
-  PCP processCloud = PCP(new PC());
+  PCPtr processCloud = PCPtr(new PC());
   // processCloud->resize(0);
 
   // We must build a condition.
@@ -261,10 +262,10 @@ PCP& Segmentation::clipByDistance(PCP &unclipped,
   return processCloud;
 }
 
-PCP& Segmentation::voxelGridify(PCP &loose, float gridSize) {
+PCPtr Segmentation::voxelGridify(PCPtr &loose, float gridSize) {
   //ROS_INFO("Voxel grid filtering...");
 
-  PCP processCloud = PCP(new PC());
+  PCPtr processCloud = PCPtr(new PC());
   // processCloud->resize(0);
   // Create the filtering object: downsample the dataset
   pcl::VoxelGrid<ORPPoint> vg;
@@ -275,13 +276,13 @@ PCP& Segmentation::voxelGridify(PCP &loose, float gridSize) {
   return processCloud;
 }
 
-PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations,
+PCPtr Segmentation::removePrimaryPlanes(PCPtr &input, int maxIterations,
   float thresholdDistance, float percentageGood)
 {
-  PCP planes(new PC());
-  PCP planeCloud(new PC());
+  PCPtr planes(new PC());
+  PCPtr planeCloud(new PC());
 
-  PCP processCloud = PCP(new PC());
+  PCPtr processCloud = PCPtr(new PC());
   // processCloud->resize(0);
   // Create the segmentation object for the planar model and set all the
   // parameters
@@ -338,7 +339,7 @@ PCP& Segmentation::removePrimaryPlanes(PCP &input, int maxIterations,
 }
 
 std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(
-  PCP &input, float clusterTolerance,
+  PCPtr &input, float clusterTolerance,
   int minClusterSize, int maxClusterSize)
 {
   clusters.clear();
@@ -365,7 +366,7 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(
       it != cluster_indices.end(); ++it)
   {
     //extract all the points based on the set of indices
-    PCP processCloud = PCP(new PC());
+    PCPtr processCloud = PCPtr(new PC());
     for(std::vector<int>::const_iterator pit = it->indices.begin();
         pit != it->indices.end (); ++pit)
     {

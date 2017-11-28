@@ -36,10 +36,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="openni"              default="false"/>
   <arg name="openni2"             default="false"/>
   <arg name="realsense"           default="false"/>
-
   <!-- calibration files used for OpenNI2 -->
   <arg name="rgb_calib_url"       default="" />
   <arg name="depth_calib_url"     default="" />
+
+  <!-- use to allow custom camera names -->
+  <arg name="camera"              default="camera" />
 
   <arg name="autostart"           default="true"/>
   <arg name="reconfigure"         default="true"/>
@@ -50,17 +52,26 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="sixdof"              default="false"/>
   <arg name="rgb"                 default="false"/>
   <arg name="segmentation_server" default="true" />
+  <arg name="default_segmentation" default="true" />
 
   <arg name="throttle_nodelet"    default="100" />
 
   <!-- CAMERA NODES -->
-  <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
-  <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">
-    <arg name="rgb_camera_info_url" value="$(arg rgb_calib_url)" />
-    <arg name="depth_camera_info_url" value="$(arg depth_calib_url)" />
+  <group unless="$(arg sim)">
+    <include if="$(arg openni)" file="$(find openni_launch)/launch/openni.launch"> </include>
+    <include if="$(arg openni2)" file="$(find openni2_launch)/launch/openni2.launch">
+      <arg name="rgb_camera_info_url" value="$(arg rgb_calib_url)" />
+      <arg name="depth_camera_info_url" value="$(arg depth_calib_url)" />
+    </include>
+    <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_rviz.launch"> </include>\
+  </group>
+
+  <!-- PUBLISH FRAMES IF THEY AREN'T BEING PUBLISHED BY CAMERA DRIVERS -->
+  <include if="$(arg sim)"
+     file="$(find rgbd_launch)/launch/kinect_frames.launch">
+    <arg name="camera" value="$(arg camera)" />
   </include>
-  <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_rviz.launch"> </include>
-  <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/orp/input_cloud" />
+  <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
 
   <node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/>
 
@@ -128,18 +139,19 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
       respawn = "false"
     />
-
-    <node
-      if      = "$(arg rviz)"
-      name    = "rviz"
-      pkg     = "rviz"
-      type    = "rviz"
-      args    = "-d $(arg rviz_file) -s $(find orp)/rviz/splash.png"
-
-      respawn = "false"
-      output  = "screen"
-    />
-
-    <rosparam command="load" file="$(find orp)/cfg/default.yaml" />
   </group>
+
+  <node
+    if      = "$(arg rviz)"
+    name    = "rviz"
+    pkg     = "rviz"
+    type    = "rviz"
+    args    = "-d $(arg rviz_file) -s $(find orp)/rviz/splash.png"
+
+    respawn = "false"
+    output  = "screen"
+  />
+
+  <rosparam command="load" file="$(find orp)/cfg/default.yaml" />
+  <rosparam if="$(arg default_segmentation)" command="load" param="orp/segmentation/" file="$(find multiuse_workcell)/config/segmentation.yaml" />
 </launch>

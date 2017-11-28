@@ -52,8 +52,8 @@ RegionMonitor::RegionMonitor() :
     transformToFrame = "world";
   }
 
-  inputCloud = PCP(new PC());
-  processCloud = PCP(new PC());
+  inputCloud = PCPtr(new PC());
+  processCloud = PCPtr(new PC());
 
   boundedScenePublisher =
       privateNode.advertise<sensor_msgs::PointCloud2>("bounded_scene",1);
@@ -92,7 +92,7 @@ bool RegionMonitor::cb_monitor(
   orp::MonitorRequest& req, orp::MonitorResponse& res)
 {
   // ROS_INFO("clipping by distance.");
-  PCP blah = clipByDistance(inputCloud);
+  PCPtr blah = clipByDistance(inputCloud);
 
   // ROS_INFO("checking occupation");
   res.occupied = !(blah->empty());
@@ -128,7 +128,7 @@ bool compareClusterSize(
   return a.width > b.width;
 }
 
-PCP& RegionMonitor::clipByDistance(PCP &unclipped) {
+PCPtr& RegionMonitor::clipByDistance(PCPtr &unclipped) {
 
   processCloud->resize(0);
 

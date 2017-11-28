@@ -37,7 +37,7 @@ Classifier3D::Classifier3D():
 {
   // allow remapping to different segmentation service
   node_private_.param<std::string>("segmentation_service",
-      segmentation_service_, "segmentation");
+      segmentation_service_, "segmentation/segmentation");
   segmentation_client_ =
       node_.serviceClient<orp::Segmentation>(segmentation_service_);
 

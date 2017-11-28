@@ -219,12 +219,12 @@ private:
   int maxClusterSize;
 
   /// Input is stored here
-  // PCP inputCloud;
+  // PCPtr inputCloud;
   /// Used as intermediate step for cloud processing, without having to
   /// realloc more clouds.
   /// TODO(kukanani): does this actually save any time? Use of this variable
   /// should be revisited.
-  // PCP processCloud;
+  // PCPtr processCloud;
 
   std::vector<sensor_msgs::PointCloud2> clusters;
 
@@ -243,7 +243,7 @@ private:
    * @param  maxZ      max bound to process
    * @return           the filtered point cloud
    */
-  PCP& clipByDistance(PCP &unclipped,
+  PCPtr clipByDistance(PCPtr &unclipped,
       float minX, float maxX, float minY, float maxY, float minZ, float maxZ);
 
   /**
@@ -254,7 +254,7 @@ private:
    * @param  gridSize the distance between voxels in the grid
    * @return          the points of the voxel grid created from the input
    */
-  PCP& voxelGridify(PCP &loose, float gridSize);
+  PCPtr voxelGridify(PCPtr &loose, float gridSize);
 
   /**
    * Segment out planar clouds. See
@@ -269,7 +269,7 @@ private:
    * @return                   the point cloud with primary planes removed as
    *                           specified.
    */
-  PCP& removePrimaryPlanes(PCP &input, int maxIterations,
+  PCPtr removePrimaryPlanes(PCPtr &input, int maxIterations,
       float thresholdDistance, float percentageGood);
 
   /**
@@ -284,7 +284,7 @@ private:
    * @return                 a vector of point clouds, each representing a
    *                         cluster from the clustering algorithm.
    */
-  std::vector<sensor_msgs::PointCloud2> cluster(PCP &input,
+  std::vector<sensor_msgs::PointCloud2> cluster(PCPtr &input,
       float clusterTolerance, int minClusterSize, int maxClusterSize);
 public:
   /**

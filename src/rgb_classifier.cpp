@@ -65,12 +65,19 @@ RGBClassifier::RGBClassifier():
 
 void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
 {
+  ROS_DEBUG_NAMED("RGB Classfiier",
+      "Received point cloud to classify as R/G/B");
+
   orp::ClassificationResult classRes;
   classRes.method = "rgb";
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
-  segmentation_client_.call(seg_srv);
+  bool segmentation_succeeded = segmentation_client_.call(seg_srv);
+  if(!segmentation_succeeded)
+  {
+    ROS_ERROR_STREAM_THROTTLE_NAMED(5, "RGB Classifier", "Could not call segmentation service at " << segmentation_service_);
+  }
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
 
   if(!clouds.empty()) {

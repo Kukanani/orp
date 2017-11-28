@@ -1,0 +1,6 @@
+{cluster_tolerance: 0.03, max_cluster_size: 2000,
+  max_plane_segmentation_iterations: 50, min_cluster_size: 300,
+  object_label_alpha: 1.0, percentage_to_analyze: 0.3,
+  segmentation_distance_threshold: 0.01, spatial_max_x: -5, spatial_max_y: 5,
+  spatial_max_z: 5, spatial_min_x: -5, spatial_min_y: -5.0, spatial_min_z: 5,
+  spatial_theta_x: 0.0, voxel_leaf_size: 0.005}

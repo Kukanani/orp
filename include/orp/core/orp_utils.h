@@ -53,7 +53,7 @@ typedef pcl::PointXYZRGB ORPPoint;
 typedef pcl::PointCloud<ORPPoint> PC;
 
 /// A smart pointer to an ORP point cloud
-typedef pcl::PointCloud<ORPPoint>::Ptr PCP;
+typedef pcl::PointCloud<ORPPoint>::Ptr PCPtr;
 
 /// Shorthand used for processing point clouds by point indices.
 typedef std::vector<pcl::PointIndices> IndexVector;

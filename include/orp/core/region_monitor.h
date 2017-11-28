@@ -106,9 +106,9 @@ private:
   float maxZ; // far clipping in world space
 
   ///input is stored here
-  PCP inputCloud;
+  PCPtr inputCloud;
   ///used as intermediate step for cloud processing
-  PCP processCloud;
+  PCPtr processCloud;
 
 ///////////////////////////////////////////////////////////////////////////////
 // FILTERING STEPS (FUNCTIONS)
@@ -125,7 +125,7 @@ private:
    * @param  maxZ      max bound to process
    * @return           the filtered point cloud
    */
-  PCP& clipByDistance(PCP &unclipped);
+  PCPtr& clipByDistance(PCPtr &unclipped);
 
 public:
   /// Basic constructor

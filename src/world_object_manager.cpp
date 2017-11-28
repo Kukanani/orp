@@ -63,7 +63,7 @@ void WorldObjectManager::loadTypesFromParameterServer() {
   XmlRpc::XmlRpcValue paramMap;
   std::vector<WorldObjectType> objects;
   while(!n.getParam("/orp/items", paramMap)) {
-    ROS_INFO_THROTTLE(5.0,
+    ROS_INFO_DELAYED_THROTTLE(5.0,
       "Waiting for object type list on parameter server...");
     ros::Duration(1.0).sleep();
   }

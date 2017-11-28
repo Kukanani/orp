@@ -86,13 +86,13 @@ Recognizer::Recognizer() :
     autostart = true;
   }
   if(!privateNode.getParam("detection_topic", markerTopic)) {
-    markerTopic = "orp/detected_object_markers";
+    markerTopic = "detected_object_markers";
   }
   if(!privateNode.getParam("detection_markers_topic", objectTopic)) {
-    objectTopic = "orp/detected_objects";
+    objectTopic = "detected_objects";
   }
   if(!privateNode.getParam("classification_topic", classificationTopic)) {
-    objectTopic = "orp/classification";
+    classificationTopic = "classification";
   }
 
   ROS_INFO_STREAM_NAMED("ORP Recognizer",
@@ -123,10 +123,10 @@ Recognizer::Recognizer() :
       n.advertiseService("get_objects",
         &Recognizer::cb_getObjects, this);
   startSub =
-      n.subscribe("orp/start_recognition", 1,
+      n.subscribe("start_recognition", 1,
         &Recognizer::cb_startRecognition, this);
   stopSub =
-      n.subscribe("orp/stop_recognition", 1,
+      n.subscribe("stop_recognition", 1,
         &Recognizer::cb_stopRecognition, this);
 
   transformListener = new tf::TransformListener();

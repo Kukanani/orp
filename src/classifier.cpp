@@ -38,9 +38,9 @@ Classifier::Classifier():
   node_private_.param<std::string>("classification_topic",
       classification_topic_, "classification");
   node_private_.param<std::string>("start_topic",
-      start_topic_, "orp/start_recognition");
+      start_topic_, "start_recognition");
   node_private_.param<std::string>("stop_topic",
-      stop_topic_, "orp/stop_recognition");
+      stop_topic_, "stop_recognition");
 
   start_sub_ = node_.subscribe(start_topic_, 1, &Classifier::cb_start, this);
   stop_sub_ = node_.subscribe(stop_topic_, 1, &Classifier::cb_stop, this);
