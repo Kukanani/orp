@@ -359,8 +359,9 @@ void Recognizer::publishROS()
     vision_msgs::ObjectHypothesisWithPose hypothesis;
     hypothesis.score = (**it).getProbability();
     // TODO(kukanani): actually provide a meaningful id
-    // // newObject.label  = (**it).getType().getName();
-    hypothesis.id = 42;
+    // std::string label  = (**it).getType().getName();
+
+    hypothesis.id = (**it).getType().getID();
     tf::poseEigenToMsg((**it).getPose(), hypothesis.pose.pose);
 
 

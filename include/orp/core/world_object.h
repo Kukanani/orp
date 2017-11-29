@@ -99,9 +99,17 @@ enum ObjectShape {
  * of different WorldObjectType.
  */
 struct WorldObjectType {
+private:
+  static int nextValidID;     /// ncremented on new object type creation.
+
 protected:
   /// No two WorldObjectTypes should share a name.
   std::string name;
+
+  /// Unique identifier, used to identify the object in a more compact
+  /// fashion than using the whole name.
+  int id;
+
   /// A marker with its appearance already prepared for this object type.
   visualization_msgs::Marker stub;
 
@@ -131,6 +139,7 @@ public:
       offset()
   {
     setupStub();
+    id = nextValidID;
     if(name == "unknown") {
       setShape(BLOB);
       stub.scale.x = 0.1;
@@ -225,6 +234,13 @@ public:
    * @return the object type's name
    */
   std::string getName() { return name; };
+
+  /**
+   * Get the ID of this object's type
+   * @return the unique identifier for this object type.
+   */
+  std::string getID() { return id; };
+
   /**
    * Get a marker stub for this object type
    * @return a visualization marker that already looks the way this

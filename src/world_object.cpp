@@ -38,6 +38,7 @@
 #include "orp/core/grasp_generator.h"
 
 int WorldObject::nextValidID = 0;
+int WorldObjectType::nextValidID = 0;
 
 const float WorldObject::MEASUREMENT_COVARIANCE = 0.001f; //1mm measurement covariance
 

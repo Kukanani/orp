@@ -30,6 +30,9 @@
 
 #include "orp/core/world_object_manager.h"
 #include "orp/core/world_object.h"
+#include <sstream>
+
+typedef std::map<int, WorldObjectType> TypeMap;
 
 WorldObjectManager::WorldObjectManager() : unknownType("unknown") {
   addType(unknownType);
@@ -40,22 +43,37 @@ void WorldObjectManager::addType(WorldObjectType wot) {
   // no default constructor (which [] requires). See
   // http://stackoverflow.com/questions/695645/why-does-the-c-map-type-argument-require-an-empty-constructor-when-using
 
-  if(types.find(wot.getName()) != types.end()) { //already exists
-    types.find(wot.getName())->second = wot;
+  if(types.find(wot.getID()) != types.end()) { //already exists
+    types.find(wot.getID())->second = wot;
   }
   else {
-    types.insert(std::pair<std::string, WorldObjectType>(wot.getName(),wot));
+    types.insert(std::pair<int, WorldObjectType>(wot.getID(), wot));
   }
-} //addType
+}
 
-WorldObjectType& WorldObjectManager::getTypeByName(std::string name) {
-  std::map<std::string, WorldObjectType>::iterator found = types.find(name);
+WorldObjectType& WorldObjectManager::getTypeByID(int id) {
+  std::map<std::string, WorldObjectType>::iterator found = types.find(id);
   if(found != types.end()) {
     return found->second;
   }
+  std::stringstream err;
+  err << "did not find object with id '" << id << "'";
+  throw std::logic_error(err.str());
+  return unknownType;
+}
+
+WorldObjectType& WorldObjectManager::getTypeByName(std::string name) {
+  TypeMap::iterator type_it;
+  for(; type_it != types.end(); ++type_it)
+  {
+    if(type_it->second.getName() == name)
+    {
+      return type_it->second;
+    }
+  }
   throw std::logic_error("did not find object named '" + name + "'");
   return unknownType;
-} //getTypeByName
+}
 
 void WorldObjectManager::loadTypesFromParameterServer() {
   ros::NodeHandle n;

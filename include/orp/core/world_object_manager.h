@@ -35,6 +35,7 @@
 #include <stdexcept>
 
 #include "orp/core/world_object.h"
+
 /**
  * @brief Keeps track of world object types so that their properties remain
  *        constant.
@@ -45,7 +46,7 @@ private:
   WorldObjectType unknownType;
 public:
   /// The possible world object types
-  std::map<std::string, WorldObjectType> types;
+  std::map<int, WorldObjectType> types;
 
   /**
     * Create a new world object manager with the specified default type.
@@ -64,6 +65,9 @@ public:
 
   /// Retrieve a type by name, or the "unknown" object type if not found.
   WorldObjectType& getTypeByName(std::string name);
+
+  /// Retrieve a type by ID, or the "unknown" object type if not found.
+  WorldObjectType& getTypeByName(int id);
 
   /// Load a full set of world object types from the parameter server.
   /// This can be called after loading a yaml file (or sqlite database) of
