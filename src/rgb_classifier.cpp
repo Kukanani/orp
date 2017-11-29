@@ -84,7 +84,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
     for(auto eachCloud = clouds.begin();
         eachCloud != clouds.end(); eachCloud++)
     {
-      if(eachCloud->width < 3) {
+      if(eachCloud->width < 3 || eachCloud->width > 500) {
         continue;
       }
       pcl::PointCloud<ORPPoint>::Ptr thisCluster(
@@ -130,6 +130,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
       thisObject.pose.pose.orientation.z = 0;
       thisObject.pose.pose.orientation.w = 1;
 
+      thisObject.probability = 0.75;
       classRes.result.push_back(thisObject);
     }
   }

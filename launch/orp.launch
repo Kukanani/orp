@@ -46,6 +46,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="autostart"           default="true"/>
   <arg name="reconfigure"         default="true"/>
   <arg name="sim"                 default="false"/>
+  <arg name="legacy"              default="false"/>
   <arg name="rviz"                default="false"/>
   <arg name="rviz_file"           default="$(find orp)/cfg/recognition.rviz" />
 
@@ -127,6 +128,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     >
       <param name="recognition_frame" value="$(arg recognition_frame)"/>
       <param name="autostart" type="bool" value="$(arg autostart)"/>
+      <param name="legacy" type="bool" value="$(arg legacy)"/>
     </node>
 
     <!-- VISUALIZATION AND CONFIGURATION -->

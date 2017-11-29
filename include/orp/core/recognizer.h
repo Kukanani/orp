@@ -87,10 +87,13 @@ private:
   std::string classificationTopic;
   /// If true, udpate our model of the world (and remove old objects). Used
   /// for lazy updates
-  bool dirty;
+  bool dirty = false;
   /// if true, begin the recognition loop automatically (auto-subscribe to
   /// classification)
-  bool autostart;
+  bool autostart = true;
+
+  /// if true, publish old ORP messages instead of vision_msgs
+  bool legacy = false;
 
 // ROS
 
@@ -218,6 +221,11 @@ private:
    * information. This includes object information as well as RViz markers.
    */
   void publishROS();
+  /**
+   * Old version of ROS publishing code, for backwards compatibility with
+   * ORP 1 users.
+   */
+  void publishROSLegacy();
 
   /**
    * Creates a new marker for the given object. This should be called when

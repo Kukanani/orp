@@ -42,6 +42,7 @@ void WorldObjectManager::addType(WorldObjectType wot) {
   // we need this check/case because not using C++17, and WorldObjectType has
   // no default constructor (which [] requires). See
   // http://stackoverflow.com/questions/695645/why-does-the-c-map-type-argument-require-an-empty-constructor-when-using
+  // ROS_INFO_STREAM("adding object with id " << wot.getID() << " and name " << wot.getName());
 
   if(types.find(wot.getID()) != types.end()) { //already exists
     types.find(wot.getID())->second = wot;
@@ -52,7 +53,7 @@ void WorldObjectManager::addType(WorldObjectType wot) {
 }
 
 WorldObjectType& WorldObjectManager::getTypeByID(int id) {
-  std::map<std::string, WorldObjectType>::iterator found = types.find(id);
+  TypeMap::iterator found = types.find(id);
   if(found != types.end()) {
     return found->second;
   }
@@ -64,7 +65,7 @@ WorldObjectType& WorldObjectManager::getTypeByID(int id) {
 
 WorldObjectType& WorldObjectManager::getTypeByName(std::string name) {
   TypeMap::iterator type_it;
-  for(; type_it != types.end(); ++type_it)
+  for(type_it = types.begin(); type_it != types.end(); ++type_it)
   {
     if(type_it->second.getName() == name)
     {
@@ -88,7 +89,7 @@ void WorldObjectManager::loadTypesFromParameterServer() {
   for(auto it = paramMap.begin(); it != paramMap.end(); ++it)
   {
     std::string objName = (*it).first;
-    WorldObjectType thisType = WorldObjectType(objName);
+    WorldObjectType thisType = WorldObjectType(std::string(objName));
     double x, y, z, roll = 0.0, pitch = 0.0, yaw = 0.0;
     double x_off = 0.0, y_off = 0.0, z_off = 0.0;
     float r = 0.5, g = 0.5, b = 0.5;
@@ -142,7 +143,7 @@ void WorldObjectManager::loadTypesFromParameterServer() {
       shape = BLOB;
     }
     if(x > 1 && y > 1 && z > 1) { //detect sizes in mm instead of m
-      ROS_WARN_STREAM("While loading " << objName << ", I found a dimension"
+      ROS_WARN_STREAM("While loading " << objName << ", I found a dimension "
                << "greater than 1 meter. "
                << "Since that's highly unlikely for our tasks, I'm going to "
                << "scale it down by 1000, assuming that the dimension is in "
@@ -156,6 +157,7 @@ void WorldObjectManager::loadTypesFromParameterServer() {
     thisType.setSize(x,y,z);
     thisType.setOffset(roll,pitch,yaw);
 
+    // ROS_INFO_STREAM("adding object type named " << objName);
     addType(thisType);
   }
 //   ROS_INFO("The world object loader has generated " << getNumTypes()

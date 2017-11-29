@@ -67,7 +67,7 @@ public:
   WorldObjectType& getTypeByName(std::string name);
 
   /// Retrieve a type by ID, or the "unknown" object type if not found.
-  WorldObjectType& getTypeByName(int id);
+  WorldObjectType& getTypeByID(int id);
 
   /// Load a full set of world object types from the parameter server.
   /// This can be called after loading a yaml file (or sqlite database) of

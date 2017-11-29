@@ -226,7 +226,7 @@ private:
   /// should be revisited.
   // PCPtr processCloud;
 
-  std::vector<sensor_msgs::PointCloud2> clusters;
+  // std::vector<sensor_msgs::PointCloud2> clusters;
 
 ///////////////////////////////////////////////////////////////////////////////
 // FILTERING STEPS (FUNCTIONS)

@@ -54,15 +54,15 @@ Segmentation::Segmentation() :
   }
 
   boundedScenePublisher =
-    privateNode.advertise<sensor_msgs::PointCloud2>("bounded_scene",1);
+    privateNode.advertise<sensor_msgs::PointCloud2>("bounded_scene", 5);
   voxelPublisher =
-    privateNode.advertise<sensor_msgs::PointCloud2>("voxel_scene",1);
+    privateNode.advertise<sensor_msgs::PointCloud2>("voxel_scene", 5);
   allPlanesPublisher =
-    privateNode.advertise<sensor_msgs::PointCloud2>("all_planes",1);
+    privateNode.advertise<sensor_msgs::PointCloud2>("all_planes", 5);
   largestObjectPublisher =
-    privateNode.advertise<sensor_msgs::PointCloud2>("largest_object",1);
+    privateNode.advertise<sensor_msgs::PointCloud2>("largest_object", 5);
   allObjectsPublisher =
-    privateNode.advertise<sensor_msgs::PointCloud2>("all_objects",1);
+    privateNode.advertise<sensor_msgs::PointCloud2>("all_objects", 5);
 
   segmentationServer =
     node.advertiseService("segmentation", &Segmentation::cb_segment, this);
@@ -127,16 +127,16 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     return false;
   }
 
-  PCPtr inputCloud = PCPtr(new PC());
+  PC tmpCloud;
   // processCloud = PCPtr(new PC());
-  inputCloud->points.clear();
+  // inputCloud->points.clear();
   originalCloudFrame = req.scene.header.frame_id;
 
   sensor_msgs::PointCloud2 transformedMessage;
   sensor_msgs::PointCloud2 rawMessage;
 
   if(transformToFrame == "") {
-    pcl::fromROSMsg(req.scene, *inputCloud);
+    pcl::fromROSMsg(req.scene, tmpCloud);
     rawMessage.header.frame_id = req.scene.header.frame_id;
   }
   else if(listener.waitForTransform(
@@ -145,7 +145,7 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
   {
     pcl_ros::transformPointCloud(transformToFrame, req.scene,
       transformedMessage, listener);
-    pcl::fromROSMsg(transformedMessage, *inputCloud);
+    pcl::fromROSMsg(transformedMessage, tmpCloud);
   }
   else {
     ROS_WARN_STREAM_THROTTLE(60,
@@ -153,9 +153,10 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
       req.scene.header.frame_id.c_str() <<
       " to " << transformToFrame.c_str() <<
       " timed out. Proceeding...");
-    pcl::fromROSMsg(req.scene, *inputCloud);
+    pcl::fromROSMsg(req.scene, tmpCloud);
     rawMessage.header.frame_id = req.scene.header.frame_id;
   }
+  PCPtr inputCloud = PCPtr(new PC(tmpCloud));
 
   if(inputCloud->points.size() <= minClusterSize) {
     ROS_INFO_STREAM(
@@ -342,7 +343,8 @@ std::vector<sensor_msgs::PointCloud2> Segmentation::cluster(
   PCPtr &input, float clusterTolerance,
   int minClusterSize, int maxClusterSize)
 {
-  clusters.clear();
+  // clusters.clear();
+  std::vector<sensor_msgs::PointCloud2> clusters;
 
   // Creating the KdTree object for the search method of the extraction
   pcl::search::KdTree<ORPPoint>::Ptr tree (new pcl::search::KdTree<ORPPoint>);

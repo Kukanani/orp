@@ -140,6 +140,7 @@ public:
   {
     setupStub();
     id = nextValidID;
+    nextValidID++;
     if(name == "unknown") {
       setShape(BLOB);
       stub.scale.x = 0.1;
@@ -239,7 +240,7 @@ public:
    * Get the ID of this object's type
    * @return the unique identifier for this object type.
    */
-  std::string getID() { return id; };
+  int getID() { return id; };
 
   /**
    * Get a marker stub for this object type

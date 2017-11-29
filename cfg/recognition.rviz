@@ -9,6 +9,7 @@ Panels:
         - /Image1
         - /MarkerArray1
         - /PointCloud22
+        - /PointCloud23
       Splitter Ratio: 0.5
     Tree Height: 843
   - Class: rviz/Selection
@@ -94,13 +95,13 @@ Visualization Manager:
       Use rainbow: true
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: false
-      Marker Topic: /detected_object_markers
+      Enabled: true
+      Marker Topic: /orp/detected_object_markers
       Name: MarkerArray
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -111,7 +112,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 170; 0
-      Color Transformer: ""
+      Color Transformer: FlatColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -127,6 +128,36 @@ Visualization Manager:
       Size (m): 0.00999999978
       Style: Points
       Topic: /orp/segmentation/bounded_scene
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 85; 127
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 5
+      Size (m): 0.00999999978
+      Style: Points
+      Topic: /orp/segmentation/largest_object
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -155,25 +186,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.866353452
+      Distance: 0.571963191
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.618143678
-        Y: -0.148831829
-        Z: 0.0241454989
+        X: 0.829074562
+        Y: -0.265674829
+        Z: -0.0646548942
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: -0.134601802
+      Pitch: -0.269600391
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.35539746
+      Yaw: 3.58041334
     Saved: ~
 Window Geometry:
   Displays:

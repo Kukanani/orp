@@ -59,7 +59,6 @@ int main(int argc, char **argv)
 
 Recognizer::Recognizer() :
     colocationDist(0.05),
-    dirty(false),
     typeManager(),
     visionInfo(),
 
@@ -79,11 +78,10 @@ Recognizer::Recognizer() :
 {
   // load any overrides from parameters, otherwise use defaults
   ros::NodeHandle privateNode("~");
+  privateNode.getParam("legacy", legacy);
+  privateNode.getParam("autostart", autostart);
   if(!privateNode.getParam("recognition_frame", recognitionFrame)) {
     recognitionFrame = "world";
-  }
-  if(!privateNode.getParam("autostart", autostart)) {
-    autostart = true;
   }
   if(!privateNode.getParam("detection_topic", markerTopic)) {
     markerTopic = "detected_object_markers";
@@ -104,9 +102,15 @@ Recognizer::Recognizer() :
   reconfigureServer.setCallback(reconfigureCallbackType);
 
   //ROS clients and publishers
-  markerPub = privateNode.advertise<visualization_msgs::MarkerArray>(
+  markerPub = n.advertise<visualization_msgs::MarkerArray>(
       markerTopic, 1, true);
-  objectPub = n.advertise<vision_msgs::Detection3DArray>(objectTopic, 1);
+  if(legacy)
+  {
+    objectPub = n.advertise<orp::WorldObjects>(objectTopic, 1);
+  } else
+  {
+    objectPub = n.advertise<vision_msgs::Detection3DArray>(objectTopic, 1);
+  }
   stopPub = n.advertise<std_msgs::Empty>("stop_recognition", 1, true);
   visionInfoPub = n.advertise<vision_msgs::VisionInfo>("vision_info", 1, true);
 
@@ -219,7 +223,7 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
 
       WorldObjectPtr p = WorldObjectPtr(
         new WorldObject(colocationDist, &typeManager, newObject.label,
-                        recognitionFrame, eigPose, 1.0f));
+                        recognitionFrame, eigPose, newObject.probability));
       p->setCloud(newObject.cloud);
 
       // build a list of objects sorted by their distance to the new one
@@ -312,7 +316,7 @@ void Recognizer::update()
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     // decay probabiilty of detection over time
-    (**it).setProbability((**it).getProbability() * 0.99);
+    // (**it).setProbability((**it).getProbability() * 0.99);
     if(now - (**it).getLastUpdated() > staleTime)
     {
       (**it).setStale(true);
@@ -326,6 +330,11 @@ void Recognizer::update()
 
 void Recognizer::publishROS()
 {
+  if(legacy)
+  {
+    publishROSLegacy();
+    return;
+  }
   //add all world objects to message
   vision_msgs::Detection3DArray objectArray;
   objectArray.header.frame_id = recognitionFrame;
@@ -365,6 +374,41 @@ void Recognizer::publishROS()
   //publish 'em
   markerPub.publish(markerMsg);
   objectPub.publish(objectArray);
+}
+
+void Recognizer::publishROSLegacy()
+{
+  //add all world objects to message
+  orp::WorldObjects objectMsg;
+  visualization_msgs::MarkerArray markerMsg, labelMsg;
+
+  for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
+  {
+    //create the object message
+    orp::WorldObject newObject;
+    tf::Pose intPose;
+    tf::poseEigenToTF((**it).getPose(), intPose);
+    tf::poseTFToMsg(intPose, newObject.pose.pose);
+
+    // fill the new object with data
+    newObject.colocationDist = (**it).getColocationDistance();
+    newObject.probability = (**it).getProbability();
+    newObject.pose.header.frame_id = recognitionFrame;
+    newObject.pose.header.stamp = ros::Time::now();
+    newObject.pose.header.seq = object_sequence++;
+    newObject.label  = (**it).getType().getName();
+    newObject.cloud = (**it).getCloud();
+
+    objectMsg.objects.insert(objectMsg.objects.end(), newObject);
+
+    //create the marker message
+    std::vector<visualization_msgs::Marker> newMarkers = (**it).getMarkers();
+    markerMsg.markers.insert(markerMsg.markers.end(),
+        newMarkers.begin(), newMarkers.end());
+  }
+  //publish 'em
+  markerPub.publish(markerMsg);
+  objectPub.publish(objectMsg);
 }
 
 bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,

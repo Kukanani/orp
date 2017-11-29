@@ -88,6 +88,8 @@ WorldObject::WorldObject(float colocationDist, WorldObjectManager* manager_,
 
 bool WorldObject::merge(WorldObjectPtr other)
 {
+  // ROS_DEBUG_STREAM("my type is " << getType().getName() << ", my probability is " << getProbability() <<
+  //          "their type is " << other->getType().getName() << ", their probability is " << other->getProbability());
   if(probability > other->getProbability())
   {
     // I'm better. Stay as I am
