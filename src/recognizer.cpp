@@ -336,31 +336,9 @@ void Recognizer::publishROS()
 
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
-    //create the object message
-    // orp::WorldObject newObject;
-    // tf::Pose intPose;
-    // tf::poseEigenToTF((**it).getPose(), intPose);
-    // tf::poseTFToMsg(intPose, newObject.pose.pose);
-
-    // fill the new object with data
-    // newObject.colocationDist = (**it).getColocationDistance();
-    // newObject.probability = (**it).getProbability();
-    // newObject.pose.header.frame_id = recognitionFrame;
-    // newObject.pose.header.stamp = ros::Time::now();
-    // newObject.pose.header.seq = object_sequence++;
-
-    // newObject.cloud = (**it).getCloud();
-
-    // objectMsg.objects.insert(objectMsg.objects.end(), newObject);
-
-
-
     // Create a hypothesis
     vision_msgs::ObjectHypothesisWithPose hypothesis;
     hypothesis.score = (**it).getProbability();
-    // TODO(kukanani): actually provide a meaningful id
-    // std::string label  = (**it).getType().getName();
-
     hypothesis.id = (**it).getType().getID();
     tf::poseEigenToMsg((**it).getPose(), hypothesis.pose.pose);
 
