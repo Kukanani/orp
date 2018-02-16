@@ -56,6 +56,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="default_segmentation" default="true" />
 
   <arg name="throttle_nodelet"    default="100" />
+  <arg name="camera_topic"        default="/camera/depth_registered/points" />
 
   <!-- CAMERA NODES -->
   <group unless="$(arg sim)">
@@ -73,6 +74,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <arg name="camera" value="$(arg camera)" />
   </include>
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
+  <remap from="/camera/depth_registered/points" to="$(arg camera_topic)" />
 
   <node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/>
 
@@ -155,5 +157,4 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   />
 
   <rosparam command="load" file="$(find orp)/cfg/default.yaml" />
-  <rosparam if="$(arg default_segmentation)" command="load" param="orp/segmentation/" file="$(find multiuse_workcell)/config/segmentation.yaml" />
 </launch>
