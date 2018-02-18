@@ -76,7 +76,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <remap if="$(arg sim)" from="/camera/depth_registered/points" to="/cloud_pcd" />
   <remap from="/camera/depth_registered/points" to="$(arg camera_topic)" />
 
-  <node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/>
+  <!--<node name="throttle_nodelet" pkg="orp" type="throttle_nodelet.sh" args="$(arg throttle_nodelet)"/> -->
 
   <group ns="orp">
     <!-- CLASSIFICATION -->

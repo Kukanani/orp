@@ -91,28 +91,28 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
           new pcl::PointCloud<ORPPoint>);
       pcl::fromROSMsg(*eachCloud, *thisCluster);
 
-      std::string color = "unknown";
-      M.release();
-      M = cv::Mat(thisCluster->points.size(), 1, CV_8UC3, cv::Scalar(0,0,0));
-      int i = 0;
+      // std::string color = "unknown";
+      // M.release();
+      // M = cv::Mat(thisCluster->points.size(), 1, CV_8UC3, cv::Scalar(0,0,0));
+      // int i = 0;
 
-      pcl::PointCloud<ORPPoint>::iterator point;
-      float r=0, g=0, b=0;
+      // pcl::PointCloud<ORPPoint>::iterator point;
+      // float r=0, g=0, b=0;
 
-      for(point = thisCluster->points.begin();
-          point < thisCluster->points.end(); ++point, ++i)
-      {
-        r += point->r;
-        g += point->g;
-        b += point->b;
-      }
+      // for(point = thisCluster->points.begin();
+      //     point < thisCluster->points.end(); ++point, ++i)
+      // {
+      //   r += point->r;
+      //   g += point->g;
+      //   b += point->b;
+      // }
 
       // std::cout << "M has " << eachCloud->width << " elements." << std::endl;
 
-      color = getColor(r, g, b);
+      // color = getColor(r, g, b);
 
       orp::WorldObject thisObject;
-      thisObject.label = "obj_" + color;
+      thisObject.label = "object";
       thisObject.pose.header.frame_id = eachCloud->header.frame_id;
 
 
