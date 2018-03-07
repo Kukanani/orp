@@ -53,7 +53,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="sixdof"              default="false"/>
   <arg name="rgb"                 default="false"/>
   <arg name="segmentation_server" default="true" />
-  <arg name="default_segmentation" default="true" />
 
   <arg name="throttle_nodelet"    default="100" />
   <arg name="camera_topic"        default="/camera/depth_registered/points" />
