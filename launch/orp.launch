@@ -35,7 +35,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <arg name="openni"              default="false"/>
   <arg name="openni2"             default="false"/>
-  <arg name="realsense"           default="false"/>
+  <arg name="realsense_r200"      default="false"/>
   <!-- calibration files used for OpenNI2 -->
   <arg name="rgb_calib_url"       default="" />
   <arg name="depth_calib_url"     default="" />
@@ -63,7 +63,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <arg name="rgb_camera_info_url" value="$(arg rgb_calib_url)" />
       <arg name="depth_camera_info_url" value="$(arg depth_calib_url)" />
     </include>
-    <include if="$(arg realsense)" file="$(find realsense_camera)/launch/realsense_rviz.launch"> </include>\
+    <include if="$(arg realsense_r200)" file="$(find realsense_camera)/launch/r200_nodelet_rgbd.launch"> </include>\
   </group>
 
   <!-- PUBLISH FRAMES IF THEY AREN'T BEING PUBLISHED BY CAMERA DRIVERS -->

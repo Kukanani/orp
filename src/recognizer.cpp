@@ -45,7 +45,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "recognizer");
 
   //get started
-  Recognizer s;
+  Recognizer r;
 
   //Run ROS until shutdown
   ros::AsyncSpinner spinner(2);
@@ -134,6 +134,7 @@ Recognizer::Recognizer() :
         &Recognizer::cb_stopRecognition, this);
 
   transformListener = new tf::TransformListener();
+  transformBroadcaster = new tf::TransformBroadcaster();
 
   //this will wait until types have been added to the parameter server
   ROS_INFO_NAMED("ORP Recognizer", "Loading object types");
@@ -343,6 +344,12 @@ void Recognizer::publishROS()
 
   visualization_msgs::MarkerArray markerMsg, labelMsg;
 
+  // re-sort. This could almost certainly be done more efficiently
+  model.sort([](const WorldObjectPtr& a, const WorldObjectPtr& b) {
+    return a->getPose().translation().norm() < b->getPose().translation().norm();
+  });
+
+  std::map<WorldObjectType, int> typeCounter;
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     // Create a hypothesis
@@ -350,7 +357,6 @@ void Recognizer::publishROS()
     hypothesis.score = (**it).getProbability();
     hypothesis.id = (**it).getType().getID();
     tf::poseEigenToMsg((**it).getPose(), hypothesis.pose.pose);
-
 
     // create a detection
     vision_msgs::Detection3D newDetection;
@@ -370,7 +376,21 @@ void Recognizer::publishROS()
     std::vector<visualization_msgs::Marker> newMarkers = (**it).getMarkers();
     markerMsg.markers.insert(markerMsg.markers.end(),
         newMarkers.begin(), newMarkers.end());
+
+    WorldObjectType type = (**it).getType();
+    std::string frame_name = type.getName() + "_" + std::to_string(typeCounter[type]);
+    typeCounter[type] += 1;
+
+    tf::Transform transform;
+    geometry_msgs::Pose intMsg;
+    tf::poseEigenToMsg((**it).getPose(), intMsg);
+    tf::poseMsgToTF(intMsg, transform);
+
+    this->transformBroadcaster->sendTransform(
+      tf::StampedTransform(transform, ros::Time::now(), recognitionFrame,
+                           frame_name));
   }
+
   //publish 'em
   markerPub.publish(markerMsg);
   objectPub.publish(objectArray);

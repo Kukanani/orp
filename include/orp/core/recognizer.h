@@ -33,6 +33,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <string>
 
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
@@ -113,8 +114,8 @@ private:
   ros::Publisher stopPub;
   /// listen for necessary transformations before publishing
   tf::TransformListener* transformListener;
-  /// transform object poses from one frame to another
-  tf::Transformer* objectTransformeqr;
+  /// publish object transformation frames
+  tf::TransformBroadcaster* transformBroadcaster;
   /// Provides poses for requested objects.
   ros::ServiceServer objectPoseServer;
   /// Provides poses of all current objects.
