@@ -67,7 +67,7 @@ obj_orange:
   height: 0.0254
   mass: 8
   pitch: 0.0
-  red: 0
+  red: 1
   roll: 0.0
   width: 0.0254
   yaw: 0.0

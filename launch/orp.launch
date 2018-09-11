@@ -36,6 +36,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="openni"              default="false"/>
   <arg name="openni2"             default="false"/>
   <arg name="realsense_r200"      default="false"/>
+
   <!-- calibration files used for OpenNI2 -->
   <arg name="rgb_calib_url"       default="" />
   <arg name="depth_calib_url"     default="" />
@@ -49,6 +50,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   <arg name="legacy"              default="false"/>
   <arg name="rviz"                default="false"/>
   <arg name="rviz_file"           default="$(find orp)/cfg/recognition.rviz" />
+  <arg name="config_file"         default="$(find orp)/cfg/default.yaml" />
 
   <arg name="sixdof"              default="false"/>
   <arg name="rgb"                 default="false"/>
@@ -165,5 +167,5 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     output  = "screen"
   />
 
-  <rosparam command="load" file="$(find orp)/cfg/default.yaml" />
+  <rosparam command="load" file="$(arg config_file)" />
 </launch>

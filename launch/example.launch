@@ -33,8 +33,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
      using one of the built-in classifiers.
 
      The example uses an Intel Realsense R200, and attempts to find small
-     objects on a planar surface. It detects those objects as type obj_red,
-     obj_green, or obj_blue. You can easily modify this example to work with
+     objects on a planar surface. It detects those objects by their color, with
+     names such as "obj_blue", "obj_orange", etc.
+
+     You can easily modify this example to work with
      OpenNI2 (Asus Xtion) or Orbbec Astra cameras.
 -->
 <launch>
@@ -50,18 +52,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          you are already running a camera from a different method (such as
          one of your own launch files). There are a few supported cameras,
          read orp.launch for more details. -->
-    <arg name="realsense_r200"   value="true"/>
+    <arg name="realsense_r200" value="true" />
 
     <!-- You can toggle different classifiers with flags. Two common ones you
          can try out are "hue" and "rgb" classifiers. You can run multiple
          classifiers at once. You can also not enable any classifiers here
          if you want to run your own classifiers. -->
-    <arg name="rgb"              value="true"/>
+    <arg name="hue" value="true" />
 
     <!-- By default, ORP does not start the recognition update loop immediately
          to avoid hogging CPU (since depth processing can be very expensive).
          Setting autostart to true overrides this behavior. -->
-    <arg name="autostart"        value="true"/>
+    <arg name="autostart" value="true" />
 
     <!-- Your clipping parameters will be specified relative to this frame.
          Every detected object will also be specified using PoseStamped
@@ -71,9 +73,22 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          available because it may be at an odd angle based on your camera
          setup. Consider using base_link, world, or whatever frame you have
          that will be oriented in an intuitive way. -->
-    <arg name="recognition_frame"        value="/camera_link"/>
-  </include>
+    <arg name="recognition_frame" value="/camera_link" />
 
+    <!-- Once you run the example, you will probably tune the segmentation
+         parameters such as clipping bounds, voxel size, min/max cluster size,
+         etc. Once you have settings you like, you can save them using the
+         terminal command `rosparam dump orp_settings.yaml /orp`. Once you've
+         done that, you can pass the path to that file to this argument so you
+         don't have to re-tune every time. -->
+    <arg name="config_file" value="$(find orp)/cfg/default.yaml" />
+
+    <!-- Load up some sensible RViz defaults that are good for visualizing
+         ORP's output. The default for this parameter is false, so if you
+         don't want RViz to come up you can remove this argument
+         completely. -->
+    <arg name="rviz" value="true" />
+  </include>
 
   <!-- additional launch files could be added here to finish the vision stack.
        It may be necessary to define one or more TF static_transform_publisher
