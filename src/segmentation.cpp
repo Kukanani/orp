@@ -307,8 +307,8 @@ PCPtr Segmentation::removePrimaryPlanes(PCPtr &input, int maxIterations,
     seg.segment (*planeIndices, *coefficients);
 
     if(planeIndices->indices.size () == 0) {
-      ROS_ERROR(
-        "[Could not find any good planes in the point cloud.");
+      ROS_ERROR_THROTTLE(10,
+        "Could not find any good planes in the point cloud (printed every 10s)...");
       break;
     }
     // Segment the largest planar component from the remaining cloud

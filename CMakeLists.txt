@@ -115,6 +115,10 @@ add_executable(rgb_classifier src/rgb_classifier.cpp)
 add_dependencies(rgb_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(rgb_classifier ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
 
+add_executable(hue_classifier src/hue_classifier.cpp)
+add_dependencies(hue_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+target_link_libraries(hue_classifier ${catkin_LIBRARIES} orp ${OpenCV_LIBS})
+
 add_executable(basic_classifier src/basic_classifier.cpp)
 add_dependencies(basic_classifier ${orp_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(basic_classifier ${catkin_LIBRARIES} orp ${OpenCV_LIBS})

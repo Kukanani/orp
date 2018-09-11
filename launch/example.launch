@@ -32,9 +32,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 <!-- This launch file is an example of how to use ORP in your own application,
      using one of the built-in classifiers.
 
-     The example uses OpenNI2 (e.g. Asus Xtion Pro), and attempts to find small
+     The example uses an Intel Realsense R200, and attempts to find small
      objects on a planar surface. It detects those objects as type obj_red,
-     obj_green, or obj_blue.
+     obj_green, or obj_blue. You can easily modify this example to work with
+     OpenNI2 (Asus Xtion) or Orbbec Astra cameras.
 -->
 <launch>
   <!-- Before calling orp.launch, your list of items should be loaded onto the
@@ -45,9 +46,32 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
        for the segmentation server. If you want to override these, you should
        add a <rosparam load> tag somewhere after the orp.launch call. -->
   <include file="$(find orp)/launch/orp.launch">
-    <arg name="openni2"          value="true"/>
+    <!-- You can enable different cameras here, or not enable any of them if
+         you are already running a camera from a different method (such as
+         one of your own launch files). There are a few supported cameras,
+         read orp.launch for more details. -->
+    <arg name="realsense_r200"   value="true"/>
+
+    <!-- You can toggle different classifiers with flags. Two common ones you
+         can try out are "hue" and "rgb" classifiers. You can run multiple
+         classifiers at once. You can also not enable any classifiers here
+         if you want to run your own classifiers. -->
     <arg name="rgb"              value="true"/>
+
+    <!-- By default, ORP does not start the recognition update loop immediately
+         to avoid hogging CPU (since depth processing can be very expensive).
+         Setting autostart to true overrides this behavior. -->
     <arg name="autostart"        value="true"/>
+
+    <!-- Your clipping parameters will be specified relative to this frame.
+         Every detected object will also be specified using PoseStamped
+         messages relative to this frame. Ideally you should pick a frame
+         that is easy to understand for motion planning and/or clipping.
+         For example, using your camera_link is probably not the best frame
+         available because it may be at an odd angle based on your camera
+         setup. Consider using base_link, world, or whatever frame you have
+         that will be oriented in an intuitive way. -->
+    <arg name="recognition_frame"        value="/camera_link"/>
   </include>
 
 

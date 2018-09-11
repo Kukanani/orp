@@ -52,6 +52,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   <arg name="sixdof"              default="false"/>
   <arg name="rgb"                 default="false"/>
+  <arg name="hue"                 default="false"/>
   <arg name="segmentation_server" default="true" />
 
   <arg name="camera_topic"        default="/camera/depth_registered/points" />
@@ -115,6 +116,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       <param name="autostart" type="bool" value="$(arg autostart)"/>
     </node>
 
+    <node
+      if      = "$(arg hue)"
+      name    = "hue_classifier"
+      pkg     = "orp"
+      type    = "hue_classifier"
+      args    = ""
+
+      respawn = "true"
+      output  = "screen"
+    >
+      <param name="autostart" type="bool" value="$(arg autostart)"/>
+    </node>
     <!-- Main recognition node, which interprets and combines results
          from (possibly several different) classifiers. -->
     <node
