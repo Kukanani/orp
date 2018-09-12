@@ -1,0 +1,62 @@
+<!--
+Copyright (c) 2017, Adam Allevato
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+   this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!-- This launch file is an example of how to use ORP in your own application,
+     using one of the built-in classifiers.
+
+     The example uses OpenNI2 (e.g. Asus Xtion Pro), and attempts to find small
+     objects on a planar surface. It detects those objects as type obj_red,
+     obj_green, or obj_blue.
+-->
+<launch>
+  <!-- Before calling orp.launch, your list of items should be loaded onto the
+       ROS parameter server. The following line does just that. -->
+  <rosparam command="load" param="/orp/items" file="$(find orp)/data/example_database.yaml" />
+
+  <!-- orp.launch loads some default configuration parameters, such as settings
+       for the segmentation server. If you want to override these, you should
+       add a <rosparam load> tag somewhere after the orp.launch call. -->
+  <include file="$(find orp)/launch/orp.launch">
+    <arg name="astra"             value="true"/>
+    <arg name="hue"               value="true"/>
+    <arg name="autostart"         value="true"/>
+    <arg name="recognition_frame" value="j2s7s300_link_base"/>
+  </include>
+
+
+  <!-- additional launch files could be added here to finish the vision stack.
+       It may be necessary to define one or more TF static_transform_publisher
+       nodes to define the transformations between the camera and the world.-->
+
+
+  <node pkg="tf" type="static_transform_publisher" name="camera_connection_tf"
+    args="0 0 0 1.57 0 1.57 camera_placement_link camera_link 100" /> 
+</launch>
