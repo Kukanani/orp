@@ -205,7 +205,7 @@ public:
    * Takes the incoming point cloud and stores it.
    * @param cloud the incoming cloud supplied from the topic publisher
    */
-  virtual void cb_classify(sensor_msgs::PointCloud2 cloud) = 0;
+  virtual void cb_classify(const sensor_msgs::PointCloud2& cloud) = 0;
 };
 
 #endif

@@ -64,7 +64,7 @@ HueClassifier::HueClassifier():
 {
 }
 
-void HueClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
+void HueClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
 {
   ROS_DEBUG_NAMED("Hue Classfiier",
       "Received point cloud to classify objects by hue");
@@ -79,52 +79,68 @@ void HueClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
   {
     ROS_ERROR_STREAM_THROTTLE_NAMED(5, "Hue Classifier", "Could not call segmentation service at " << segmentation_service_);
   }
-  std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
+  std::vector<sensor_msgs::PointCloud2> cloudMessages = seg_srv.response.clusters;
 
-  if(!clouds.empty()) {
-    for(auto eachCloud = clouds.begin();
-        eachCloud != clouds.end(); eachCloud++)
+  if(!cloudMessages.empty()) {
+    for(const auto& cloudMessage : cloudMessages)
     {
-      if(eachCloud->width < 3 || eachCloud->width > 500) {
+      if(cloudMessage.width < 3 || cloudMessage.width > 500) {
         continue;
       }
-      pcl::PointCloud<ORPPoint>::Ptr thisCluster(
+      pcl::PointCloud<ORPPoint>::Ptr cloudPtr(
           new pcl::PointCloud<ORPPoint>);
-      pcl::fromROSMsg(*eachCloud, *thisCluster);
+      pcl::fromROSMsg(cloudMessage, *cloudPtr);
 
       std::string color = "unknown";
       M.release();
-      M = cv::Mat(thisCluster->points.size(), 1, CV_8UC3, cv::Scalar(0,0,0));
+      M = cv::Mat(cloudPtr->points.size(), 1, CV_8UC3, cv::Scalar(0,0,0));
       int i = 0;
 
       pcl::PointCloud<ORPPoint>::iterator point;
       float r=0, g=0, b=0;
 
-      for(point = thisCluster->points.begin();
-          point < thisCluster->points.end(); ++point, ++i)
+      for(point = cloudPtr->points.begin();
+          point < cloudPtr->points.end(); ++point, ++i)
       {
         r += point->r;
         g += point->g;
         b += point->b;
       }
 
-      // std::cout << "M has " << eachCloud->width << " elements." << std::endl;
+      // std::cout << "M has " << cloudMessage->width << " elements." << std::endl;
 
       color = getColor(r, g, b);
 
       orp::WorldObject thisObject;
       thisObject.label = "obj_" + color;
-      thisObject.pose.header.frame_id = eachCloud->header.frame_id;
+      thisObject.pose.header.frame_id = cloudMessage.header.frame_id;
 
 
-      Eigen::Vector4f clusterCentroid;
-      pcl::compute3DCentroid(*thisCluster, clusterCentroid);
+      // Eigen::Vector4f clusterCentroid;
+      // pcl::compute3DCentroid(*cloudPtr, clusterCentroid);
 
-      Eigen::Affine3d finalPose;
-      finalPose(0,3) = clusterCentroid(0);
-      finalPose(1,3) = clusterCentroid(1);
-      finalPose(2,3) = clusterCentroid(2);
-      tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
+      // Eigen::Affine3d finalPose;
+      // finalPose(0,3) = clusterCentroid(0);
+      // finalPose(1,3) = clusterCentroid(1);
+      // finalPose(2,3) = clusterCentroid(2);
+      // tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
+
+      float maxX = -1e300, minX = 1e300;
+      float maxY = -1e300, minY = 1e300;
+      float maxZ = -1e300, minZ = 1e300;
+      for(const auto& pt : cloudPtr->points)
+      {
+        maxX = std::max(maxX, pt.x);
+        minX = std::min(minX, pt.x);
+        maxY = std::max(maxY, pt.y);
+        minY = std::min(minY, pt.y);
+        maxZ = std::max(maxZ, pt.z);
+        minZ = std::min(minZ, pt.z);
+      }
+
+      thisObject.pose.pose.position.x = minX + (maxX - minX) / 2;
+      thisObject.pose.pose.position.y = minY + (maxY - minY) / 2;
+      thisObject.pose.pose.position.z = maxZ;
 
       thisObject.pose.pose.orientation.x = 0;
       thisObject.pose.pose.orientation.y = 0;

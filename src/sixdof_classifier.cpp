@@ -124,7 +124,7 @@ bool SixDOFClassifier::loadHist(
 
 double testLast = 0; // used for debug testing
 
-void SixDOFClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
+void SixDOFClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud) {
   orp::ClassificationResult classRes;
   classRes.method = "sixdof";
 
