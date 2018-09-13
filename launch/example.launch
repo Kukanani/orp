@@ -52,7 +52,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          you are already running a camera from a different method (such as
          one of your own launch files). There are a few supported cameras,
          read orp.launch for more details. -->
-    <arg name="realsense_r200" value="true" />
+    <arg name="realsense_4xx" value="true" />
 
     <!-- You can toggle different classifiers with flags. Two common ones you
          can try out are "hue" and "rgb" classifiers. You can run multiple
