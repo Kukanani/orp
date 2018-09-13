@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
     interactive_markers
     message_generation
     message_runtime
-    opencv_apps
     pcl_conversions
     pcl_ros
     roscpp
