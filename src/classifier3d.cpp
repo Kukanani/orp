@@ -56,7 +56,7 @@ void Classifier3D::start()
 
 void Classifier3D::stop()
 {
-  Classifier::start();
+  Classifier::stop();
   if(depth_sub_ != NULL)
   {
     depth_sub_.shutdown();

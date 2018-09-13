@@ -78,7 +78,7 @@ void CylinderClassifier::paramsChanged(
 
 }
 
-void CylinderClassifier::cb_classify(sensor_msgs::PointCloud2 cloud) {
+void CylinderClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud) {
   orp::ClassificationResult classRes;
   classRes.method = "cylinder";
 

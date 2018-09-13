@@ -68,7 +68,7 @@ public:
    *
    * @param cloud the point cloud to generate a classification from.
    */
-  virtual void cb_classify(sensor_msgs::PointCloud2 cloud) = 0;
+  virtual void cb_classify(const sensor_msgs::PointCloud2& cloud) = 0;
 
   /**
    * Start listening to images

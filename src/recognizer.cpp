@@ -279,6 +279,11 @@ bool Recognizer::isRecognitionStarted() {
 void Recognizer::startRecognition() {
   if(!isRecognitionStarted())
   {
+    for(WorldObjectList::iterator it = model.begin();
+        it != model.end(); ++it)
+    {
+      (*it)->setStale(true);
+    }
     ROS_INFO("Starting Visual Recognition");
     recognitionSub = n.subscribe(
       classificationTopic,
@@ -296,20 +301,22 @@ void Recognizer::startRecognition() {
 }
 
 void Recognizer::stopRecognition() {
+  // This is now more of a pause behavior, because we keep publishing.
   if(isRecognitionStarted())
   {
     ROS_INFO("Stopping Visual Recognition");
-    timer.stop();
-    recognitionSub.shutdown();
+    timer.stop();  // if actually stopping
+    recognitionSub.shutdown();  // if actually stopping
     for(WorldObjectList::iterator it = model.begin();
         it != model.end(); ++it)
     {
-      (*it)->setStale(true);
+      // (*it)->setStale(false);  // if pausing
+      (*it)->setStale(true);  // if actually stopping
     }
-    //say goodbye (send delete markers)
+    //say goodbye (send delete markers) (if actually stopping)
     publishROS();
 
-    //clear all markers
+    //clear all markers (if actually stopping)
     model.clear();
   } else {
     ROS_WARN_NAMED("ORP Recognizer",

@@ -60,10 +60,10 @@ BasicClassifier::BasicClassifier():
 {
 }
 
-void BasicClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
+void BasicClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
 {
   ROS_DEBUG_NAMED("Basic Classfiier",
-      "Received point cloud to classify as R/G/B");
+      "Received point cloud to find objects");
 
   orp::ClassificationResult classRes;
   classRes.method = "basic";

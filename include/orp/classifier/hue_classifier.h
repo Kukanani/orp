@@ -59,7 +59,7 @@ public:
    * the result into the output topic.
    * @param cloud the incoming cloud supplied from the topic publisher
    */
-  void cb_classify(sensor_msgs::PointCloud2 cloud);
+  void cb_classify(const sensor_msgs::PointCloud2& cloud);
 
   /**
    * Posterize the colors in a cv Mat. See
