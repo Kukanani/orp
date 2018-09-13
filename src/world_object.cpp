@@ -55,7 +55,7 @@ WorldObject WorldObject::createFromMessage(
 
 WorldObject::WorldObject(float colocationDist, WorldObjectManager* manager_,
                          std::string type_, std::string _frame,
-                         Eigen::Affine3d pose_, float probability_):
+                         const Eigen::Affine3d& pose_, float probability_):
   type(manager_->getTypeByName(type_)),
   lastUpdated(ros::Time::now()),
   id(nextValidID),
@@ -85,6 +85,17 @@ WorldObject::WorldObject(float colocationDist, WorldObjectManager* manager_,
 
   pose = pose * eigStubAdjustment;
 } //WorldObject constructor
+
+std::string WorldObject::getDebugRepresentation()
+{
+  std::string staleString = "";
+  if(isStale())
+  {
+    staleString = " [STALE] ";
+  }
+  return "WorldObject(" + staleString + "#" + std::to_string(id) + ", " +
+         getType().getName() + ")";
+}
 
 bool WorldObject::merge(WorldObjectPtr other)
 {
@@ -128,7 +139,7 @@ bool WorldObject::isColocatedWith(WorldObjectPtr other) {
 }
 
 float WorldObject::distanceTo(WorldObjectPtr other) {
-  return (pose.translation()-other->getPose().translation()).norm();
+  return (getPose().translation()-other->getPose().translation()).norm();
 }
 
 void WorldObject::setType(WorldObjectType newType) {
@@ -180,7 +191,7 @@ void WorldObject::setProbability(float probability_) {
   probability = probability_;
 }
 
-void WorldObject::setPose( Eigen::Affine3d pos, bool hard) {
+void WorldObject::setPose(const Eigen::Affine3d& pos, bool hard) {
   if(hard) {
     pose = pos; //no filter!
   }
@@ -190,12 +201,12 @@ void WorldObject::setPose( Eigen::Affine3d pos, bool hard) {
 
   //tPose.setRotation(tPose.getRotation().normalize());
   //update the marker
-  tf::poseEigenToMsg(pose, objectMarker.pose);
-  tf::poseEigenToMsg(pose, labelMarker.pose);
+  tf::poseEigenToMsg(Eigen::Affine3d(pose), objectMarker.pose);
+  tf::poseEigenToMsg(Eigen::Affine3d(pose), labelMarker.pose);
   updateMarkers();
 }
 
-void WorldObject::setPoseKalman(Eigen::Affine3d pos) {
+void WorldObject::setPoseKalman(const Eigen::Affine3d& pos) {
   Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> K =
     covariance * (covariance + Q).inverse();
 
@@ -224,7 +235,7 @@ void WorldObject::updateMarkers() {
   labelMarker.pose.position.z += 0.03f;
 }
 
-Eigen::Affine3d WorldObject::getPose() {
+const Eigen::Transform<double, 3, Eigen::Affine, Eigen::DontAlign>& WorldObject::getPose() {
   return pose;
 }
 
@@ -237,6 +248,7 @@ WorldObjectType WorldObject::getType() {
 std::vector<visualization_msgs::Marker> WorldObject::getMarkers() {
   std::vector<visualization_msgs::Marker> markers;
   if(isStale()) {
+    ROS_INFO_STREAM("pushing delete markers for stale object " << getDebugRepresentation());
     //DELETE all the markers alloted to this object
     for(int i=0; i < MARKERS_PER_OBJECT; ++i) {
       visualization_msgs::Marker newMarker;
@@ -282,8 +294,7 @@ float WorldObject::getProbability()
 } //getProbability
 
 tf::Pose WorldObject::getPoseTf() {
-  tf::Pose tPose;
-  tf::poseEigenToTF(getPose(), tPose);
+  tf::poseEigenToTF(Eigen::Affine3d(getPose()), tPose);
   return tPose;
 }
 

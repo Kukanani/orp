@@ -170,6 +170,15 @@ void Recognizer::paramsChanged(orp::RecognizerConfig &config, uint32_t level)
   showPoseStdDev = config.show_pose_std_dev;
 }
 
+void Recognizer::debugPrint()
+{
+  ROS_INFO_STREAM("Current list of world objects:");
+  for (const auto& wot : model)
+  {
+    ROS_INFO_STREAM(" - " + wot->getDebugRepresentation());
+  }
+}
+
 bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
   orp::GetObjectPose::Response &response)
 {
@@ -180,7 +189,7 @@ bool Recognizer::getObjectPose(orp::GetObjectPose::Request &req,
 
   geometry_msgs::PoseStamped pose;
   tf::Pose originalPose;
-  tf::poseEigenToTF (found->getPose(), originalPose);
+  tf::poseEigenToTF (Eigen::Affine3d(found->getPose()), originalPose);
   tf::poseTFToMsg(originalPose, pose.pose);
 
   pose.header.stamp = ros::Time::now();
@@ -327,6 +336,10 @@ void Recognizer::update()
     }
   }
   dirty = false;
+  if(shouldDebugPrint)
+  {
+    debugPrint();
+  }
 }
 
 void Recognizer::publishROS()
@@ -356,7 +369,7 @@ void Recognizer::publishROS()
     vision_msgs::ObjectHypothesisWithPose hypothesis;
     hypothesis.score = (**it).getProbability();
     hypothesis.id = (**it).getType().getID();
-    tf::poseEigenToMsg((**it).getPose(), hypothesis.pose.pose);
+    tf::poseEigenToMsg(Eigen::Affine3d((**it).getPose()), hypothesis.pose.pose);
 
     // create a detection
     vision_msgs::Detection3D newDetection;
@@ -379,11 +392,14 @@ void Recognizer::publishROS()
 
     WorldObjectType type = (**it).getType();
     std::string frame_name = type.getName() + "_" + std::to_string(typeCounter[type]);
-    typeCounter[type] += 1;
+    if(!(**it).isStale())
+    {
+      typeCounter[type] += 1;
+    }
 
     tf::Transform transform;
     geometry_msgs::Pose intMsg;
-    tf::poseEigenToMsg((**it).getPose(), intMsg);
+    tf::poseEigenToMsg(Eigen::Affine3d((**it).getPose()), intMsg);
     tf::poseMsgToTF(intMsg, transform);
 
     this->transformBroadcaster->sendTransform(
@@ -407,7 +423,7 @@ void Recognizer::publishROSLegacy()
     //create the object message
     orp::WorldObject newObject;
     tf::Pose intPose;
-    tf::poseEigenToTF((**it).getPose(), intPose);
+    tf::poseEigenToTF(Eigen::Affine3d((**it).getPose()), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
 
     // fill the new object with data
@@ -450,7 +466,7 @@ bool Recognizer::cb_getObjects(orp::GetObjects::Request &req,
     //create the object message
     orp::WorldObject newObject;
     tf::Pose intPose;
-    tf::poseEigenToTF((**it).getPose(), intPose);
+    tf::poseEigenToTF(Eigen::Affine3d((**it).getPose()), intPose);
     tf::poseTFToMsg(intPose, newObject.pose.pose);
 
     newObject.colocationDist = (**it).getColocationDistance();

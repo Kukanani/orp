@@ -84,7 +84,7 @@ void RGBClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
     for(auto eachCloud = clouds.begin();
         eachCloud != clouds.end(); eachCloud++)
     {
-      if(eachCloud->width < 3 || eachCloud->width > 500) {
+      if(eachCloud->width < 3) {
         continue;
       }
       pcl::PointCloud<ORPPoint>::Ptr thisCluster(

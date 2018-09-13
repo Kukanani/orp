@@ -50,7 +50,7 @@ Classifier3D::Classifier3D():
 void Classifier3D::start()
 {
   Classifier::start();
-  depth_sub_ = node_.subscribe(depth_topic_, 10,
+  depth_sub_ = node_.subscribe(depth_topic_, 1,
       &Classifier3D::cb_classify, this);
 }
 

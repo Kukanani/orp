@@ -324,7 +324,9 @@ protected:
   /// The TF frame name that this object lives in.
   std::string frame;
   /// position and orientation of this object (center of object)
-  Eigen::Affine3d pose;
+  Eigen::Transform<double, 3, Eigen::Affine, Eigen::DontAlign> pose;
+  /// TF version of the pose
+  tf::Pose tPose;
 
   /// When this object was last updated by a recognition event
   ros::Time lastUpdated;
@@ -362,7 +364,7 @@ protected:
   Eigen::Matrix<double, KALMAN_SIZE,KALMAN_SIZE> Q;
 
   /// Use a pseudo-Kalman statistical filter to update the object's position.
-  void setPoseKalman(Eigen::Affine3d pos);
+  void setPoseKalman(const Eigen::Affine3d& pos);
 public:
   ///Create a new WorldObject from a WorldObject message.
   static WorldObject createFromMessage(WorldObjectManager* manager_,
@@ -373,8 +375,14 @@ public:
    * makes building a WorldObject a bit of pain.
    */
   WorldObject(float colocationDist, WorldObjectManager* manager_,
-    std::string type_, std::string frame, Eigen::Affine3d pose_,
+    std::string type_, std::string frame, const Eigen::Affine3d& pose_,
     float probability_);
+
+  /**
+   * Return a human-friendly representation string of this object, including
+   * the ID and type name.
+   */
+  std::string getDebugRepresentation();
 
   /**
    * Merge this object's data with another object. It's assumed that the other
@@ -405,7 +413,7 @@ public:
    * function ends. If "hard" is false, then the function will call
    * setPoseKalman() to update the pose statistically.
    */
-  void setPose( Eigen::Affine3d pos, bool hard = false);
+  void setPose(const Eigen::Affine3d& pos, bool hard = false);
 
   /// Set the probability of this object's class
   void setProbability(float probability_);
@@ -441,7 +449,7 @@ public:
   tf::Stamped<tf::Pose>  getPoseTfStamped();
 
   /// Get the object pose
-  Eigen::Affine3d getPose();
+  const Eigen::Transform<double, 3, Eigen::Affine, Eigen::DontAlign>& getPose();
 
   /// Get this object's type.
   WorldObjectType getType();

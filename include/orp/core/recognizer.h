@@ -251,6 +251,11 @@ private:
   void deleteMarker(WorldObjectPtr wo);
 
   /**
+   * Print debug message describing the current list of WorldObjects.
+   */
+  void debugPrint();
+
+  /**
    * ROS wrapper for startRecognition()
    * @param msg unused
    */

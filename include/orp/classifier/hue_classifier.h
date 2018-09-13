@@ -39,6 +39,8 @@
 //NRG internal files
 #include "orp/core/classifier3d.h"
 
+#include <mutex>
+
 /**
  * Hue-based classification - posterizing colors into red, green,
  * blue, yellow, orange, and purple
@@ -47,6 +49,8 @@ class HueClassifier : public Classifier3D {
 protected:
   ///For RGB cluster visualization
   cv::Mat M;
+
+  std::mutex segmentation_mutex_;
 public:
   HueClassifier();
 

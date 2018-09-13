@@ -92,6 +92,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
       respawn = "true"
       output  = "screen"
+      launch-prefix="xterm -e gdb --args"
     >
       <param name="clippingFrame" value="$(arg recognition_frame)"/>
     </node>
@@ -142,6 +143,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       type    = "recognizer"
       output  = "screen"
       respawn = "true"
+      launch-prefix="xterm -e gdb --args"
     >
       <param name="recognition_frame" value="$(arg recognition_frame)"/>
       <param name="autostart" type="bool" value="$(arg autostart)"/>

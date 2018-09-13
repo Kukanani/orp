@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
   // for cluster visualization
   //cv::namedWindow( "RGBCluster", cv::WINDOW_NORMAL );
-  ros::AsyncSpinner spinner(2);
+  ros::AsyncSpinner spinner(1);
   spinner.start();
 
   ros::waitForShutdown();
@@ -74,18 +74,24 @@ void HueClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
 
   orp::Segmentation seg_srv;
   seg_srv.request.scene = cloud;
-  bool segmentation_succeeded = segmentation_client_.call(seg_srv);
-  if(!segmentation_succeeded)
+
   {
-    ROS_ERROR_STREAM_THROTTLE_NAMED(5, "Hue Classifier", "Could not call segmentation service at " << segmentation_service_);
+    std::lock_guard<std::mutex> lock(segmentation_mutex_);
+    bool segmentation_succeeded = segmentation_client_.call(seg_srv);
+    if(!segmentation_succeeded)
+    {
+      ROS_ERROR_STREAM_THROTTLE_NAMED(5, "Hue Classifier", "Could not call segmentation service at " << segmentation_service_);
+    }
   }
   std::vector<sensor_msgs::PointCloud2> clouds = seg_srv.response.clusters;
 
+  int numClouds = clouds.size();
   if(!clouds.empty()) {
+    int cloudCounter = 0;
     for(auto eachCloud = clouds.begin();
         eachCloud != clouds.end(); eachCloud++)
     {
-      if(eachCloud->width < 3 || eachCloud->width > 500) {
+      if(eachCloud->width < 3) {
         continue;
       }
       pcl::PointCloud<ORPPoint>::Ptr thisCluster(
@@ -133,8 +139,11 @@ void HueClassifier::cb_classify(sensor_msgs::PointCloud2 cloud)
 
       thisObject.probability = 0.75;
       classRes.result.push_back(thisObject);
+      cloudCounter++;
+      // ROS_INFO_STREAM("processed cloud " << cloudCounter<< " of " << numClouds);
     }
   }
+  // ROS_INFO_STREAM("Finished processing " << numClouds << " clouds");
   classification_pub_.publish(classRes);
 }
 
