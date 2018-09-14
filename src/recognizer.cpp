@@ -384,7 +384,7 @@ void Recognizer::publishROS()
 
     tf::Transform transform;
     geometry_msgs::Pose intMsg;
-    tf::poseEigenToMsg(Eigen::Affine3d((*objMsg).getPose()), intMsg);
+    tf::poseEigenToMsg(Eigen::Affine3d((*objPtr).getPose()), intMsg);
     tf::poseMsgToTF(intMsg, transform);
 
     this->transformBroadcaster->sendTransform(
