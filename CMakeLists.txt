@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(orp)
 
 # Use C++11
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 11)
-endif()
+add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
     cv_bridge
