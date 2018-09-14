@@ -52,7 +52,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          you are already running a camera from a different method (such as
          one of your own launch files). There are a few supported cameras,
          read orp.launch for more details. -->
-    <arg name="realsense_4xx" value="true" />
+    <arg name="realsense_r200" value="true" />
 
     <!-- You can toggle different classifiers with flags. Two common ones you
          can try out are "hue" and "rgb" classifiers. You can run multiple
@@ -88,7 +88,24 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          don't want RViz to come up you can remove this argument
          completely. -->
     <arg name="rviz" value="true" />
+
+
+    <!-- Set where ORP listens for point clouds. You can use this argument to
+         apply ORP to a custom camera, bag file replay, etc. Here we are using
+         it to listen for a less-frequent version of the camera data (see
+         below). -->
+    <arg name="camera_topic" default="/camera/depth_registered/points_throttle" />
   </include>
+
+  <!-- Perception algorithms are very expensive! Here, we generate a throttled
+       version of the camera input stream using ROS's topic_tools package.
+       The speed is set to 2 messages per second (2 Hz). -->
+  <node name="camera_throttler" pkg="topic_tools" type="throttle"
+    args="messages /camera/depth_registered/points 2.0 /camera/depth_registered/points_throttle"
+  >
+    <param name="unreliable" value="true"/>
+    <param name="lazy" value="true"/>
+  </node>
 
   <!-- additional launch files could be added here to finish the vision stack.
        It may be necessary to define one or more TF static_transform_publisher

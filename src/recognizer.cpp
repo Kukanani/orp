@@ -149,11 +149,17 @@ Recognizer::Recognizer() :
 void Recognizer::recognize(const ros::TimerEvent& event)
 {
   // update objects
-  update();
+  if(isRecognitionStarted())
+  {
+    update();
+  }
   // publish markers
   publishROS();
   // cull old objects
-  killStale();
+  if(isRecognitionStarted())
+  {
+    killStale();
+  }
 }
 
 void Recognizer::paramsChanged(orp::RecognizerConfig &config, uint32_t level)
@@ -238,6 +244,8 @@ void Recognizer::cb_processNewClassification(orp::ClassificationResult objects)
 
       // build a list of objects sorted by their distance to the new one
       std::map<float, WorldObjectPtr> distances;
+
+      std::lock_guard<std::mutex> modelLock(modelMutex);
       for(auto it = model.begin(); it != model.end(); ++it)
       {
         distances[(**it).distanceTo(p)] = *it;
@@ -284,6 +292,9 @@ void Recognizer::startRecognition() {
     {
       (*it)->setStale(true);
     }
+    visualization_msgs::Marker marker;
+    marker.action = visualization_msgs::Marker::DELETEALL;
+    markerMsg.markers.push_back(marker);
     ROS_INFO("Starting Visual Recognition");
     recognitionSub = n.subscribe(
       classificationTopic,
@@ -305,19 +316,19 @@ void Recognizer::stopRecognition() {
   if(isRecognitionStarted())
   {
     ROS_INFO("Stopping Visual Recognition");
-    timer.stop();  // if actually stopping
+    //timer.stop();  // if actually stopping
     recognitionSub.shutdown();  // if actually stopping
     for(WorldObjectList::iterator it = model.begin();
         it != model.end(); ++it)
     {
-      // (*it)->setStale(false);  // if pausing
-      (*it)->setStale(true);  // if actually stopping
+      (*it)->setStale(false);  // if pausing
+      //(*it)->setStale(true);  // if actually stopping
     }
     //say goodbye (send delete markers) (if actually stopping)
-    publishROS();
+    //publishROS();
 
     //clear all markers (if actually stopping)
-    model.clear();
+    //model.clear();
   } else {
     ROS_WARN_NAMED("ORP Recognizer",
         "Attempted to stop recognition, but it hasn't started.");
@@ -328,7 +339,7 @@ void Recognizer::update()
 {
   // Only update the stale objects if we have new data.
   // No camera points->no updates (lazy)
-  if(!dirty) return;
+  if(!dirty && model.empty()) return;
   ros::Time now = ros::Time::now();
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
@@ -351,25 +362,53 @@ void Recognizer::update()
 
 void Recognizer::publishROS()
 {
+  // re-sort. This could almost certainly be done more efficiently
+  model.sort([](const WorldObjectPtr& a, const WorldObjectPtr& b) {
+    return a->getPose().translation().norm() < b->getPose().translation().norm();
+  });
+
+  // used to generate unique object/frame names
+  std::map<WorldObjectType, int> typeCounter;
+  for(const auto& objPtr : model) {
+    //create the marker message
+    std::vector<visualization_msgs::Marker> newMarkers = (*objPtr).getMarkers();
+    markerMsg.markers.insert(markerMsg.markers.end(),
+        newMarkers.begin(), newMarkers.end());
+
+    WorldObjectType type = (*objPtr).getType();
+    std::string frame_name = type.getName() + "_" + std::to_string(typeCounter[type]);
+    if(!(*objPtr).isStale())
+    {
+      typeCounter[type] += 1;
+    }
+
+    tf::Transform transform;
+    geometry_msgs::Pose intMsg;
+    tf::poseEigenToMsg(Eigen::Affine3d((*objMsg).getPose()), intMsg);
+    tf::poseMsgToTF(intMsg, transform);
+
+    this->transformBroadcaster->sendTransform(
+      tf::StampedTransform(transform, ros::Time::now(), recognitionFrame,
+                           frame_name));
+  }
+  //publish 'em
+  markerPub.publish(markerMsg);
+  markerMsg.markers.clear();
+
   if(legacy)
   {
     publishROSLegacy();
     return;
   }
+
   //add all world objects to message
   vision_msgs::Detection3DArray objectArray;
   objectArray.header.frame_id = recognitionFrame;
   objectArray.header.stamp = ros::Time::now();
   objectArray.header.seq = object_sequence;
 
-  visualization_msgs::MarkerArray markerMsg, labelMsg;
+  visualization_msgs::MarkerArray markerMsg;
 
-  // re-sort. This could almost certainly be done more efficiently
-  model.sort([](const WorldObjectPtr& a, const WorldObjectPtr& b) {
-    return a->getPose().translation().norm() < b->getPose().translation().norm();
-  });
-
-  std::map<WorldObjectType, int> typeCounter;
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
     // Create a hypothesis
@@ -391,31 +430,9 @@ void Recognizer::publishROS()
     // add the detection to the list
     objectArray.detections.push_back(newDetection);
     object_sequence++;
-
-    //create the marker message
-    std::vector<visualization_msgs::Marker> newMarkers = (**it).getMarkers();
-    markerMsg.markers.insert(markerMsg.markers.end(),
-        newMarkers.begin(), newMarkers.end());
-
-    WorldObjectType type = (**it).getType();
-    std::string frame_name = type.getName() + "_" + std::to_string(typeCounter[type]);
-    if(!(**it).isStale())
-    {
-      typeCounter[type] += 1;
-    }
-
-    tf::Transform transform;
-    geometry_msgs::Pose intMsg;
-    tf::poseEigenToMsg(Eigen::Affine3d((**it).getPose()), intMsg);
-    tf::poseMsgToTF(intMsg, transform);
-
-    this->transformBroadcaster->sendTransform(
-      tf::StampedTransform(transform, ros::Time::now(), recognitionFrame,
-                           frame_name));
   }
 
   //publish 'em
-  markerPub.publish(markerMsg);
   objectPub.publish(objectArray);
 }
 
@@ -423,7 +440,6 @@ void Recognizer::publishROSLegacy()
 {
   //add all world objects to message
   orp::WorldObjects objectMsg;
-  visualization_msgs::MarkerArray markerMsg, labelMsg;
 
   for(WorldObjectList::iterator it = model.begin(); it != model.end(); ++it)
   {
@@ -443,14 +459,9 @@ void Recognizer::publishROSLegacy()
     newObject.cloud = (**it).getCloud();
 
     objectMsg.objects.insert(objectMsg.objects.end(), newObject);
-
-    //create the marker message
-    std::vector<visualization_msgs::Marker> newMarkers = (**it).getMarkers();
-    markerMsg.markers.insert(markerMsg.markers.end(),
-        newMarkers.begin(), newMarkers.end());
   }
+
   //publish 'em
-  markerPub.publish(markerMsg);
   objectPub.publish(objectMsg);
 }
 
