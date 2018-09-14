@@ -85,7 +85,7 @@ void HueClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
   }
   std::vector<sensor_msgs::PointCloud2> cloudMessages = seg_srv.response.clusters;
 
-  int numClouds = clouds.size();
+  int numClouds = cloudMessages.size();
   if(!cloudMessages.empty()) {
     int cloudCounter = 0;
     for(const auto& cloudMessage : cloudMessages)
