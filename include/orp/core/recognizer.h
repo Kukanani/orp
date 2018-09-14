@@ -34,6 +34,8 @@
 #include <ctime>
 #include <fstream>
 #include <string>
+#include <mutex>
+#include <thread>
 
 #include <ros/ros.h>
 #include <dynamic_reconfigure/server.h>
@@ -78,6 +80,8 @@ private:
   std::string recognitionFrame;
   /// A list of currently-accepted objects in the world.
   WorldObjectList model;
+  /// Prevents simultaneous modification to world object model.
+  std::mutex modelMutex;
   /// Manages the list of world object types.
   WorldObjectManager typeManager;
   /// Where to publish the WorldObjects
@@ -110,6 +114,8 @@ private:
   /// Publishes a WorldObjects message that contains all the recognized
   /// objects from
   ros::Publisher markerPub;
+  /// The stored list of markers to publish.
+  visualization_msgs::MarkerArray markerMsg;
   /// Used to self-stop recognition
   ros::Publisher stopPub;
   /// listen for necessary transformations before publishing

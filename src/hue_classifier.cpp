@@ -151,7 +151,10 @@ void HueClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
       classRes.result.push_back(thisObject);
     }
   }
-  classification_pub_.publish(classRes);
+  if(classification_pub_ != NULL)
+  {
+    classification_pub_.publish(classRes);
+  }
 }
 
 inline uchar reduceVal(const uchar val)
