@@ -41,16 +41,42 @@
 
 #include <mutex>
 
+
+/**
+ * A range of valid HSV values and the object name associated with that range.
+ */
+struct ObjHsv {
+  std::string name;
+  double min_h, max_h, min_s, max_s, min_v, max_v;
+  ObjHsv(std::string name, double min_h, double max_h, double min_s, double max_s, double min_v, double max_v) :
+    name(name),
+    min_h(min_h),
+    max_h(max_h),
+    min_s(min_s),
+    max_s(max_s),
+    min_v(min_v),
+    max_v(max_v)
+  {}
+
+};
+
 /**
  * Hue-based classification - posterizing colors into red, green,
  * blue, yellow, orange, and purple
  */
 class HueClassifier : public Classifier3D {
 protected:
-  ///For RGB cluster visualization
-  cv::Mat M;
+
+  /**
+   * Load the list of object types from the parameter server.
+   * This function looks for "hue_min", "hue_max", "sat_min", etc.
+   * for each object on the parameter server and stores it internally.
+   */
+  void loadTypeList();
 
   std::mutex segmentation_mutex_;
+
+  std::vector<ObjHsv> obj_hsvs;
 public:
   HueClassifier();
 
@@ -62,15 +88,9 @@ public:
   void cb_classify(const sensor_msgs::PointCloud2& cloud);
 
   /**
-   * Posterize the colors in a cv Mat. See
-   * http://stackoverflow.com/questions/5906693/how-to-reduce-the-number-of-colors-in-an-image-with-opencv-in-python
-   */
-  void processColors(cv::Mat& img);
-
-  /**
    * Get a string name that represents the most common color in this image.
    */
-  std::string getColor(float r, float g, float b);
+  std::string getClassByColor(const cv::Mat& cloud);
 };
 
 #endif
