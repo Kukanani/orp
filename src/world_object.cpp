@@ -248,7 +248,6 @@ WorldObjectType WorldObject::getType() {
 std::vector<visualization_msgs::Marker> WorldObject::getMarkers() {
   std::vector<visualization_msgs::Marker> markers;
   if(isStale()) {
-    ROS_INFO_STREAM("pushing delete markers for stale object " << getDebugRepresentation());
     //DELETE all the markers alloted to this object
     for(int i=0; i < MARKERS_PER_OBJECT; ++i) {
       visualization_msgs::Marker newMarker;
