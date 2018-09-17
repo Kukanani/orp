@@ -6,7 +6,7 @@
 #
 # Additional commented-out objects are at the end of this file for reference.
 #
-# Dimensions are in mm.
+# Dimensions are in m.
 # Color values range from 0 to 1.
 # The acceptable values for "geometry" are BLOB (sphere), CYLINDER, and BOX.
 
