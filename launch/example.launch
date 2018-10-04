@@ -52,7 +52,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          you are already running a camera from a different method (such as
          one of your own launch files). There are a few supported cameras,
          read orp.launch for more details. -->
-    <arg name="realsense_r200" value="true" />
+    <!-- <arg name="realsense_r200" value="true" /> -->
 
     <!-- You can toggle different classifiers with flags. Two common ones you
          can try out are "hue" and "rgb" classifiers. You can run multiple
@@ -94,7 +94,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
          apply ORP to a custom camera, bag file replay, etc. Here we are using
          it to listen for a less-frequent version of the camera data (see
          below). -->
-    <arg name="camera_topic" default="/camera/depth_registered/points_throttle" />
+    <arg name="camera_topic" default="/camera/depth_registered/points" />
   </include>
 
   <!-- Perception algorithms are very expensive! Here, we generate a throttled

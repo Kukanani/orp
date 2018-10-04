@@ -34,6 +34,7 @@
 
 #include "orp/core/orp_utils.h"
 #include "orp/classifier/hue_classifier.h"
+#include "orp/core/world_object.h"
 
 #include <sstream>
 #include <cmath>
@@ -59,9 +60,66 @@ int main(int argc, char **argv)
   return 1;
 }
 
+
 HueClassifier::HueClassifier():
   Classifier3D()
 {
+  loadTypeList();
+}
+
+void HueClassifier::loadTypeList()
+{
+  XmlRpc::XmlRpcValue paramMap;
+  while(!node_.getParam("items", paramMap)) {
+    ROS_INFO_DELAYED_THROTTLE(5.0,
+                      "Waiting for object type list on parameter server...");
+    ros::Duration(1.0).sleep();
+  }
+  for(XmlRpc::XmlRpcValue::iterator it = paramMap.begin();
+      it != paramMap.end(); ++it) {
+    ROS_INFO_STREAM(it->first);
+    ROS_INFO_STREAM(it->second);
+    bool has_all = false, has_some = false;
+    if(it->second.hasMember("hue_min") &&
+       it->second.hasMember("hue_max") &&
+       it->second.hasMember("sat_min") &&
+       it->second.hasMember("sat_max") &&
+       it->second.hasMember("val_min") &&
+       it->second.hasMember("val_max"))
+    {
+      has_all = true;
+    }
+    if(it->second.hasMember("hue_min") ||
+       it->second.hasMember("hue_max") ||
+       it->second.hasMember("sat_min") ||
+       it->second.hasMember("sat_max") ||
+       it->second.hasMember("val_min") ||
+       it->second.hasMember("val_max"))
+    {
+      has_some = true;
+    }
+
+    if(has_some && !has_all)
+    {
+      ROS_WARN_STREAM("Object " << it->first << " has some of the values " <<
+                      "needed for HSV object classification, but not all " <<
+                      "of them. You must provide hue_min, hue_max, " <<
+                      "sat_min, sat_max, val_min, and val_max.");
+    }
+    if(has_all)
+    {
+      obj_hsvs.push_back(ObjHsv(
+        it->first,
+        static_cast<double>(it->second["hue_min"]),
+        static_cast<double>(it->second["hue_max"]),
+        static_cast<double>(it->second["sat_min"]),
+        static_cast<double>(it->second["sat_max"]),
+        static_cast<double>(it->second["val_min"]),
+        static_cast<double>(it->second["val_max"])
+        ));
+    }
+
+  }
 }
 
 void HueClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
@@ -98,39 +156,26 @@ void HueClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
       pcl::fromROSMsg(cloudMessage, *cloudPtr);
 
       std::string color = "unknown";
-      M.release();
-      M = cv::Mat(cloudPtr->points.size(), 1, CV_8UC3, cv::Scalar(0,0,0));
-      int i = 0;
+      cv::Mat M = cv::Mat(cloudPtr->points.size(), 1, CV_8UC3);
 
-      pcl::PointCloud<ORPPoint>::iterator point;
-      float r=0, g=0, b=0;
-
-      for(point = cloudPtr->points.begin();
-          point < cloudPtr->points.end(); ++point, ++i)
+      int i=0;
+      for(const auto& point : cloudPtr->points)
       {
-        r += point->r;
-        g += point->g;
-        b += point->b;
+        M.at<cv::Vec3b>(0, i) =
+          cv::Vec3b(static_cast<uint8_t>(point.b), static_cast<uint8_t>(point.g), static_cast<uint8_t>(point.r));
+        i++;
       }
 
-      // std::cout << "M has " << cloudMessage->width << " elements." << std::endl;
-
-      color = getColor(r, g, b);
+      color = getClassByColor(M);
+      if(color == "") {
+        // no detection!
+        continue;
+      }
 
       orp::WorldObject thisObject;
-      thisObject.label = "obj_" + color;
-      thisObject.pose.header.frame_id = cloudMessage.header.frame_id;
+      thisObject.label = color;
 
-
-      // Eigen::Vector4f clusterCentroid;
-      // pcl::compute3DCentroid(*cloudPtr, clusterCentroid);
-
-      // Eigen::Affine3d finalPose;
-      // finalPose(0,3) = clusterCentroid(0);
-      // finalPose(1,3) = clusterCentroid(1);
-      // finalPose(2,3) = clusterCentroid(2);
-      // tf::poseEigenToMsg(finalPose, thisObject.pose.pose);
-
+      // Now set the object pose: the center of the top of the pointcloud AABB
       float maxX = -1e300, minX = 1e300;
       float maxY = -1e300, minY = 1e300;
       float maxZ = -1e300, minZ = 1e300;
@@ -153,186 +198,132 @@ void HueClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
       thisObject.pose.pose.orientation.y = 0;
       thisObject.pose.pose.orientation.z = 0;
       thisObject.pose.pose.orientation.w = 1;
+      thisObject.pose.header.frame_id = cloudMessage.header.frame_id;
 
       thisObject.probability = 0.75;
       classRes.result.push_back(thisObject);
       cloudCounter++;
-      // ROS_INFO_STREAM("processed cloud " << cloudCounter<< " of " << numClouds);
+      ROS_DEBUG_STREAM("processed cloud " << cloudCounter<< " of " << numClouds);
     }
   }
-  // ROS_INFO_STREAM("Finished processing " << numClouds << " clouds");
+  ROS_DEBUG_STREAM("Finished processing " << numClouds << " clouds");
   if(classification_pub_ != NULL)
   {
+    ROS_DEBUG_STREAM("publishing");
     classification_pub_.publish(classRes);
   }
 }
 
-inline uchar reduceVal(const uchar val)
-{
-  if (val < 64) return 0;
-  if (val < 128) return 64;
-  return 255;
-}
 
-void HueClassifier::processColors(cv::Mat& img)
+std::string HueClassifier::getClassByColor(const cv::Mat& input)
 {
-  uchar* pixelPtr = img.data;
-  for (int i = 0; i < img.rows; i++)
+  cv::Mat hsv = cv::Mat::zeros(1, 1, CV_8UC3);
+  cv::Scalar avg_bgr = cv::mean(input);
+  hsv.at<cv::Vec3b>(0, 0) = cv::Vec3b(avg_bgr[0], avg_bgr[1], avg_bgr[2]);
+  cv::cvtColor(hsv, hsv, CV_BGR2HSV);
+  ROS_DEBUG_STREAM("raw average HSV: " << hsv.at<cv::Vec3b>(0, 0));
+  cv::Vec3b hsv_raw = hsv.at<cv::Vec3b>(0, 0);
+
+  // Hue goes into range 0-360
+  int h = static_cast<int>(hsv_raw[0] * 2);
+
+  // Saturation goes into range 0-100
+  int s = static_cast<int>(hsv_raw[1] * 0.3921568);
+
+  // Value goes into range 0-100
+  int v = static_cast<int>(hsv_raw[2] * 0.3921568);
+
+  ROS_DEBUG_STREAM("" << h << ", " << s << ", " << v);
+
+  // now go through each HSV range known by the classifier and check it
+  for(const auto& obj_hsv : obj_hsvs)
   {
-    for (int j = 0; j < img.cols; j++)
+    ROS_DEBUG_STREAM("" << obj_hsv.min_h << ", " << obj_hsv.max_h << ", " <<
+      obj_hsv.min_s << ", " << obj_hsv.max_s << ", " << obj_hsv.min_v <<
+      ", " << obj_hsv.max_v);
+
+    // Hue can wrap around over 360, so we have to check two conditions
+    bool h_in_range = false;
+    if(obj_hsv.max_h <= 360)
     {
-      const int pi = i*img.cols*3 + j*3;
-      pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
-      pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
-      pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
-      if(pixelPtr[pi+0] == 64) pixelPtr[pi+0] = 127;
-      if(pixelPtr[pi+1] == 64) pixelPtr[pi+1] = 127;
-      if(pixelPtr[pi+2] == 64) pixelPtr[pi+2] = 127;
+      // a basic range from 0-360
+      h_in_range = h > obj_hsv.min_h && h <= obj_hsv.max_h;
+    } else
+    {
+      // a range that wraps around
+      h_in_range = h < obj_hsv.max_h-360 || h > obj_hsv.min_h;
+    }
+    if(h_in_range)
+    {
+      ROS_DEBUG_STREAM("Hue in range for " << obj_hsv.name);
+    }
+    // Check that we are in all ranges
+    if(h_in_range &&
+       s > obj_hsv.min_s && s <= obj_hsv.max_s &&
+       v > obj_hsv.min_v && v <= obj_hsv.max_v)
+    {
+      // done!
+      ROS_DEBUG_STREAM("Object class detected as: " << obj_hsv.name);
+      return obj_hsv.name;
     }
   }
+
+  // if no desired color is found, don't detect the object
+  return "";
 }
 
-std::string HueClassifier::getColor(float r, float g, float b)
-{
-  // TODO(Kukanani):
-  // This function used to take a cv::Mat and use the cv::sum function to
-  // calculate the r, g, and b values in one line each. However, this began
-  // giving me segfaults after migrating to a new machine. I don't know the
-  // exact issue, but I suspect a conflict with OpenCV versions 2 and 3.
-  // Whatever the reason, you now have the pass the r/g/b values directly to
-  // this function.
+// Old version
+// std::string HueClassifier::getClassByColor(int r, int g, int b)
+// {
 
-  // Eigen::Vector3f input_color(std::static_cast<float>(r),
-  //                             std::static_cast<float>(g),
-  //                             std::static_cast<float>(b));
-  // input_color = input_color.normalized();
+//   // scale to interval 0, 1
+//   double input_max = std::max(std::max(r, g), b);
+//   double R = static_cast<double>(r)/input_max;
+//   double G = static_cast<double>(g)/input_max;
+//   double B = static_cast<double>(b)/input_max;
 
-  // Eigen::Vector3f red(255, 0, 0);
-  // Eigen::Vector3f green(0, 255, 0);
-  // Eigen::Vector3f yellow(255, 255, 0);
-  // Eigen::Vector3f blue(0, 0, 255);
+//   double M = std::max(std::max(R, G), B);
+//   double m = std::min(std::min(R, G), B);
+//   double C = M - m;
 
-  // std::vector<std::pair<Eigen::Vector3f, std::string>> colors;
-  // colors.append(std::pair<Eigen::Vector3f, std::string>(red, "red"));
-  // colors.append(std::pair<Eigen::Vector3f, std::string>(green, "green"));
-  // colors.append(std::pair<Eigen::Vector3f, std::string>(blue, "blue"));
-  // colors.append(std::pair<Eigen::Vector3f, std::string>(yellow, "yellow"));
-
-  // double best_distance = 1e300;
-  // std::string best_color = "null";
-  // for(const auto& p: colors)
-  // {
-  //   double distance =
-  //   if distance < best_distance
-  //   {
-  //     best_distance = distance;
-  //     best_color = p.second;
-  //   }
-  // }
-  // return best_color;
-
-  // scale to interval 0, 1
-  double input_max = std::max(std::max(r, g), b);
-  double R = static_cast<double>(r)/input_max;
-  double G = static_cast<double>(g)/input_max;
-  double B = static_cast<double>(b)/input_max;
-
-  double M = std::max(std::max(R, G), B);
-  double m = std::min(std::min(R, G), B);
-  double C = M - m;
-
-  double H = 0;
-  if(M == R)
-  {
-    H = std::fmod((G - B) / C, 6.0);
-  }
-  else if(M == G)
-  {
-    H = (B - R) / C + 2;
-  }
-  else
-  {
-    H = (R - G) + 4;
-  }
-
-  H = 60*H;
-
-  if(H < 20 || H > 340)
-  {
-    return "red";
-  }
-  else if(H < 40)
-  {
-    return "orange";
-  }
-  else if(H < 90)
-  {
-    return "yellow";
-  }
-  else if(H < 180)
-  {
-    return "green";
-  }
-  else if (H < 270)
-  {
-    return "blue";
-  }
-  else
-  {
-    return "purple";
-  }
-}
-
-///////////////////////////////
-// Example of OpenCV-based point cloud filtering
-//   pcl::PointCloud<ORPPoint>::Ptr pclCloud = pcl::PointCloud<ORPPoint>::Ptr(new pcl::PointCloud<ORPPoint>());
-//   pcl::fromROSMsg(cloud, *pclCloud);
-//
-//   uint8_t* pixelPtr = (uint8_t*)cv_ptr->image.data;
-//   int cn = cv_ptr->image.channels();
-//   cv::Scalar_<uint8_t> bgrPixel;
-//   int i= 0;
-//   for (size_t u = 0; u < cloud.height; ++u)   // rows
+//   double H = 0;
+//   if(M == R)
 //   {
-//     for (size_t v = 0; v < cloud.width; ++v, ++i)  // cols
-//     {
-//       if(cv_ptr->image.at<cv::Vec3b>(u,v).val[0] > 128) { //blue channel check
-//         pclCloud->points[i].x = std::numeric_limits<float>::quiet_NaN();
-//         pclCloud->points[i].y = std::numeric_limits<float>::quiet_NaN();
-//         pclCloud->points[i].z = std::numeric_limits<float>::quiet_NaN();
-//       }
-//     }
+//     H = std::fmod((G - B) / C, 6.0);
 //   }
-//   pcl::toROSMsg(*pclCloud, cloud);
-//   filterPub.publish(cloud);
-//
-// } //classify
-//
-//
-// ///http://stackoverflow.com/questions/5906693/how-to-reduce-the-number-of-colors-in-an-image-with-opencv-in-python
-// inline uchar reduceVal(const uchar val)
-// {
-//     if (val < 64) return 0;
-//     if (val < 128) return 64;
-//     return 255;
-// }
-//
-// void OpenCVClassifier::process(cv::Mat& img)
-// {
-//     uchar* pixelPtr = img.data;
-//     for (int i = 0; i < img.rows; i++)
-//     {
-//         for (int j = 0; j < img.cols; j++)
-//         {
-//             const int pi = i*img.cols*3 + j*3;
-//             pixelPtr[pi + 0] = reduceVal(pixelPtr[pi + 0]); // B
-//             pixelPtr[pi + 1] = reduceVal(pixelPtr[pi + 1]); // G
-//             pixelPtr[pi + 2] = reduceVal(pixelPtr[pi + 2]); // R
-//
-//
-//             if(pixelPtr[pi+0] == 64) pixelPtr[pi+0] = 127;
-//             if(pixelPtr[pi+1] == 64) pixelPtr[pi+1] = 127;
-//             if(pixelPtr[pi+2] == 64) pixelPtr[pi+2] = 127;
-//         }
-//     }
+//   else if(M == G)
+//   {
+//     H = (B - R) / C + 2;
+//   }
+//   else
+//   {
+//     H = (R - G) + 4;
+//   }
+
+//   H = 60*H;
+
+//   if(H < 20 || H > 340)
+//   {
+//     return "red";
+//   }
+//   else if(H < 40)
+//   {
+//     return "orange";
+//   }
+//   else if(H < 90)
+//   {
+//     return "yellow";
+//   }
+//   else if(H < 180)
+//   {
+//     return "green";
+//   }
+//   else if (H < 270)
+//   {
+//     return "blue";
+//   }
+//   else
+//   {
+//     return "purple";
+//   }
 // }

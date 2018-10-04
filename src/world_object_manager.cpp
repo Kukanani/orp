@@ -59,7 +59,7 @@ WorldObjectType& WorldObjectManager::getTypeByID(int id) {
   }
   std::stringstream err;
   err << "did not find object with id '" << id << "'";
-  throw std::logic_error(err.str());
+  // throw std::logic_error(err.str());
   return unknownType;
 }
 
@@ -72,7 +72,7 @@ WorldObjectType& WorldObjectManager::getTypeByName(std::string name) {
       return type_it->second;
     }
   }
-  throw std::logic_error("did not find object named '" + name + "'");
+  // throw std::logic_error("did not find object named '" + name + "'");
   return unknownType;
 }
 
@@ -180,12 +180,12 @@ bool WorldObjectManager::attemptToCopyFloatParam(const ros::NodeHandle &node,
   if(!node.hasParam(from)) {
     ROS_ERROR_STREAM("source param " << from << " not found while attempting "
               << "to copy to " << to);
-    throw std::runtime_error("Source param does not exist");
+    // throw std::runtime_error("Source param does not exist");
     return false;
   } if(!node.hasParam(to)) {
     ROS_ERROR_STREAM("target param " << to << " not found while attempting "
               << "to copy from " << from);
-    throw std::runtime_error("Target param does not exist");
+    // throw std::runtime_error("Target param does not exist");
     return false;
   }
   node.getParam(from, temp);
@@ -199,7 +199,7 @@ bool WorldObjectManager::attemptToSetFloatParam(const ros::NodeHandle &node,
   if(!node.hasParam(to)) {
     ROS_ERROR_STREAM("target param " << to << " not found while attempting to "
               << "set value = " << val);
-    throw std::runtime_error("Target param does not exist");
+    // throw std::runtime_error("Target param does not exist");
     return false;
   }
   node.setParam(to, (double)val);
