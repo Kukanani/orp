@@ -145,7 +145,8 @@ void HueClassifier::cb_classify(const sensor_msgs::PointCloud2& cloud)
       }
 
       thisObject.pose.pose.position.x = minX + (maxX - minX) / 2;
-      thisObject.pose.pose.position.y = minY + (maxY - minY) / 2;
+      // thisObject.pose.pose.position.y = minY + (maxY - minY) / 2;
+      thisObject.pose.pose.position.y = maxY;
       thisObject.pose.pose.position.z = maxZ;
 
       thisObject.pose.pose.orientation.x = 0;
