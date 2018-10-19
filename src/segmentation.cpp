@@ -189,7 +189,7 @@ bool Segmentation::cb_segment(orp::Segmentation::Request &req,
     //remove planes
     inputCloud =
       removePrimaryPlanes(inputCloud,maxPlaneSegmentationIterations,
-        segmentationDistanceThreshold, percentageToAnalyze);
+        segmentationDistanceThreshold, percentageToAnalyze, transformToFrame);
 
     if(_publishAllObjects) {
       pcl::toROSMsg(*inputCloud, transformedMessage);
@@ -278,7 +278,7 @@ PCPtr Segmentation::voxelGridify(PCPtr &loose, float gridSize) {
 }
 
 PCPtr Segmentation::removePrimaryPlanes(PCPtr &input, int maxIterations,
-  float thresholdDistance, float percentageGood)
+  float thresholdDistance, float percentageGood, std::string parentFrame)
 {
   PCPtr planes(new PC());
   PCPtr planeCloud(new PC());
@@ -332,7 +332,7 @@ PCPtr Segmentation::removePrimaryPlanes(PCPtr &input, int maxIterations,
   if(_publishAllPlanes) {
     sensor_msgs::PointCloud2 planes_pc2;
     pcl::toROSMsg(*planes, planes_pc2);
-    planes_pc2.header.frame_id = originalCloudFrame;
+    planes_pc2.header.frame_id = parentFrame;
     allPlanesPublisher.publish(planes_pc2);
   }
 
