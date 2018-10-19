@@ -266,11 +266,14 @@ private:
    * @param  percentageGood    keep removing planes until the amount of data
    *                           left is less than this percentage of the initial
    *                           data.
+   * @param  parentFrame       The frame to use for the message containing all
+   *                           plane point clouds (if such a message is to be
+   *                           published)
    * @return                   the point cloud with primary planes removed as
    *                           specified.
    */
   PCPtr removePrimaryPlanes(PCPtr &input, int maxIterations,
-      float thresholdDistance, float percentageGood);
+      float thresholdDistance, float percentageGood, std::string parentFrame);
 
   /**
    * Euclidean clustering algorithm. See
