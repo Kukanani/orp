@@ -1,41 +1,29 @@
 # Table of Contents
 1. [Installation](#installation)
-1. [Training Objects](#training-objects)
+1. [Run Example](#run-example)
 1. [How to Use](#how-to-use)
 1. [About](#about)
 
 ***
 
 ## Installation<a name="installation" />
-1. **Download the repository from GitHub**
-	* Open a new terminal and enter
-        ```
-		cd ~/
-		git clone https://github.com/UTNuclearRobotics/nrg-ros-support.git
-       ```
+1. Download the repository from GitHub
+```
+cd catkin_ws/src
+git clone https://github.com/UTNuclearRobotics/orp.git
+```
+1. Install dependencies
+You may need to install camera drivers depending on what type of camera you are using. See the [package.xml](https://github.com/UTNuclearRobotics/orp/blob/kinetic/package.xml) for a list of additional dependencies.
 
-## Training Objects<a name="training-objects" />
-*This setup assumes you have a training table capable of spinning 360 degrees.*
+1. Build your catkin workspace
 
-1. Set up the camera to view the table and two AR tags
-
-1. Run in a terminal
-	```
-	roslaunch orp train.launch
-	```
-
-1. Adjust filtering parameters as necessary through rqt_reconfigure. The bounded_scene point cloud should only display the table surface and the object on the table.
-
-1. Run in a terminal
-	```
-	rosrun train_object.py <your_object_name> <angle_increment_in_degrees>
-	```
-
-1. The spin table will spin 360 degrees to allow point cloud data taken for every side of the object.
+## Test<a name="run-example" />
+```
+roslaunch orp example.launch
+```
 
 ## How to Use<a name="how-to-use" />
-
-~Coming Soon to Documentation Near You~
+Coming soon
 
 
 ## About<a name="about" />
