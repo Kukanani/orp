@@ -13,6 +13,7 @@ cd catkin_ws/src
 git clone https://github.com/UTNuclearRobotics/orp.git
 ```
 1. Install dependencies
+
 You may need to install camera drivers depending on what type of camera you are using. See the [package.xml](https://github.com/UTNuclearRobotics/orp/blob/kinetic/package.xml) for a list of additional dependencies.
 
 1. Build your catkin workspace
