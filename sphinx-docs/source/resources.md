@@ -17,3 +17,5 @@ Last Modified: March 8th, 2019
 [Cpp Domain Reference 2](https://media.readthedocs.org/pdf/sphinx/1.7/sphinx.pdf)
 
 [RST Reference Document](http://docutils.sourceforge.net/docs/user/rst/quickref.html#escaping)
+
+[ReadTheDocsIO Hosting Guide](https://docs.readthedocs.io/en/latest/intro/getting-started-with-sphinx.html#quick-start)
