@@ -19,3 +19,5 @@ Last Modified: March 8th, 2019
 [RST Reference Document](http://docutils.sourceforge.net/docs/user/rst/quickref.html#escaping)
 
 [ReadTheDocsIO Hosting Guide](https://docs.readthedocs.io/en/latest/intro/getting-started-with-sphinx.html#quick-start)
+
+[Sphinx with Github Pages](https://daler.github.io/sphinxdoc-test/includeme.html)
