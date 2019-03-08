@@ -1,0 +1,196 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Object Recognition and Perception (ORP) documentation &#8212; ORP 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Setup" href="setup.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="object-recognition-and-perception-orp-documentation">
+<h1>Object Recognition and Perception (ORP) documentation<a class="headerlink" href="#object-recognition-and-perception-orp-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#requirements">Requirements</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending ORP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extending.html#when-to-build-a-custom-classifier">When to Build a Custom Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending.html#how-to-build-a-custom-classifier">How to Build a Custom Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extending.html#how-to-use-a-custom-classifier">How to Use a Custom Classifier</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#step-1-are-the-correct-nodes-running">Step 1: Are the correct nodes running?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#step-2-are-you-providing-an-object-list">Step 2: Are you providing an object list?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#step-3-how-do-the-intermediate-steps-look">Step 3: How do the intermediate steps look?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#step-4-how-does-the-final-output-look">Step 4: How does the final output look?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#step-5-you-re-special">Step 5: You’re special</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>ORP is an object recognition library for detecting objects using visual data
+(such as information from 2D or 3D cameras). ORP bridges the gap between camera
+data and useful information that your robotics application can use. It provides
+the following features:</p>
+<blockquote>
+<div><ul class="simple">
+<li>A unified framework for different types of visual object detectors</li>
+<li>Handling of both 2D and 3D data</li>
+<li>A YAML-based syntax for defining objects detectable with vision</li>
+<li>An extendable set of basic classifier types</li>
+<li>Example classifiers</li>
+<li>A segmentation server that provides tunable versions of common algorithms provided by the Point Cloud library</li>
+<li>Interoperability with <code class="docutils literal notranslate"><span class="pre">tf</span></code>, <code class="docutils literal notranslate"><span class="pre">rqt_reconfigure</span></code>, and (coming soon) <code class="docutils literal notranslate"><span class="pre">vision_msgs</span></code></li>
+<li>Automatic RViz visualization of detected objects</li>
+</ul>
+</div></blockquote>
+<p>We realize that every vision use case is different, so a key feature of ORP is
+the ability to be easily modified, including tuning recognition algorithm
+parameters. ORP uses functionality from the Point Cloud Library and OpenCV. If
+you plan on extending or modifying ORP, you should have a good handle on at
+least one of those two libraries.</p>
+<p>Many features of ORP may seem outdated; this is partly intentional. While
+machine learning-based computer vision has seen much success in recent years,
+the needs of many robotics applications (such as locating a small object in a
+fairly uncluttered environment) are often adequately met by using older vision
+techniques, such as edge detection and clustering. With that being said,
+because ORP is flexible and modular, it is possible to use newer detectors,
+such as the YOLO detector, in the ORP framework, and in fact, it’s encouraged
+because it allows visual classifiers to be more interoperable.</p>
+</div>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>ORP is based on ROS, and each component of ORP is its own ROS node. These nodes
+can each be modified, swapped, or configured separately, making ORP a powerful,
+flexible tool for ROS-based recognition.</p>
+<p>The key component of ORP is the <code class="docutils literal notranslate"><span class="pre">recognizer</span></code>, which aggregates vision
+information from any number of classifiers. Classifers can be created by
+writing a new C++ class that extends one of the provided Classifier base types,
+such as Classifier2d (for image data) or Classifier3d (for point cloud data).
+Other input types are also possible under the framework, just not strongly
+supported yet.</p>
+<p>ORP classifiers can be set to start recognizing as soon as they start, or they
+can be started “dormant” and enabled later. You can debug ORP by using
+rostopic echo on the /classification and /detected_objects topics.</p>
+<p>ORP also provides a single node, the <em>segmentation server</em>, which provides many
+point cloud processing algorithms out of the box, and has tunable parameters
+exposed by the <code class="docutils literal notranslate"><span class="pre">rqt_reconfigure</span></code> ROS package.</p>
+</div>
+<div class="section" id="project-history">
+<h2>Project History<a class="headerlink" href="#project-history" title="Permalink to this headline">¶</a></h2>
+<p>ORP was originally conceived as part of Adam Allevato’s masters thesis,
+published in 2016 at The University of Texas at Austin, for the Nuclear and
+Applied Robotics group’s entry in the 2015 Amazon Picking Challenge.
+Some of the code was based on earlier point cloud research done by Brian E.
+O’Neil.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">ORP</a></h1>
+
+
+
+<p class="blurb">Object Recognition and Pose Perception</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending ORP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="setup.html" title="next chapter">Setup</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
