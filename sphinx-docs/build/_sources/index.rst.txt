@@ -10,9 +10,11 @@ Object Recognition and Perception (ORP) documentation
    :maxdepth: 2
    :caption: Contents:
 
+   markdown_pages
    setup
    extending
    troubleshooting
+   resources
 
 Overview
 --------

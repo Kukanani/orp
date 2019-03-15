@@ -1,7 +1,4 @@
-===============================================================================
-Troubleshooting
-===============================================================================
-.. toctree::
+# Troubleshooting
 
 Introduction
 ------------
@@ -62,30 +59,29 @@ Step 3: How do the intermediate steps look?
 If your recognizer is running, but is publishing empty lists of items, the
 next step is to check the ROS services and topics that are part of the
 ORP pipeline.
-- You should be able to subscribe to your sensor feed, either through the
-  terminal or by using RViz
-- If you are using 3D data, the ``/segmentation`` service should be visible
-  by running ``rosservice list``.
+- You should be able to subscribe to your sensor feed, either through the terminal
+or by using RViz
+- If you are using 3D data, the ``/segmentation`` service should be visible by
+running ``rosservice list``.
 - If you are using 3D data, the segmentation node should be publishing
-  "intermediate" point clouds, such as the bounded scene and object clusters.
-  The publishing of these clouds can be enabled or disabled by using the
-  checkboxes available in the Dynamic Reconfigure control panel,
-  ``rqt_reconfigure``, which should have launched with ``orp.launch`` (if it
-  didn't you can run it with the ``rosrun rqt_reconfigure rqt_reconfigure``
-  command). Once these clouds are being published, you should be able to
-  visualize them in RViz and see if they match your expectations. In particular,
-  you may have to adjust the ``spatial`` parameters in the reconfigure console
-  so that the ``/bounded_scene`` point cloud encompasses your entire detection
-  region. The other parameters can be used to fine-tune the segmentation
-  results. in the end, the "all objects" cloud should contain points for each
-  of the objects you want to detect, and no other points (such as ground,
-  walls, or large objects in the scene you want to ignore).
+"intermediate" point clouds, such as the bounded scene and object clusters. The
+publishing of these clouds can be enabled or disabled by using the checkboxes
+available in the Dynamic Reconfigure control panel, ``rqt_reconfigure``, which
+should have launched with ``orp.launch`` (if it didn't you can run it with the
+``rosrun rqt_reconfigure rqt_reconfigure`` command). Once these clouds are being
+published, you should be able to visualize them in RViz and see if they match your
+expectations. In particular, you may have to adjust the ``spatial`` parameters in
+the reconfigure console so that the ``/bounded_scene`` point cloud encompasses your
+entire detection region. The other parameters can be used to fine-tune the segmentation
+results. in the end, the "all objects" cloud should contain points for each
+of the objects you want to detect, and no other points (such as ground,
+walls, or large objects in the scene you want to ignore).
 - Messages should be being published on the ``/classification`` topic by the
-  classifier(s), checkable with ``rostopic echo /classification``. If no
-  object classifications are being published, but the intermediate point clouds
-  contain useful points for classification (as determined in the previous
-  step), then there is mostly likely a problem with the classifier
-  implementation.
+classifier(s), checkable with ``rostopic echo /classification``. If no
+object classifications are being published, but the intermediate point clouds
+contain useful points for classification (as determined in the previous
+step), then there is mostly likely a problem with the classifier
+implementation.
 
 Step 4: How does the final output look?
 ---------------------------------------
