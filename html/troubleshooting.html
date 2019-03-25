@@ -1,0 +1,225 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Troubleshooting &#8212; ORP 1.0.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="List of reference material" href="resources.html" />
+    <link rel="prev" title="Extending ORP" href="extending.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>ORP is build entirely in a ROS-centric way, which means that you can use
+standard ROS debugging tools to figure out what’s going wrong with your
+program. This page will list several steps you can take to find the exact
+location of your issue.</p>
+<p>If you find other tools that are helpful for debugging, please feel free to
+add them to this page.</p>
+<p>All of these commands assume that you are attempting to run your entire vision
+pipeline, and that for some reason, it is not working as expected.</p>
+</div>
+<div class="section" id="step-1-are-the-correct-nodes-running">
+<h2>Step 1: Are the correct nodes running?<a class="headerlink" href="#step-1-are-the-correct-nodes-running" title="Permalink to this headline">¶</a></h2>
+<p>First, use the <code class="docutils literal notranslate"><span class="pre">rosnode</span> <span class="pre">list</span></code> command line tool to check that all nodes are
+running as expected. These should be:</p>
+<ul class="simple">
+<li>A camera driver, such as openni2</li>
+<li>The ORP <code class="docutils literal notranslate"><span class="pre">recognizer</span></code> node, which orchestrates the ORP system</li>
+<li>The segmentation server, <code class="docutils literal notranslate"><span class="pre">/segmentation</span></code>, if using 3D data</li>
+<li>One or more classifiers (node names vary, but usually contain “<code class="docutils literal notranslate"><span class="pre">classifier</span></code>”).</li>
+</ul>
+<p>If no camera driver is running, check what launch files you are running and
+ensure that you are passing the correct flags to <code class="docutils literal notranslate"><span class="pre">orp.launch</span></code>, if you are
+using it.</p>
+<p>If no recognizer and/or segmentation nodes are running, check that you are
+launching <code class="docutils literal notranslate"><span class="pre">orp.launch</span></code> and that the nodes are not crashing (there should be
+terminal output if something goes wrong inside these nodes). If these nodes
+are crashing on startup, there may be an ORP internal bug and further digging
+may be required (but finish the steps on this page to be sure).</p>
+<p>If a built-in (provided with ORP) classifier node is not running, check the
+arguments you’re passing to <code class="docutils literal notranslate"><span class="pre">orp.launch</span></code>. If your custom classifier is not
+running, check that you are in fact launching it in some way, and that it’s not
+crashing on startup.</p>
+</div>
+<div class="section" id="step-2-are-you-providing-an-object-list">
+<h2>Step 2: Are you providing an object list?<a class="headerlink" href="#step-2-are-you-providing-an-object-list" title="Permalink to this headline">¶</a></h2>
+<p>The ORP recognizer requires a list of possible detectable objects to be stored
+on the ROS parameter server when it first launches, as a way of understanding
+how to interpret the classification messages it receives. You should ensure
+that some set of parameters is being loaded, preferably by uploading params
+defined in a .yaml file. For example, you may need to add the following line in
+one of your launch files:</p>
+<p>::</p>
+<rosparam command="load" param="items/" file="$(find my_package)/data/database.yaml" /><p>For an example of how to define a list of objects, please see ORP’s
+<code class="docutils literal notranslate"><span class="pre">data/example_database.yaml</span></code>.</p>
+</div>
+<div class="section" id="step-3-how-do-the-intermediate-steps-look">
+<h2>Step 3: How do the intermediate steps look?<a class="headerlink" href="#step-3-how-do-the-intermediate-steps-look" title="Permalink to this headline">¶</a></h2>
+<p>If your recognizer is running, but is publishing empty lists of items, the
+next step is to check the ROS services and topics that are part of the
+ORP pipeline.</p>
+<ul class="simple">
+<li>You should be able to subscribe to your sensor feed, either through the terminal
+or by using RViz</li>
+<li>If you are using 3D data, the <code class="docutils literal notranslate"><span class="pre">/segmentation</span></code> service should be visible by
+running <code class="docutils literal notranslate"><span class="pre">rosservice</span> <span class="pre">list</span></code>.</li>
+<li>If you are using 3D data, the segmentation node should be publishing
+“intermediate” point clouds, such as the bounded scene and object clusters. The
+publishing of these clouds can be enabled or disabled by using the checkboxes
+available in the Dynamic Reconfigure control panel, <code class="docutils literal notranslate"><span class="pre">rqt_reconfigure</span></code>, which
+should have launched with <code class="docutils literal notranslate"><span class="pre">orp.launch</span></code> (if it didn’t you can run it with the
+<code class="docutils literal notranslate"><span class="pre">rosrun</span> <span class="pre">rqt_reconfigure</span> <span class="pre">rqt_reconfigure</span></code> command). Once these clouds are being
+published, you should be able to visualize them in RViz and see if they match your
+expectations. In particular, you may have to adjust the <code class="docutils literal notranslate"><span class="pre">spatial</span></code> parameters in
+the reconfigure console so that the <code class="docutils literal notranslate"><span class="pre">/bounded_scene</span></code> point cloud encompasses your
+entire detection region. The other parameters can be used to fine-tune the segmentation
+results. in the end, the “all objects” cloud should contain points for each
+of the objects you want to detect, and no other points (such as ground,
+walls, or large objects in the scene you want to ignore).</li>
+<li>Messages should be being published on the <code class="docutils literal notranslate"><span class="pre">/classification</span></code> topic by the
+classifier(s), checkable with <code class="docutils literal notranslate"><span class="pre">rostopic</span> <span class="pre">echo</span> <span class="pre">/classification</span></code>. If no
+object classifications are being published, but the intermediate point clouds
+contain useful points for classification (as determined in the previous
+step), then there is mostly likely a problem with the classifier
+implementation.</li>
+</ul>
+</div>
+<div class="section" id="step-4-how-does-the-final-output-look">
+<h2>Step 4: How does the final output look?<a class="headerlink" href="#step-4-how-does-the-final-output-look" title="Permalink to this headline">¶</a></h2>
+<p>The recognizer node should be publishing results to the ROS topic
+<code class="docutils literal notranslate"><span class="pre">/detected_objects</span></code>. You can check for this using <code class="docutils literal notranslate"><span class="pre">rostopic</span> <span class="pre">echo</span></code>. Even
+if no classifiers are running, messages should be arriving, containing empty
+lists.</p>
+<p>If no messages are arriving, it’s possible that recognition is paused - this
+is a feature of ORP that will allow the nodes to run without actually doing
+recognition, saving a lot of CPU overhead. To start recognition automatically,
+you can specify the <code class="docutils literal notranslate"><span class="pre">autostart</span></code> parameter when calling <code class="docutils literal notranslate"><span class="pre">orp.launch</span></code>. To
+start and stop recognition manually (which can be done later, even if the
+system is autostarted on launch), publish <code class="docutils literal notranslate"><span class="pre">std_msgs::Empty</span></code> messages on the
+topics <code class="docutils literal notranslate"><span class="pre">/orp_start_recognition</span></code> and <code class="docutils literal notranslate"><span class="pre">/orp_stop_recognition</span></code>. Here is an
+example of how to start recognition from the command line:</p>
+<p>::</p>
+<p>rostopic pub /orp_start_recognition std_msgs/Empty “{}”</p>
+</div>
+<div class="section" id="step-5-you-re-special">
+<h2>Step 5: You’re special<a class="headerlink" href="#step-5-you-re-special" title="Permalink to this headline">¶</a></h2>
+<p>If all of the above steps are working, but somehow you are not getting the
+results that you want, it’s time to ask for help from someone else.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">ORP</a></h1>
+
+
+
+<p class="blurb">Object Recognition and Pose Perception</p>
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="markdown_pages.html">Markdown Formatting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extending.html">Extending ORP</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-1-are-the-correct-nodes-running">Step 1: Are the correct nodes running?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2-are-you-providing-an-object-list">Step 2: Are you providing an object list?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-3-how-do-the-intermediate-steps-look">Step 3: How do the intermediate steps look?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-4-how-does-the-final-output-look">Step 4: How does the final output look?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-5-you-re-special">Step 5: You’re special</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="resources.html">List of reference material</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="extending.html" title="previous chapter">Extending ORP</a></li>
+      <li>Next: <a href="resources.html" title="next chapter">List of reference material</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/troubleshooting.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

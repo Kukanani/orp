@@ -1,3 +1,0 @@
-# default ORP parameters
-# other nodes' parameters could also be added to this file.
-camera: {driver: {depth_registration: true}}
