@@ -17,7 +17,7 @@ Publishing Directions (For Adam Allevato and/or collaborators of ORP):
 ##### Publishing updates or documentation changes
 To build the most recent version of the docs, use the following command in the root directory (orp/sphinx-docs):
 **$ sphinx-build -b html source build**
-Build is the directory that
+Build is the directory that you want the resulting html files to be placed.
 
 _This project is structured such that multiple builds and sources can be configured (i.e. for a testing and stable version, etc.)_
 
