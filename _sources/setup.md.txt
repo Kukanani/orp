@@ -6,7 +6,7 @@ Requirements
 Currently, the tested and known working version of this software runs with
 ROS Kinetic, which requires the following:
 
- - Ubuntu 16.04 (Xenial)
+    - Ubuntu 16.04 (Xenial)
 
 Use this `link <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_ to go through
 the installation and setup process.
@@ -23,7 +23,13 @@ Now download the ORP repository from Github.
 
 3. ``catkin_make`` (this builds all packages in the workspace)
 
-    a. If this fails, the command should return an error log, likely with the package components dependencies that are missing labeled.
+    The following are possible errors that might occur when setting up and building the program.
+
+    a.  ``The program 'catkin_make' is currently not installed...``
+
+    The solution to this program is to follow step 1 in the **run** instructions.
+
+    b.  If the make fails, the command should return an error log, likely with the package components dependencies that are missing labeled.
 
     For example, the following error is provided:
 
@@ -32,7 +38,17 @@ Now download the ORP repository from Github.
 
     Specifically, this package is [here](https://github.com/Kukanani/vision_msgs.git), in which it can be installed following [this guide](https://answers.ros.org/question/252478/how-to-build-a-package-from-source-on-ubuntu-mate-1604-lts-and-ros-kinetic/?answer=252502#post-id-252502).
 
-# TODO: Add a note about catkin_make with correct compiler flags in order to build vision_msgs correctly...    
+    c. ``Make -j8 -l8 failed`` plus indefinite stalling:
+
+    This bug has been identified so far on SIM lab's Dell XPS 13 9360 Laptops with Intel's octocore i5-8250U CPUs.
+
+    A proven fix is appending the ``-j1 -l1`` flag to the command.
+
+4. ``. ~/catkin_ws/devel/setup.bash`` (Add the rebuilt workspace to the ROS environment)
+
+5. **Sanity Check:** To see whether the build process and setup has worked, try ``rospack depends1``. Display all the possibilities, and orp should appear as one of the dependencies.
+If not, the following steps won't work. (I'm not quite sure of a precise fix, but possible solutions include re-sourcing the env setup file in 4, or running catkin clean and rebuilding the entire workspace.)
+
 
 Run Instructions
 ----------------

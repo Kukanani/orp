@@ -40,9 +40,9 @@
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>Currently, the tested and known working version of this software runs with
 ROS Kinetic, which requires the following:</p>
-<ul class="simple">
-<li>Ubuntu 16.04 (Xenial)</li>
-</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="n">Ubuntu</span> <span class="mf">16.04</span> <span class="p">(</span><span class="n">Xenial</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Use this <code class="docutils literal notranslate"><span class="pre">link</span> <span class="pre">&lt;http://wiki.ros.org/kinetic/Installation/Ubuntu&gt;</span></code>_ to go through
 the installation and setup process.</p>
 <p>These setup instructions assume you have been through the aforementioned setup
@@ -55,19 +55,27 @@ catkin_ws.</p>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github/UTNuclearRobotics/orp.git</span></code></p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">catkin_make</span></code> (this builds all packages in the workspace)</p>
-<p>a. If this fails, the command should return an error log, likely with the package components dependencies that are missing labeled.</p>
+<p>The following are possible errors that might occur when setting up and building the program.</p>
+<p>a.  <code class="docutils literal notranslate"><span class="pre">The</span> <span class="pre">program</span> <span class="pre">'catkin_make'</span> <span class="pre">is</span> <span class="pre">currently</span> <span class="pre">not</span> <span class="pre">installed...</span></code></p>
+<p>The solution to this program is to follow step 1 in the <strong>run</strong> instructions.</p>
+<p>b.  If the make fails, the command should return an error log, likely with the package components dependencies that are missing labeled.</p>
 <p>For example, the following error is provided:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="n">Could</span> <span class="ow">not</span> <span class="n">find</span> <span class="n">a</span> <span class="n">package</span> <span class="n">configuration</span> <span class="n">file</span> <span class="n">provided</span> <span class="n">by</span> <span class="s2">&quot;vision_msgs&quot;</span>
  <span class="k">with</span> <span class="nb">any</span> <span class="n">of</span> <span class="n">the</span> <span class="n">following</span> <span class="n">names</span><span class="p">:</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>Specifically, this package is <a class="reference external" href="https://github.com/Kukanani/vision_msgs.git">here</a>, in which it can be installed following <a class="reference external" href="https://answers.ros.org/question/252478/how-to-build-a-package-from-source-on-ubuntu-mate-1604-lts-and-ros-kinetic/?answer=252502#post-id-252502">this guide</a>.</p>
+<p>c. <code class="docutils literal notranslate"><span class="pre">Make</span> <span class="pre">-j8</span> <span class="pre">-l8</span> <span class="pre">failed</span></code> plus indefinite stalling:</p>
+<p>This bug has been identified so far on SIM lab’s Dell XPS 13 9360 Laptops with Intel’s octocore i5-8250U CPUs.</p>
+<p>A proven fix is appending the <code class="docutils literal notranslate"><span class="pre">-j1</span> <span class="pre">-l1</span></code> flag to the command.</p>
+</li>
+<li><p class="first"><code class="docutils literal notranslate"><span class="pre">.</span> <span class="pre">~/catkin_ws/devel/setup.bash</span></code> (Add the rebuilt workspace to the ROS environment)</p>
+</li>
+<li><p class="first"><strong>Sanity Check:</strong> To see whether the build process and setup has worked, try <code class="docutils literal notranslate"><span class="pre">rospack</span> <span class="pre">depends1</span></code>. Display all the possibilities, and orp should appear as one of the dependencies.
+If not, the following steps won’t work. (I’m not quite sure of a precise fix, but possible solutions include re-sourcing the env setup file in 4, or running catkin clean and rebuilding the entire workspace.)</p>
 </li>
 </ol>
 </div>
-</div>
-<div class="section" id="todo-add-a-note-about-catkin-make-with-correct-compiler-flags-in-order-to-build-vision-msgs-correctly">
-<h1>TODO: Add a note about catkin_make with correct compiler flags in order to build vision_msgs correctly…<a class="headerlink" href="#todo-add-a-note-about-catkin-make-with-correct-compiler-flags-in-order-to-build-vision-msgs-correctly" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="run-instructions">
 <h2>Run Instructions<a class="headerlink" href="#run-instructions" title="Permalink to this headline">¶</a></h2>
 <ol>
@@ -105,9 +113,6 @@ catkin_ws.</p>
 <li class="toctree-l1"><a class="reference internal" href="markdown_pages.html">Markdown Formatting</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Setup</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#todo-add-a-note-about-catkin-make-with-correct-compiler-flags-in-order-to-build-vision-msgs-correctly">TODO: Add a note about catkin_make with correct compiler flags in order to build vision_msgs correctly…</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#run-instructions">Run Instructions</a></li>
 </ul>
 </li>
