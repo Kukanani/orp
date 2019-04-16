@@ -52,6 +52,7 @@ If not, the following steps won't work. (I'm not quite sure of a precise fix, bu
 
 6. **Refresh:** If the workspace no longer can recognize orp as a package, try step 4 again, and if that fails, ``catkin clean`` and restarting from step 3.
 
+
 Run Instructions
 ----------------
 
@@ -67,25 +68,26 @@ Run Instructions
     a. if this step fails because it cannot find the orp package, try step 6 in the setup instructions.
 
 ##### Note:
-    When running example.launch, no data should be published to the window because of ...
-    This is due to example.launch not being properly connected to the camera.
-    In the specific case of SIMLab, we are using an Intel Realsense Depth Camera, model D435. In order to run this, we need both
-        1. the correct drivers for the camera installed and
-        2. the camera enabled in example.launch to auto connect with the drivers.
 
-    1.  Install actual driver   https://github.com/IntelRealSense/librealsense/releases TODO
-        Install ros driver TODO
+When running example.launch, if this is the first time setup, no data should be published to the window because the camera is not connected.
 
-    2.  To setup the camera enabled, look at orp.launch in the same launch folder. Inside it, you should see a list of arguments for possible camera drivers like below:
+In the specific case of SIMLab, we are using an Intel Realsense Depth Camera, model D435. In order to run this, we need both
+    1. the correct drivers for the camera installed and
+    2. the camera enabled in example.launch to auto connect with the drivers.
 
-    ```
-    <arg name="openni"          default="false"/>
-    <arg name="openi2"          default="false"/>
-    <arg name="realsense_r200"  default="false"/>
-    <arg name="realsense_4xx"   default="false"/>
-    <arg name="astra"           default="false"/>
-    ```
+1.  Install actual driver   https://github.com/IntelRealSense/librealsense/releases TODO
+    Install ros driver TODO
 
-    Copy the realsense_4xx line and put it in example.orp where the default line where realsense_r200 is.
+2.  To setup the camera enabled, look at orp.launch in the same launch folder. Inside it, you should see a list of arguments for possible camera drivers like below:
 
-    Rerun step 3.
+```
+<arg name="openni"          default="false"/>
+<arg name="openi2"          default="false"/>
+<arg name="realsense_r200"  default="false"/>
+<arg name="realsense_4xx"   default="false"/>
+<arg name="astra"           default="false"/>
+```
+
+Copy the realsense_4xx line and put it in example.orp where the default line where realsense_r200 is.
+
+Rerun step 3.
