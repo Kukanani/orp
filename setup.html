@@ -71,9 +71,12 @@ catkin_ws.</p>
 </li>
 <li><p class="first"><code class="docutils literal notranslate"><span class="pre">.</span> <span class="pre">~/catkin_ws/devel/setup.bash</span></code> (Add the rebuilt workspace to the ROS environment)</p>
 </li>
-<li><p class="first"><strong>Sanity Check:</strong> To see whether the build process and setup has worked, try <code class="docutils literal notranslate"><span class="pre">rospack</span> <span class="pre">depends1</span></code>. Display all the possibilities, and orp should appear as one of the dependencies.
-If not, the following steps won’t work. (I’m not quite sure of a precise fix, but possible solutions include re-sourcing the env setup file in 4, or running catkin clean and rebuilding the entire workspace.)</p>
+<li><p class="first"><strong>Sanity Check:</strong> To see whether the build process and setup has worked, try <code class="docutils literal notranslate"><span class="pre">rospack</span> <span class="pre">depends1</span> <span class="pre">[no</span> <span class="pre">3rd</span> <span class="pre">arg]</span></code>. Display all the possibilities, and <code class="docutils literal notranslate"><span class="pre">orp</span></code> should appear as one of the dependencies. Alternatively, if the above command gives an error, like <code class="docutils literal notranslate"><span class="pre">Error:</span> <span class="pre">no</span> <span class="pre">package</span> <span class="pre">given</span></code>, try calling <code class="docutils literal notranslate"><span class="pre">rospack</span> <span class="pre">depends1</span> <span class="pre">orp</span></code> to see if dependencies show up.</p>
 </li>
+</ol>
+<p>If not, the following steps won’t work. (I’m not quite sure of a precise fix, but possible solutions include re-sourcing the env setup file in setp 4, or running <code class="docutils literal notranslate"><span class="pre">catkin</span> <span class="pre">clean</span></code> and rebuilding the entire workspace.)</p>
+<ol class="simple">
+<li><strong>Refresh:</strong> If the workspace no longer can recognize orp as a package, try step 4 again, and if that fails, <code class="docutils literal notranslate"><span class="pre">catkin</span> <span class="pre">clean</span></code> and restarting from step 3.</li>
 </ol>
 </div>
 <div class="section" id="run-instructions">
@@ -83,9 +86,39 @@ If not, the following steps won’t work. (I’m not quite sure of a precise fix
 <code class="docutils literal notranslate"><span class="pre">$</span> <span class="pre">source</span> <span class="pre">/opt/ros/kinetic/setup.bash</span></code></p>
 <p>Alternatively, you can add the command as a line to your <a class="reference external" href="https://answers.ros.org/question/206876/how-often-do-i-need-to-source-setupbash/">.bashrc</a>.</p>
 </li>
+<li><p class="first">Start up roscore. <code class="docutils literal notranslate"><span class="pre">roscore</span></code></p>
+</li>
 <li><p class="first">To test run orp, call <code class="docutils literal notranslate"><span class="pre">roslaunch</span> <span class="pre">orp</span> <span class="pre">example.launch</span></code> (or alternatively, <code class="docutils literal notranslate"><span class="pre">roslaunch</span> <span class="pre">example.launch</span></code> in the orp/launch folder).</p>
+<p>a. if this step fails because it cannot find the orp package, try step 6 in the setup instructions.</p>
 </li>
 </ol>
+<div class="section" id="note">
+<h3>Note:<a class="headerlink" href="#note" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>When running example.launch, no data should be published to the window because of ...
+This is due to example.launch not being properly connected to the camera.
+In the specific case of SIMLab, we are using an Intel Realsense Depth Camera, model D435. In order to run this, we need both
+    1. the correct drivers for the camera installed and
+    2. the camera enabled in example.launch to auto connect with the drivers.
+
+1.  Install actual driver   https://github.com/IntelRealSense/librealsense/releases TODO
+    Install ros driver TODO
+
+2.  To setup the camera enabled, look at orp.launch in the same launch folder. Inside it, you should see a list of arguments for possible camera drivers like below:
+
+```
+&lt;arg name=&quot;openni&quot;          default=&quot;false&quot;/&gt;
+&lt;arg name=&quot;openi2&quot;          default=&quot;false&quot;/&gt;
+&lt;arg name=&quot;realsense_r200&quot;  default=&quot;false&quot;/&gt;
+&lt;arg name=&quot;realsense_4xx&quot;   default=&quot;false&quot;/&gt;
+&lt;arg name=&quot;astra&quot;           default=&quot;false&quot;/&gt;
+```
+
+Copy the realsense_4xx line and put it in example.orp where the default line where realsense_r200 is.
+
+Rerun step 3.
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 
