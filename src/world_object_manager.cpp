@@ -34,7 +34,7 @@
 
 typedef std::map<int, WorldObjectType> TypeMap;
 
-WorldObjectManager::WorldObjectManager() : unknownType("unknown") {
+WorldObjectManager::WorldObjectManager() : unknownType(-1, "unknown") {
   addType(unknownType);
 } //WorldObjectManager
 
@@ -89,7 +89,10 @@ void WorldObjectManager::loadTypesFromParameterServer() {
   for(auto it = paramMap.begin(); it != paramMap.end(); ++it)
   {
     std::string objName = (*it).first;
-    WorldObjectType thisType = WorldObjectType(std::string(objName));
+    int id = 0;
+    WorldObjectManager::attemptToReloadIntParam(
+        n, "/orp/items/" + objName + "/id", id, true);
+    WorldObjectType thisType = WorldObjectType(id, std::string(objName));
     double x, y, z, roll = 0.0, pitch = 0.0, yaw = 0.0;
     double x_off = 0.0, y_off = 0.0, z_off = 0.0;
     float r = 0.5, g = 0.5, b = 0.5;
@@ -225,6 +228,21 @@ bool WorldObjectManager::attemptToReloadFloatParam(const ros::NodeHandle &node,
 
 bool WorldObjectManager::attemptToReloadDoubleParam(
     const ros::NodeHandle &node, std::string paramName, double &toFill,
+    bool strict)
+{
+  if(!node.hasParam(paramName)) {
+    if(strict) {
+      ROS_ERROR_STREAM("can't find parameter " << paramName.c_str());
+      throw std::runtime_error("Source param does not exist");
+    }
+    return false;
+  }
+  node.getParam(paramName, toFill);
+  return true;
+}
+
+bool WorldObjectManager::attemptToReloadIntParam(
+    const ros::NodeHandle &node, std::string paramName, int &toFill,
     bool strict)
 {
   if(!node.hasParam(paramName)) {

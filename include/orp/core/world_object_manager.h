@@ -87,6 +87,9 @@ public:
   /// Attempt to put a load a double from the parameter server.
   static bool attemptToReloadDoubleParam(const ros::NodeHandle &node,
       std::string paramName, double &toFill, bool strict = false);
+  /// Attempt to put a load an int from the parameter server.
+  static bool attemptToReloadIntParam(const ros::NodeHandle &node,
+      std::string paramName, int &toFill, bool strict = false);
   /// Attempt to put a load a string from the parameter server.
   static bool attemptToReloadStringParam(const ros::NodeHandle &node,
     std::string paramName, std::string &toFill, bool strict = false);

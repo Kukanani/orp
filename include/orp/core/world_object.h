@@ -99,9 +99,6 @@ enum ObjectShape {
  * of different WorldObjectType.
  */
 struct WorldObjectType {
-private:
-  static int nextValidID;     /// ncremented on new object type creation.
-
 protected:
   /// No two WorldObjectTypes should share a name.
   std::string name;
@@ -110,13 +107,14 @@ protected:
   /// fashion than using the whole name.
   int id;
 
+  /// This object's shape.
+  ObjectShape shape;
+
   /// A marker with its appearance already prepared for this object type.
   visualization_msgs::Marker stub;
 
   /// Offset rotation of the appearance from default.
   RPY offset;
-  /// This object's shape.
-  ObjectShape shape;
 
   /**
    * Do the barebones setup for this type's marker stub.
@@ -132,15 +130,14 @@ public:
    * TODO(Kukanani): use friend classes to make this constructor protected,
    * while still being accessible from the world object manager.
    */
-  WorldObjectType(std::string _name):
-      shape(OTHER),
+  WorldObjectType(int _id, std::string _name):
+      id(_id),
       name(_name),
+      shape(OTHER),
       stub(),
       offset()
   {
     setupStub();
-    id = nextValidID;
-    nextValidID++;
     if(name == "unknown") {
       setShape(BLOB);
       stub.scale.x = 0.1;
