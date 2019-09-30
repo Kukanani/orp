@@ -16,12 +16,11 @@ Untitled Document
 *.dox
 *.wikidoc
 
-# eclipse stuff
+# IDEs
 .project
 .cproject
-
-# pycharm
 .idea/
+.vscode/
 
 # qcreator stuff
 CMakeLists.txt.user
