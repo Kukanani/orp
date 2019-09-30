@@ -7,6 +7,7 @@ Object Recognition and Perception (ORP) documentation
 =============================================================
 
 .. toctree::
+   :hidden:
    :maxdepth: 2
    :caption: Contents:
 
