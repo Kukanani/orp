@@ -220,7 +220,7 @@ std::string HueClassifier::getClassByColor(const cv::Mat& input)
   cv::Mat hsv = cv::Mat::zeros(1, 1, CV_8UC3);
   cv::Scalar avg_bgr = cv::mean(input);
   hsv.at<cv::Vec3b>(0, 0) = cv::Vec3b(avg_bgr[0], avg_bgr[1], avg_bgr[2]);
-  cv::cvtColor(hsv, hsv, CV_BGR2HSV);
+  cv::cvtColor(hsv, hsv, cv::COLOR_BGR2HSV);
   ROS_DEBUG_STREAM("raw average HSV: " << hsv.at<cv::Vec3b>(0, 0));
   cv::Vec3b hsv_raw = hsv.at<cv::Vec3b>(0, 0);
 
